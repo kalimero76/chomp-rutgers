@@ -1,0 +1,2 @@
+This is a program which generates statistics about random cubical complexes.
+It defines _CHOMP_HEADER_ONLY_, which means it includes all of the .hpp and .cpp files and compiles as a single file.
