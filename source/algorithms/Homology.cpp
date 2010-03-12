@@ -11,7 +11,7 @@
 #include "algorithms/Homology.h"
 
 #ifndef _CHOMP_HEADER_ONLY_
-/* Common Template Instances */
+/* Explicit Template Instantiations */
 
 #include "complexes/Cubical_Complex.h"
 template void Homology < Cubical_Complex > ( const Cubical_Complex & );
