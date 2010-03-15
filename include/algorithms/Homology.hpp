@@ -191,7 +191,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 		using namespace capd::vectalg;
 
 		/* Insert the betti generators */
-        std::cout << "The betti number is " << betti_number << ".\n";
+        //std::cout << "The betti number is " << betti_number << ".\n";
 		for ( unsigned int betti_index = 0; betti_index < betti_number; ++ betti_index ) {
 			generators [ betti_index ] . second = 0;
 			typename Cell_Complex::Chain & generator_chain = generators [ betti_index ] . first;
@@ -200,7 +200,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
 			entry != generator_vector . end (); ++ entry ) 
 				generator_chain += std::pair < typename Cell_Complex::Elementary_Chain, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-            std::cout << "Betti Chain: " << generator_chain << "\n";
+            //std::cout << "Betti Chain: " << generator_chain << "\n";
 		}
 
 
@@ -213,7 +213,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
 			entry != generator_vector . end (); ++ entry ) 
 				generator_chain += std::pair < typename Cell_Complex::Elementary_Chain, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-            std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
+            //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
 
 		}
 		/* Store second_* into first_* */
