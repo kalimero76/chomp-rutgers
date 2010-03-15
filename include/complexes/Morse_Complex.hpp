@@ -353,8 +353,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
 
 } /* endfunction */
 
-/* Local Classes for Morse Boundary Algorithm. These are not available throug the header, which is why they
- * are defined here. */
+
+
+
 template < class Morse_Complex_Template >
 Morse_Value_Elementary_Chain < Morse_Complex_Template > ::
 Morse_Value_Elementary_Chain ( Morse_Value_Type morse_value,  typename Cell_Complex_Template::Container::const_iterator location )
@@ -418,7 +419,7 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 	int old_percent = 0;
 	int number_computed = 0;
 	/* Now we loop through the Aces and find their Morse Boundaries. */
-	for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index )
+	for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
 		for ( typename Abstract_Complex::Container::iterator element = morse_complex . Chain_Groups [ dimension_index ] . begin ();
 		element != morse_complex . Chain_Groups [ dimension_index ] . end (); ++ element ) {
 
@@ -456,7 +457,8 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 				if ( Is_a_King ( flags ) || not Is_Alive ( flags ) ) continue;
 				work_chain . insert ( typename Morse_Value_Chain < Morse_Complex >::value_type
 					( Morse_Value_Elementary_Chain < Morse_Complex > ( Morse_Value ( location ), location ),
-					chain_term_iterator -> second ) ); } /* for */
+					chain_term_iterator -> second ) ); 
+			} /* for */
 
 
 			/* We proceed as follows. We use a morse value chain to store the current 'work terms'
@@ -497,7 +499,8 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 						answer_chain += *chain_term_iterator;
 						continue; } /* if */
 					if ( Is_a_Queen ( flags ) && Is_Alive ( flags ) )
-						kept_boundaries += *chain_term_iterator; } /* for */
+						kept_boundaries += *chain_term_iterator; 
+				} /* for */
 				/* The kept_boundaries are the living Queens of the king_boundaries. */
 
 				/* Add the remaining king boundary terms into the work_chain. The original queen will be cancelled. */
@@ -507,10 +510,43 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 			} /* while */
 			/* Now we have the answer chain; let's look at it! */
 			//std::cout << "Answer = " << answer_chain << "\n";
-			morse_complex . Boundary_Map ( element ) = answer_chain; } /* for */ } /* endfunction */
+			morse_complex . Boundary_Map ( element ) = answer_chain; 
+		} /* for */ 
+	} /* for */
+} /* Morse_Complex<>::Morse_Boundary_Algorithm */
 
-/* Chain Correspondence Algorithm */
-template < class Cell_Complex_Template >
-typename Cell_Complex_Template::Chain Morse_Complex<Cell_Complex_Template>::Chain_Correspondence_Algorithm ( Abstract_Complex::Chain & input) {
-	std::cout << "Cell_Complex_Template::Chain Chain_Correspondence_Algorithm not yet implemented.\n";
-	return typename Cell_Complex_Template::Chain(); }
+template < class Cell_Complex >
+typename Cell_Complex::Chain & Morse_Complex<Cell_Complex>::Chain_Correspondence_Algorithm ( typename Cell_Complex::Chain & canonical_chain, const Morse_Complex::Chain & morse_chain ) {
+	typedef typename Morse_Value_Chain < Morse_Complex > :: iterator Work_Chain_iterator;
+	/* First we include the chain into the original complex */
+	canonical_chain = morse_chain; /* this'll break someday */
+	typename Cell_Complex::Chain boundary_chain; 
+	original_complex . Boundary_Map ( boundary_chain, canonical_chain );
+	/* We use the special 'Morse_Value_Chain' for the upcoming algorithm */
+	Morse_Value_Chain < Morse_Complex > work_chain ( boundary_chain, *this );
+	/* Now we loop until the boundary of "canonical_chain" is canonical. 
+	 * This is acheived by throwing out non-queen terms of "work_chain", and
+	 * eliminating queen terms by adding kings to "canonical_chain". */
+	while ( not work_chain . empty () ) {
+		Work_Chain_iterator term = work_chain . begin ();
+		typename Cell_Complex::const_iterator cell_iterator = term -> first . location;
+		if ( not Is_a_Queen ( Flags ( cell_iterator ) ) ) {
+			work_chain . erase ( term );
+			continue;
+		} /* if */
+		typename Cell_Complex::const_iterator king_iterator = Husband ( cell_iterator );
+		typename Cell_Complex::Chain king_boundaries;
+		original_complex . Boundary_Map ( king_boundaries, king_iterator);
+
+		/* Calculate the factor that we need to multiply the king by. */
+		typename Cell_Complex::Chain::iterator queen_term = king_boundaries . find ( cell_iterator -> first );
+		Ring factor = - term -> second / queen_term -> second;
+		/* Hence canonical_chain + factor * king does not possess this queen term. */
+		canonical_chain [ king_iterator -> first ] = factor;
+		/* Multiply the chain terms by the correct factor. */
+		king_boundaries *= factor;
+		/* Add the remaining king boundary terms into the work_chain. The original queen will be cancelled. */
+		work_chain += Morse_Value_Chain < Morse_Complex > ( king_boundaries, *this );
+	} /* while */
+	return canonical_chain;
+} /* Morse_Complex<>::Chain_Correspondence_Algorithm */

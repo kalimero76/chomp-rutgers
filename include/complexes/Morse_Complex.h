@@ -16,27 +16,10 @@
 #include <set> /* for std::set */
 #include "complexes/Abstract_Complex.h" /* for class Abstract_Complex */
 
-/** Default Morse traits class. The defaults say that the features are missing. This tells Morse_Complex to
- * pick up the slack. If a complex has a feature mentioned here, specialize this template and choose the non-
- * default choice. */
-template < class Cell_Complex_Template >
-class Morse_Traits {
-public:
-	/* Tags for Morse_Traits for feature checking */
-	struct doesnt_store_husband_pointers {};
-	struct does_store_husband_pointers {};
-	struct doesnt_store_morse_values {};
-	struct does_store_morse_values {};
-	struct doesnt_store_flags {};
-	struct does_store_flags {};
 
-	/* Default Tag Choices */
-	typedef doesnt_store_husband_pointers does_it_store_husband_pointers;
-	typedef doesnt_store_morse_values does_it_store_morse_values;
-	typedef doesnt_store_flags does_it_store_flags;
-	/* Default Data Types */
-	typedef unsigned int morse_value_type;
-};
+/* Forward Declarations */
+template < class Cell_Complex_Template > class Morse_Traits;
+template < class Cell_Complex_Template > class Morse_Complex;
 
 /** Morse_Complex class. */
 template < class Cell_Complex_Template >
@@ -66,10 +49,34 @@ public:
 	Morse_Complex ( const Cell_Complex_Template & original_complex); 
 	void Ace_King_Queen_Algorithm ( void );
 	void Morse_Boundary_Algorithm ( void );
-	typename Cell_Complex_Template::Chain Chain_Correspondence_Algorithm ( Abstract_Complex::Chain & );
+	typename Cell_Complex_Template::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex_Template::Chain & canonical_chain, const Abstract_Complex::Chain & morse_chain );
 	
 };
 
+	
+/** Default Morse traits class. The defaults say that the features are missing. This tells Morse_Complex to
+ * pick up the slack. If a complex has a feature mentioned here, specialize this template and choose the non-
+ * default choice. */
+template < class Cell_Complex_Template >
+class Morse_Traits {
+public:
+	/* Tags for Morse_Traits for feature checking */
+	struct doesnt_store_husband_pointers {};
+	struct does_store_husband_pointers {};
+	struct doesnt_store_morse_values {};
+	struct does_store_morse_values {};
+	struct doesnt_store_flags {};
+	struct does_store_flags {};
+
+	/* Default Tag Choices */
+	typedef doesnt_store_husband_pointers does_it_store_husband_pointers;
+	typedef doesnt_store_morse_values does_it_store_morse_values;
+	typedef doesnt_store_flags does_it_store_flags;
+	/* Default Data Types */
+	typedef unsigned int morse_value_type;
+};
+
+/* Classes used by Morse_Complex implementation -- maybe ought to put in .hpp */
 
 /* A Chain Class for the upcoming algorithm */
 // Forward Declaration of friend functions for ABC_Chain
@@ -104,7 +111,7 @@ public:
 	 * fetching the Morse Values and storing iterators instead */
 	Morse_Value_Chain ( const Original_Chain & copy_me, const Morse_Complex_Template & morse_complex );
 };
-	
+
 #ifndef _CHOMP_LIBRARY_ONLY_
 #include "complexes/Morse_Complex.hpp"
 #endif
