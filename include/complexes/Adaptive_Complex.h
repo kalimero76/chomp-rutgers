@@ -12,8 +12,8 @@
 
 
 
-#include "archetypes/Chain_Archetype.h" /* for Default_Chain */
-#include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
+#include "Chain_Archetype.h" /* for Default_Chain */
+#include "Cell_Complex_Archetype.h" /* for Cell_Complex */
 
 
 /** class Adaptive_Container. **/
@@ -114,6 +114,7 @@ public:
 			 * and back_max = forward_max
 			 */
 			Relative_Positions();
+			void Set_To_Same();
 			void Set_To_Opposite( bool back_above_forward );
 		};
 
@@ -137,15 +138,14 @@ public:
 		Adaptive_Tree( unsigned int dimension );
 		~Adaptive_Tree( void );
 
-		void Set_Tree_Dimension(unsigned int dimension);
 
 		/*Splits the leaf int to 2^tree_dimension cubes
 		 * and add these cubes to the tree. The original leaf
 		 * won't be leaf any more.
 		 */
-		bool Split_Leaf( Node  * leaf_to_split);
+		void Split_Leaf( Node  * leaf_to_split);
 		/* Each entry of the first vector must be a vector with size tree_dimension
-		 * and consists of 0 and 1
+		 * and consists of false and true
 		 * false - take the left node
 		 * true - take the right node
 		 * this identifies a single cube
@@ -156,22 +156,18 @@ public:
 		 * inserted to the structure
 		 */
 		void Finalize();
-		/* Given a leaf all it's lower dimensional face are found
-		 * and added to the leaf
-		 */
-		void Find_Add_Elemetary_Cells_Of_Cube( Node * leaf);
-		/* Adds all the elementary cells of the given cube */
-		void Add_All_Elementary_Cells_Of_Full_Cube( Node * leaf);
+
+		void Finalize_Cube(Node * leaf, std::vector< std::map < int, bool > > * full_cube_cells);
 
 
-		void Add_Elementary_Cells_From_Bigger_Neighbours( Node * leaf, std::vector<Descend_Info> * bigger_neighbours);
-		void Substract_Elementary_Cells_From_Smaller_Neighbours( Node * leaf, std::vector<Descend_Info> * smaller_neighbours);
+		void Fill_With_Cells_Of_Full_Cube(std::vector< std::map < int, bool > > * full_cube_cells);
+		bool Cell_Is_Subset_Of_Union (int cell,std::vector< int > * cell_union );
+		void Add_Cell_To_Union (int cell, std::vector< int > * intersection );
+		void Find_Neighbours( Node * leaf, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours);
 
-		void Descend_To_Neighbours(Descend_Info descend_info, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours);
 
-		//typedef std::vector< std::map < Elementary_Chain, Elementary_Properties > > Leaf;
-		//class const_Leaf_iterator;
-		//class const_Node_visitor;
+		void Descend_To_Neighbours(Descend_Info * descend_info, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours);
+
 
 	};
 	class const_iterator {
@@ -262,12 +258,8 @@ public:
 
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
-#include "complexes/Adaptive_Complex.hpp"
-#endif
-
 #ifdef _CHOMP_HEADER_ONLY_
-#include "complexes/Adaptive_Complex.cpp"
+#include "Adaptive_Complex.cpp"
 #endif
 
 #endif
