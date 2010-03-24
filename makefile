@@ -28,6 +28,7 @@ LIBRARY_OBJECTS += $(patsubst %.o, build/complexes/%.o, $(COMPLEX_OBJECTS) )
 
 
 library: $(LIBRARY_OBJECTS)
+	ar rcs lib/libchomp-rutgers.a $(LIBRARY_OBJECTS)
 
 $(BUILD_DIR)/%.o : source/%.cpp include/%.h include/%.hpp
 	$(CXX) $(CXXFLAGS) -c $< -o $@
@@ -39,3 +40,4 @@ clean:
 	find build -name "*.o" -delete
 	find programs -name "*.o" -delete
 	find . -name ".?*" -delete
+	rm lib/libchomp-rutgers.a

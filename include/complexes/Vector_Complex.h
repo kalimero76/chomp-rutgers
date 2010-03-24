@@ -100,7 +100,7 @@ public:
 	void Load_From_Cell_Complex ( Cell_Complex_Template & old_complex );
 	/** Make a Vector Complex from the Cartesian Product of Two Complexes of Any Type */
 	template < class First_Cell_Complex_Template, class Second_Cell_Complex_Template >
-	void Vector_Complex::Product_Complex ( const First_Cell_Complex_Template & first_complex, const Second_Cell_Complex_Template & second_complex );
+	void Product_Complex ( const First_Cell_Complex_Template & first_complex, const Second_Cell_Complex_Template & second_complex );
 	
 /* morse decomposition interface implementations */
 	Vector_Container::const_iterator & Husband ( const Vector_Container::const_iterator & input ) const;
