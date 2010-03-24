@@ -141,9 +141,12 @@ Cubical_Complex::Cubical_Complex ( const Cubical_Complex & copy_me) {
 
 /* Deconstructor */
 Cubical_Complex::~Cubical_Complex ( void ) { 
-	delete Chain_Groups [ 0 ] . dimension_sizes;
-	delete Chain_Groups [ 0 ] . jump_values;
-	delete Chain_Groups [ 0 ] . bitmap; } /* endfunction */
+  if ( data_allocated ) {
+    delete Chain_Groups [ 0 ] . dimension_sizes;
+    delete Chain_Groups [ 0 ] . jump_values;
+    delete Chain_Groups [ 0 ] . bitmap; 
+  } /* if */
+} /* endfunction */
 
 /* Allocate_Bitmap */
 void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes ) {
@@ -180,7 +183,7 @@ void Cubical_Complex::Insert_Elementary_Cell ( const unsigned long address ) {
 			if ( address & ( 1 << dimension_index ) ) ++ cell_dimension;
 		++ Chain_Groups[ cell_dimension ] . remembered_size;
 		if ( Chain_Groups [ cell_dimension ] . first_address > address ) Chain_Groups [ cell_dimension ] . first_address = address; 
-    } /* if */ 
+  } /* if */ 
 } /* Cubical_Complex::Insert_Elementary_Cell */
 
 /* Add_Full_Cube */
