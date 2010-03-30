@@ -14,7 +14,7 @@ void generator_example ( void ) {
     std::vector < unsigned int > cube_position ( 3, 5 );
     my_cubical_complex . Allocate_Bitmap ( sizes );
     my_cubical_complex . Add_Full_Cube ( cube_position );
-    my_cubical_complex . Remove_Elementary_Chain ( my_cubical_complex . Chain_Groups[3] . begin () -> first );	
+    my_cubical_complex . Remove_Cell ( * my_cubical_complex . cells[3] . begin () );	
 	
 	/* Now "my_cubical_complex" has something homeomorphic to S^2 */
 	

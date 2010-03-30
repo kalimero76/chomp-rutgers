@@ -26,7 +26,7 @@ struct Dense {
 * which is supplied by reference. The dimension \f$k\f$ is supplied as the parameter "dimension" */
 template < class Cell_Complex >
 void Dense_Matrix_Boundary_Map ( typename Dense < typename Cell_Complex::Ring >::Matrix & output_matrix,
-                                 std::vector < typename Cell_Complex::Elementary_Chain > & translation_table,
+                                 std::vector < typename Cell_Complex::Cell > & translation_table,
                                  const Cell_Complex & complex, const unsigned int dimension );
 
 #ifndef _CHOMP_LIBRARY_ONLY_

@@ -13,7 +13,7 @@
 #include <ext/hash_map> /* for hash<> specialization */
 namespace std { using namespace __gnu_cxx; }
 #include <map> /* For map<...>, used by Default_Chain typedef */
-#include <iostream> /* For ostream, used by output streaming overload for Default_Elementary_Chain , also debug*/
+#include <iostream> /* For ostream, used by output streaming overload for Default_Cell , also debug*/
 
 /* * * * * * * * * * * * * * * * **
 ** Elementary Chains and Chains  **
@@ -21,32 +21,23 @@ namespace std { using namespace __gnu_cxx; }
 
 typedef long Default_Ring;
 
-class Default_Elementary_Chain {
+class Default_Cell {
 public:
 	unsigned long name;
 	unsigned int dimension;
-	Default_Elementary_Chain ( void );
-	Default_Elementary_Chain ( const unsigned long, const unsigned int );
-	bool operator < ( const Default_Elementary_Chain & ) const;
-	bool operator == ( const Default_Elementary_Chain & ) const;
-	bool operator != ( const Default_Elementary_Chain & ) const;
-	/** The arrow operator \verbatim -> \endverbatim is overloaded because the iterators of certain containers yield Default_Elementary_Chain objects when dereferenced. For example, see
-	 * \see{Cubical_Container::const_iterator}.
-	 * Since we would rather write \verbatim iterator -> name \endverbatim instead of \verbatim ( *iterator ) . name, \endverbatim we must overload the arrow operator. We should think that 
-	 * this would be done in the iterator class, but it happens to be the case that the elementary chain is only stored implicitly, so dereferencing of
-	 * the pointer creates a temporary object. Hence, we cannot overload the arrow operator of the iterator class to return the address of the default elementary 
-	 * chain as it would be the address of a temporary object that is destroyed by the time we get it. So instead we pass the temporary object itself with the 
-	 * overloading of the arrow operator, and then overload the arrow operator of Default_Elementary_Chain to give its own address. */
-	Default_Elementary_Chain * operator -> ( void );
-	const Default_Elementary_Chain * operator -> ( void ) const;
-	friend std::ostream & operator << ( std::ostream &, const Default_Elementary_Chain & );
+	Default_Cell ( void );
+	Default_Cell ( const unsigned long nam, const unsigned int dimension);
+	bool operator < ( const Default_Cell & right_hand_side ) const;
+	bool operator == ( const Default_Cell & right_hand_side ) const;
+	bool operator != ( const Default_Cell & right_hand_side ) const;
+	friend std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & print_me );
 };
 
 namespace __gnu_cxx {
 template <>
-struct hash<Default_Elementary_Chain> {
+struct hash<Default_Cell> {
 	//hash<unsigned long> internal_hasher;
-	size_t operator () (const Default_Elementary_Chain & hash_me) const {
+	size_t operator () (const Default_Cell & hash_me) const {
 			//return internal_hasher ( hash_me . name ); 
 			return hash_me . name;
 	} 
@@ -60,7 +51,7 @@ template < class Pair_Associative_Container > std::ostream & operator << ( std::
 template < class Pair_Associative_Container > 
 class Chain_Archetype : public Pair_Associative_Container {
 public:
-	typedef typename Pair_Associative_Container::key_type Elementary_Chain; 
+	typedef typename Pair_Associative_Container::key_type Cell; 
 	typedef typename Pair_Associative_Container::mapped_type Ring;	/* SGI's STL calls this data_type as well, but GCC doesn't dig it. */
 	typedef typename Pair_Associative_Container::value_type Chain_Term;
 	Chain_Archetype & operator += ( const Chain_Archetype & );
@@ -78,7 +69,7 @@ public:
  
 /** The default chain is the template specialization of the Chain_Archetype to the usage of STL maps with default elementary chain and
  * ring types. */
-typedef Chain_Archetype <  std::map < Default_Elementary_Chain, Default_Ring > > Default_Chain;
+class Default_Chain : public Chain_Archetype <  std::map < Default_Cell, Default_Ring > > {};
 
 #ifndef _CHOMP_LIBRARY_ONLY_
 #include "archetypes/Chain_Archetype.hpp"

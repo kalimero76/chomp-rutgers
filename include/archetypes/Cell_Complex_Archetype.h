@@ -36,7 +36,7 @@ public:
 	/** We typedef the chain type used by the underlying container. */
 	typedef typename Container_Template::Chain Chain;
 	/** We typedef the elementary chain type used by the underlying container. */
-	typedef typename Container_Template::Chain::Elementary_Chain Elementary_Chain;
+	typedef typename Container_Template::Chain::Cell Cell;
 	/** We typedef the const_iterator type used by the underlying container */
 	typedef typename Container_Template::const_iterator const_iterator;
 	/** We typedef the ring type used by the underlying container. */
@@ -51,14 +51,14 @@ public:
 	/** Store maximum dimension in the complex. */
 	unsigned int dimension;
 	/** Store a vector of Containers to hold Chain Groups. */
-	std::vector<Container> Chain_Groups;
+	std::vector<Container> cells;
 	
 	/* * * * * * * * * * * * * * * * * * * * * * **
 	**  Read-only Chain Complex Member Functions **
 	** * * * * * * * * * * * * * * * * * * * * * */
 	
 	/** Calculate Boundary and copy answer into the supplied chain */
-	virtual Chain & Boundary_Map ( Chain &, const Elementary_Chain & ) const;
+	virtual Chain & Boundary_Map ( Chain &, const Cell & ) const;
 	
 	/** Calculate Boundary and copy answer into the supplied chain */
 	virtual Chain & Boundary_Map ( Chain &, const typename Container::const_iterator & ) const = 0;
@@ -67,7 +67,7 @@ public:
 	virtual Chain & Boundary_Map ( Chain &, const Chain & ) const;
 		
 	/** Calculate Coboundary and copy answer into the supplied chain */
-	virtual Chain & Coboundary_Map ( Chain &, const Elementary_Chain & ) const;
+	virtual Chain & Coboundary_Map ( Chain &, const Cell & ) const;
 	
 	/** Calculate Coboundary and copy answer into the supplied chain */
 	virtual Chain & Coboundary_Map ( Chain &, const typename Container::const_iterator & ) const = 0;
@@ -79,19 +79,19 @@ public:
 	virtual size_type Count_Boundaries ( const typename Container::const_iterator & ) const;
 
 	/** Count the number of Elementary Chains in the boundary of a single Elementary Chain */
-	virtual size_type Count_Boundaries ( const Elementary_Chain & ) const;
+	virtual size_type Count_Boundaries ( const Cell & ) const;
 	
 	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
 	virtual size_type Count_Coboundaries ( const typename Container::const_iterator & ) const;
 
 	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
-	virtual size_type Count_Coboundaries ( const Elementary_Chain & ) const;
+	virtual size_type Count_Coboundaries ( const Cell & ) const;
 	
 	/** Report number of Elementary Chains in complex. */
 	virtual size_type size ( void ) const;
 	
 	/** Find an elementary chain in the complex. */
-	virtual typename Container::const_iterator find ( const Elementary_Chain & ) const;
+	virtual typename Container::const_iterator find ( const Cell & ) const;
 	
 	/** Return an iterator to an elementary chain in the complex of lowest possible dimension. */
 	virtual typename Container::const_iterator begin ( void ) const;
@@ -101,7 +101,7 @@ public:
 	** * * * * * * * * * * * * * * * * * * * * */
 	
 	/** Remove an Elementary Chain from the complex */
-	virtual void Remove_Elementary_Chain ( const Elementary_Chain &) = 0;
+	virtual void Remove_Cell ( const Cell &) = 0;
 	
 	/* * * * * * * * * * * * * * * * * * * * * **
 	**  Read-Write Chain Complex Manipulations **

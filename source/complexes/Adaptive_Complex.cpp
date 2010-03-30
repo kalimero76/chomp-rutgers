@@ -15,7 +15,7 @@
 
 
 /*/////////////////////////////////////////////////////////////////////////////
- * Adaptive tree :: Reative_Positions Implementation ////////////////////////////////
+ * Adaptive tree :: Relative_Positions Implementation ////////////////////////////////
  */////////////////////////////////////////////////////////////////////////////
 
 Adaptive_Container::Adaptive_Tree::Relative_Positions::Relative_Positions(){
@@ -484,12 +484,12 @@ void Adaptive_Container::Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< 
 	//go thru all the possible cells in the cube
 	leaf->elementary_cells.resize( tree_dimension + 1 );
 	for( dimension_index = 0; dimension_index < tree_dimension; ++dimension_index )
-		for( std::map<int, bool>::iterator cell_iterartor = (*full_cube_cells)[dimension_index].begin(); cell_iterartor != (*full_cube_cells)[dimension_index].end(); ++cell_iterartor){
+		for( std::map<int, bool>::iterator cell_iterator = (*full_cube_cells)[dimension_index].begin(); cell_iterator != (*full_cube_cells)[dimension_index].end(); ++cell_iterator){
 			//If cell is not in smaller neighbours
-			if( !Cell_Is_Subset_Of_Union( cell_iterartor->first, &smaller_neighbours_intersection ) ){
+			if( !Cell_Is_Subset_Of_Union( *cell_iterator, &smaller_neighbours_intersection ) ){
 				//if cube has a full dimensional cell or cell is in bigger neigbhour
-				if( leaf->elementary_cells[ tree_dimension ].size() > 0 || Cell_Is_Subset_Of_Union( cell_iterartor->first, &bigger_neighbours_intersection ) ){
-					leaf->elementary_cells[ dimension_index ].insert ( std::pair< int , bool >(cell_iterartor->first, true) );
+				if( leaf->elementary_cells[ tree_dimension ].size() > 0 || Cell_Is_Subset_Of_Union( *cell_iterator, &bigger_neighbours_intersection ) ){
+					leaf->elementary_cells[ dimension_index ].insert ( std::pair< int , bool >( *cell_iterator, true) );
 					++dimension_sizes[ dimension_index ];
 				}
 			}
@@ -537,9 +537,8 @@ Adaptive_Container::const_iterator::const_iterator( void ) : referral(NULL) { }
 Adaptive_Container::const_iterator::const_iterator( const   Adaptive_Container * const referral ) : referral(referral) { }
 
 const Adaptive_Container::value_type & Adaptive_Container::const_iterator::operator * ( void ) const {
-	dereference_value . first . name = piece_iterator -> first + (full_cube_number << (referral -> space_dimension << 1 ) );
-	dereference_value . first . dimension = referral -> chain_dimension;
-	dereference_value . second = true;
+	dereference_value . name = piece_iterator -> first + (full_cube_number << (referral -> space_dimension << 1 ) );
+	dereference_value . dimension = referral -> chain_dimension;
 	return dereference_value; } /* endfunction */
 
 const Adaptive_Container::value_type * Adaptive_Container::const_iterator::operator -> ( void ) const {
@@ -596,8 +595,8 @@ Adaptive_Container::const_iterator Adaptive_Container::begin ( void ) const {
 			return_value.full_cube_number = temp_full_cube_number;
 			return_value.piece_iterator = adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].begin();
 			//To prevent the warning
-			//return_value.dereference_value.first.name = adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].begin() -> first + (return_value.full_cube_number << (chain_dimension << 1 ) );
-			//return_value.dereference_value.first.dimension = chain_dimension;
+			//return_value.dereference_value.name = adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].begin() -> first + (return_value.full_cube_number << (chain_dimension << 1 ) );
+			//return_value.dereference_value.dimension = chain_dimension;
 			return return_value;
 		}
 		++temp_full_cube_number;
@@ -641,11 +640,11 @@ Adaptive_Complex::Adaptive_Complex ( unsigned int complex_dimension )  {
 	dimension = complex_dimension;
 	Adaptive_Container::Adaptive_Tree * tree = new Adaptive_Container::Adaptive_Tree(complex_dimension);
 
-	Chain_Groups .resize(dimension + 1);
+	cells .resize(dimension + 1);
 	for(unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		Chain_Groups [ dimension_index ] .adaptive_tree = tree;
-		Chain_Groups [ dimension_index ] .space_dimension = complex_dimension;
-		Chain_Groups [ dimension_index ] .chain_dimension = dimension_index;
+		cells [ dimension_index ] .adaptive_tree = tree;
+		cells [ dimension_index ] .space_dimension = complex_dimension;
+		cells [ dimension_index ] .chain_dimension = dimension_index;
 	}
 } /* endfunction */
 
@@ -654,15 +653,15 @@ Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
 	dimension = copy_me.dimension;
 	Adaptive_Container::Adaptive_Tree * tree = new Adaptive_Container::Adaptive_Tree(dimension);
 
-	Chain_Groups .resize(dimension + 1);
+	cells .resize(dimension + 1);
 	for(unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		Chain_Groups [ dimension_index ] .adaptive_tree = tree;
-		Chain_Groups [ dimension_index ] .space_dimension = dimension;
-		Chain_Groups [ dimension_index ] .chain_dimension = dimension_index;
+		cells [ dimension_index ] .adaptive_tree = tree;
+		cells [ dimension_index ] .space_dimension = dimension;
+		cells [ dimension_index ] .chain_dimension = dimension_index;
 	}
 
-	tree->dimension_sizes = copy_me.Chain_Groups[0].adaptive_tree->dimension_sizes;
-	tree->leaf_lookup.leaves_lookup_table.resize( copy_me.Chain_Groups[0].adaptive_tree->leaf_lookup.leaves_lookup_table.size() );
+	tree->dimension_sizes = copy_me.cells[0].adaptive_tree->dimension_sizes;
+	tree->leaf_lookup.leaves_lookup_table.resize( copy_me.cells[0].adaptive_tree->leaf_lookup.leaves_lookup_table.size() );
 
 	/*reconstruct the tree*/
 	typedef Adaptive_Container::Adaptive_Tree::Node Node;
@@ -673,7 +672,7 @@ Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
 	std::vector< Node * > new_tree_nodes_stack;
 
 	new_tree_nodes_stack.push_back( &tree->tree_root );
-	old_tree_nodes_stack.push_back( &copy_me.Chain_Groups[0].adaptive_tree->tree_root );
+	old_tree_nodes_stack.push_back( &copy_me.cells[0].adaptive_tree->tree_root );
 	while( new_tree_nodes_stack.size() > 0 ){
 		current_node_in_old_tree = old_tree_nodes_stack.back();
 		old_tree_nodes_stack.pop_back();
@@ -706,19 +705,19 @@ Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
 }
 /* Destructor */
 Adaptive_Complex::~Adaptive_Complex ( void ) {
-	if ( Chain_Groups.size() > 0 && Chain_Groups[0].adaptive_tree != NULL )
-		delete  Chain_Groups[0].adaptive_tree;
+	if ( cells.size() > 0 && cells[0].adaptive_tree != NULL )
+		delete  cells[0].adaptive_tree;
 } /* endfunction */
 
 Adaptive_Complex::Chain & Adaptive_Complex::Boundary_Map ( Adaptive_Complex::Chain & output, const Adaptive_Complex::Container::const_iterator & input) const
 {
 	int coincidence_index;
-	Elementary_Chain cell;
-	Elementary_Chain lower_dimensional_cell;
-	std::vector<Elementary_Chain> lower_dimensional_cell_pieces;
-	std::pair< Elementary_Chain, long > lower_dimensional_pair;
+	Cell cell;
+	Cell lower_dimensional_cell;
+	std::vector<Cell> lower_dimensional_cell_pieces;
+	std::pair< Cell, long > lower_dimensional_pair;
 
-	cell = input->first;
+	cell = *input;
 
 	lower_dimensional_cell.dimension = cell.dimension -1;
 	lower_dimensional_pair.first.dimension = cell.dimension -1;
@@ -733,7 +732,7 @@ Adaptive_Complex::Chain & Adaptive_Complex::Boundary_Map ( Adaptive_Complex::Cha
 			 lower_dimensional_cell.name = cell.name + (1 << ( dimension + dimension_index) );
 			 /*Process the chain*/
 			 Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
-			 for(std::vector<Elementary_Chain>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
+			 for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
 				lower_dimensional_pair.first.name = cell_iterator->name;
 				lower_dimensional_pair.second = -coincidence_index;
 				output.insert( lower_dimensional_pair );
@@ -742,7 +741,7 @@ Adaptive_Complex::Chain & Adaptive_Complex::Boundary_Map ( Adaptive_Complex::Cha
 			 lower_dimensional_cell.name +=  (1 <<  dimension_index );
 			 /*Process the chain*/
 			Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
-			for(std::vector<Elementary_Chain>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
+			for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
 				lower_dimensional_pair.first.name = cell_iterator->name;
 				lower_dimensional_pair.second = coincidence_index;
 				output.insert( lower_dimensional_pair );
@@ -761,18 +760,18 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 	unsigned int cell_ID;
 	unsigned int neighbour_full_cube_number;
 	unsigned int neighbour_cell_ID;
-	Elementary_Chain cell;
-	Elementary_Chain higher_dimensional_cell;
-	std::vector<Elementary_Chain> higher_dimensional_cell_pieces;
-	std::pair< Elementary_Chain, long > higher_dimensional_pair;
+	Cell cell;
+	Cell higher_dimensional_cell;
+	std::vector<Cell> higher_dimensional_cell_pieces;
+	std::pair< Cell, long > higher_dimensional_pair;
 	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info >  possible_owners;
 
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = Chain_Groups[ input->first.dimension ].adaptive_tree;
+	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input -> dimension ].adaptive_tree;
 
-	space_dimension = Chain_Groups[ 0 ].space_dimension;
-	cell.name = input->first.name;
-	cell.dimension = input->first.dimension;
-	full_cube_number = input->first.name >> ( 2 * space_dimension );
+	space_dimension = cells[ 0 ].space_dimension;
+	cell.name = input -> name;
+	cell.dimension = input -> dimension;
+	full_cube_number = input -> name >> ( 2 * space_dimension );
 
 	output.clear();
 	if( cell.dimension >= space_dimension )
@@ -870,10 +869,10 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 	return output;
 }
 
-void Adaptive_Complex::Remove_Elementary_Chain ( const Adaptive_Complex::Elementary_Chain & input) {
+void Adaptive_Complex::Remove_Cell ( const Adaptive_Complex::Cell & input) {
 	unsigned int full_cube_number;
 	unsigned int cell_ID;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = Chain_Groups[ input.dimension ].adaptive_tree;
+	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 
 	full_cube_number = input.name >> ( 2 * dimension );
 	cell_ID = input.name ^ ( full_cube_number << (2 * dimension ) );
@@ -884,9 +883,9 @@ void Adaptive_Complex::Remove_Elementary_Chain ( const Adaptive_Complex::Element
 		-- adaptive_tree -> dimension_sizes [ input.dimension];
 }
 
-std::vector< double > & Adaptive_Complex::Coordinates_Of_Elementary_Chain ( const Elementary_Chain & input,  std::vector< double > & coordinates){
+std::vector< double > & Adaptive_Complex::Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates){
 	unsigned int full_cube_number;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = Chain_Groups[ input.dimension ].adaptive_tree;
+	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 
 	Adaptive_Container::Adaptive_Tree::Node * new_node = NULL;
 	Adaptive_Container::Adaptive_Tree::Node * old_node = NULL;
@@ -923,23 +922,23 @@ std::vector< double > & Adaptive_Complex::Coordinates_Of_Elementary_Chain ( cons
 	return coordinates;
 }
 bool Adaptive_Complex::Add_Full_Cube( std::vector < std::vector <bool> > splitting) {
-	if ( Chain_Groups.size() == 0 )
+	if ( cells.size() == 0 )
 		return false;
-	return Chain_Groups[0].Add_Full_Cube( splitting );
+	return cells[0].Add_Full_Cube( splitting );
 }
 
 void Adaptive_Complex::Finalize(){
-	if ( Chain_Groups.size() != 0 )
-		Chain_Groups[0].Finalize( );
+	if ( cells.size() != 0 )
+		cells[0].Finalize( );
 }
 
-std::vector<Adaptive_Complex::Elementary_Chain> & Adaptive_Complex::Find_Elementary_Cell( std::vector<Adaptive_Complex::Elementary_Chain> & output, const Adaptive_Complex::Elementary_Chain & input) const {
+std::vector<Adaptive_Complex::Cell> & Adaptive_Complex::Find_Elementary_Cell( std::vector<Adaptive_Complex::Cell> & output, const Adaptive_Complex::Cell & input) const {
 
 	unsigned int full_cube_number;
 	unsigned int cell_ID;
 	unsigned int neighbour_cube_number;
 	unsigned int neighbour_cell_ID;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = Chain_Groups[ input.dimension ].adaptive_tree;
+	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > possible_owners;
 
 	output.clear();
@@ -973,7 +972,7 @@ std::vector<Adaptive_Complex::Elementary_Chain> & Adaptive_Complex::Find_Element
 			}
 			if( it->current_node->elementary_cells.size() > input.dimension )
 				if( it->current_node->elementary_cells[ input.dimension ].find( neighbour_cell_ID ) != it->current_node->elementary_cells[ input.dimension ].end() ){
-					Elementary_Chain insert_chain;
+					Cell insert_chain;
 					insert_chain.dimension = input.dimension;
 					insert_chain.name = ( neighbour_cube_number << ( 2 * dimension ) ) + neighbour_cell_ID;
 					output.push_back( insert_chain );
@@ -983,7 +982,7 @@ std::vector<Adaptive_Complex::Elementary_Chain> & Adaptive_Complex::Find_Element
 	return output;
 }
 
-std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, const Adaptive_Complex::Elementary_Chain & input, bool to_all_neighbours ) const {
+std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, const Adaptive_Complex::Cell & input, bool to_all_neighbours ) const {
 	unsigned int full_cube_number;
 	unsigned int cell_ID;
 	/* Bit 1 at space_dimension + splitting_dimension - 1 means that a node with the splitting_dimension is supposed to be viseted from left
@@ -991,7 +990,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 	 */
 	int nodes_to_be_visited = 0;
 	int nodes_visited = 0;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = Chain_Groups[ input.dimension ].adaptive_tree;
+	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 
 	Adaptive_Container::Adaptive_Tree::Node * new_node = NULL;
 	Adaptive_Container::Adaptive_Tree::Node * old_node = NULL;

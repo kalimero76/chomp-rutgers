@@ -126,13 +126,13 @@ void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > 
     /* Check dimension to see whether or not it is within bounds. */
 	if ( dimension > complex . dimension || dimension < 0 ) return;
 	/* Now we loop through all elementary chains of dimension "map_dimension". */
-	for ( typename Cell_Complex::const_iterator group_iterator = complex . Chain_Groups [ dimension ] . begin (); 
-	group_iterator != complex . Chain_Groups [ dimension ] . end (); ++ group_iterator ) {
+	for ( typename Cell_Complex::const_iterator group_iterator = complex . cells [ dimension ] . begin (); 
+	group_iterator != complex . cells [ dimension ] . end (); ++ group_iterator ) {
 		/* We find the boundary of the current elementary chain. */
 		typename Cell_Complex::Chain boundary_chain; 
 		complex . Boundary_Map ( boundary_chain, group_iterator );
 		/* We loop through the terms in the boundary we have found. */
 		for ( typename Cell_Complex::Chain::iterator chain_iterator = boundary_chain . begin (); 
 		chain_iterator != boundary_chain . end (); ++ chain_iterator ) 
-			output_matrix . set_entry ( chain_iterator -> first . name, group_iterator -> first . name, chain_iterator -> second ); } /* for */
+			output_matrix . set_entry ( chain_iterator -> first . name, group_iterator -> name, chain_iterator -> second ); } /* for */
 } /* Sparse_Matrix_Boundary_Map */

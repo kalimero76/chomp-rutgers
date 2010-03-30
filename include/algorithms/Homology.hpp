@@ -55,7 +55,7 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 	std::vector < int > number_of_free_generators_of_chain_complex ( the_complex . dimension + 1);
 
 	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension; dimension_index ++ ) 
-		number_of_free_generators_of_chain_complex [ dimension_index ] = the_complex . Chain_Groups [ dimension_index ] . size ();
+		number_of_free_generators_of_chain_complex [ dimension_index ] = the_complex . cells [ dimension_index ] . size ();
 	
 	/* Next we need to know the rank of the boundary maps. This can be determined from the SNF. */
 	std::vector < int > rank_of_boundary_homomorphism ( the_complex . dimension + 2 );
@@ -146,14 +146,14 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	first_t = 0;
 	for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension; ++ dimension_index ) {
 		/* Compute the SNF of the new boundary matrix, d_{dimension_index} */
-		std::vector < typename Cell_Complex::Elementary_Chain > translation_table;
+		std::vector < typename Cell_Complex::Cell > translation_table;
         Matrix boundary_matrix;
 		Dense_Matrix_Boundary_Map ( boundary_matrix, translation_table, complex, dimension_index + 1 );
         
         if ( dimension_index < complex . dimension )
             capd::matrixAlgorithms::smithForm( boundary_matrix, second_Q, second_Qinv, second_R, second_Rinv, second_s, second_t);
         else {
-            second_Qinv = second_Q = Matrix::Identity( complex . Chain_Groups [ complex . dimension ] . size () );
+            second_Qinv = second_Q = Matrix::Identity( complex . cells [ complex . dimension ] . size () );
             second_s = second_t = 0;
         }
 
@@ -199,7 +199,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			unsigned long index = 0;
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
 			entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::Elementary_Chain, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+				generator_chain += std::pair < typename Cell_Complex::Cell, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
             //std::cout << "Betti Chain: " << generator_chain << "\n";
 		}
 
@@ -212,7 +212,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			unsigned long index = 0;
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
 			entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::Elementary_Chain, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+				generator_chain += std::pair < typename Cell_Complex::Cell, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
             //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
 
 		}

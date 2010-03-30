@@ -44,7 +44,7 @@ void generate_random_cubical_complex ( Cubical_Complex & my_cubical_complex, std
 void save_cubical_complex ( Cubical_Complex & my_cubical_complex, const char * file_name ) {
 	std::ofstream output_file ( file_name ); 
 	const unsigned int dimension = my_cubical_complex . dimension;
-	const Cubical_Container & top_container = my_cubical_complex . Chain_Groups [ dimension ];
+	const Cubical_Container & top_container = my_cubical_complex . cells [ dimension ];
 
 	output_file << "(";
 	for ( unsigned int dimension_index = 0; dimension_index < dimension; dimension_index ++ ) {
@@ -54,7 +54,7 @@ void save_cubical_complex ( Cubical_Complex & my_cubical_complex, const char * f
 	
 	for ( Cubical_Container::const_iterator full_cube = top_container. begin () ; 
 	full_cube != top_container . end (); ++ full_cube ) {
-		unsigned long name = full_cube -> first . name >> dimension;
+		unsigned long name = full_cube -> name >> dimension;
 		output_file << "(";
 		for ( unsigned int dimension_index = 0; dimension_index < dimension; dimension_index ++ ) {
 			unsigned long current_dimension_size = top_container . dimension_sizes -> operator [] ( dimension_index );
@@ -92,12 +92,12 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	/* Tell me interesting things about the Morse Complex */
 	std::cout << "  Original Sizes (by increasing dimension): ";
 	for ( unsigned int dim = 0; dim <= my_complex . dimension; dim ++ ) 
-		std::cout << my_complex . Chain_Groups [ dim ] . size () << " ";  
+		std::cout << my_complex . cells [ dim ] . size () << " ";  
 	std::cout << "\n";
 	
 	std::cout << "  Morse Sizes (by increasing dimension): ";
 	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension; dim ++ ) 
-		std::cout << my_morse_complex . Chain_Groups [ dim ] . size () << " "; 
+		std::cout << my_morse_complex . cells [ dim ] . size () << " "; 
 	std::cout << "\n";
 	
 
@@ -153,8 +153,10 @@ void manifold_example (  unsigned int dimension  ) {
 	Cubical_Complex my_cubical_complex;
 	my_cubical_complex . Allocate_Bitmap ( sizes );
 	my_cubical_complex . Add_Full_Cube ( coordinates );
-	my_cubical_complex . Remove_Elementary_Chain ( my_cubical_complex . Chain_Groups [ 2 ] . begin () -> first );
+	my_cubical_complex . Remove_Cell ( * my_cubical_complex . cells [ 2 ] . begin () );
+    std::cout << " Creating S^1. \n";
 	Vector_Complex my_vector_complex ( my_cubical_complex );
+    std::cout << " Created S^1! \n";
 
 	/* Now S^1 is in my_vector_complex. */
 	
@@ -212,7 +214,7 @@ void imperfect_product_example ( void ) {
 	Cubical_Complex my_cubical_complex;
 	my_cubical_complex . Allocate_Bitmap ( sizes );
 	my_cubical_complex . Add_Full_Cube ( coordinates );
-	my_cubical_complex . Remove_Elementary_Chain ( my_cubical_complex . Chain_Groups [ 2 ] . begin () -> first );
+	my_cubical_complex . Remove_Cell ( * my_cubical_complex . cells [ 2 ] . begin () );
 	Vector_Complex my_vector_complex ( my_cubical_complex );
 	
 	Vector_Complex my_product_complex;
@@ -247,16 +249,16 @@ void run_tests ( char * filename, int dimension, float probability, int Number, 
 int main (int argc, char * const argv[]) {
 	
 	/* Run 2D tests */
-	run_tests( "random_cubical_stats_2d.m", 2, .2, 200, 10);
+	//run_tests( "random_cubical_stats_2d.m", 2, .2, 200, 10);
 	
 	/* Run 3D tests */
-	run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
+	//run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
 	
 	/* Run 4D tests */
-	run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
+	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
 
 	/* Run 5D tests */
-	run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
+	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
 			
 	/* Manifold Example */
 	manifold_example ( 7 );

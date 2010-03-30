@@ -12,12 +12,12 @@
 /* Template instantiation */
 #include "complexes/Cubical_Complex.h"
 template class Morse_Complex<Cubical_Complex>;
-template class Morse_Value_Elementary_Chain<Morse_Complex<Cubical_Complex> >;
-template std::ostream & operator << < Morse_Complex < Cubical_Complex > >  (std::ostream &, const Morse_Value_Elementary_Chain < Morse_Complex < Cubical_Complex > > & );
+template class Morse_Value_Cell<Morse_Complex<Cubical_Complex> >;
+template std::ostream & operator << < Morse_Complex < Cubical_Complex > >  (std::ostream &, const Morse_Value_Cell < Morse_Complex < Cubical_Complex > > & );
 
 
 #include "complexes/Abstract_Complex.h"
 template class Morse_Complex<Abstract_Complex>;
-template class Morse_Value_Elementary_Chain<Morse_Complex<Abstract_Complex> >;
-template std::ostream & operator << < Morse_Complex < Abstract_Complex > >  (std::ostream &, const Morse_Value_Elementary_Chain < Morse_Complex < Abstract_Complex > > & );
+template class Morse_Value_Cell<Morse_Complex<Abstract_Complex> >;
+template std::ostream & operator << < Morse_Complex < Abstract_Complex > >  (std::ostream &, const Morse_Value_Cell < Morse_Complex < Abstract_Complex > > & );
 #endif

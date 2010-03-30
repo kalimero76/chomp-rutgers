@@ -25,9 +25,9 @@ template < class Cell_Complex_Template > class Morse_Complex;
 template < class Cell_Complex_Template >
 class Morse_Complex : public Abstract_Complex {
 public: 
-	mutable std::map < typename Cell_Complex_Template::Elementary_Chain, typename Cell_Complex_Template::Container::const_iterator > husband_pointers;
-	mutable std::map < typename Cell_Complex_Template::Elementary_Chain, typename Morse_Traits<Cell_Complex_Template>::morse_value_type > morse_values;
-	mutable std::map < typename Cell_Complex_Template::Elementary_Chain, unsigned char > flags;	
+	mutable std::map < typename Cell_Complex_Template::Cell, typename Cell_Complex_Template::Container::const_iterator > husband_pointers;
+	mutable std::map < typename Cell_Complex_Template::Cell, typename Morse_Traits<Cell_Complex_Template>::morse_value_type > morse_values;
+	mutable std::map < typename Cell_Complex_Template::Cell, unsigned char > flags;	
 
 	typename Cell_Complex_Template::Container::const_iterator & Husband ( const typename Cell_Complex_Template::Container::const_iterator & ) const;
 	typename Morse_Traits<Cell_Complex_Template>::morse_value_type & Morse_Value ( const typename Cell_Complex_Template::Container::const_iterator &) const ;
@@ -80,27 +80,27 @@ public:
 
 /* A Chain Class for the upcoming algorithm */
 // Forward Declaration of friend functions for ABC_Chain
-template < class Morse_Complex_Template > class Morse_Value_Elementary_Chain ;
-template < class Morse_Complex_Template > std::ostream & operator << ( std::ostream &, const Morse_Value_Elementary_Chain< Morse_Complex_Template > &);
+template < class Morse_Complex_Template > class Morse_Value_Cell ;
+template < class Morse_Complex_Template > std::ostream & operator << ( std::ostream &, const Morse_Value_Cell< Morse_Complex_Template > &);
 
 
 template < class Morse_Complex_Template >
-class Morse_Value_Elementary_Chain {
+class Morse_Value_Cell {
 public:
 	typedef typename Morse_Complex_Template::Cell_Complex_Type Cell_Complex_Template;
 	typedef typename Morse_Traits<Cell_Complex_Template>::morse_value_type Morse_Value_Type;
 	Morse_Value_Type morse_value;
 	typename Cell_Complex_Template::Container::const_iterator location;
 	/* Constructor */
-	Morse_Value_Elementary_Chain ( Morse_Value_Type morse_value,  typename Cell_Complex_Template::Container::const_iterator location );
+	Morse_Value_Cell ( Morse_Value_Type morse_value,  typename Cell_Complex_Template::Container::const_iterator location );
 	/* We order the Morse Values so the larger morse values are near 'begin' */
-	bool operator < ( const Morse_Value_Elementary_Chain & right_hand_side ) const;
-	friend std::ostream & operator << < Morse_Complex_Template > ( std::ostream &, const Morse_Value_Elementary_Chain & );
+	bool operator < ( const Morse_Value_Cell & right_hand_side ) const;
+	friend std::ostream & operator << < Morse_Complex_Template > ( std::ostream &, const Morse_Value_Cell & );
 
 };
 
 template < class Morse_Complex_Template >
-class Morse_Value_Chain : public  Chain_Archetype < std::map < Morse_Value_Elementary_Chain < Morse_Complex_Template >, typename Morse_Complex_Template::Cell_Complex_Type::Ring > > {
+class Morse_Value_Chain : public  Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex_Template >, typename Morse_Complex_Template::Cell_Complex_Type::Ring > > {
 public:		
 	typedef typename Morse_Complex_Template::Cell_Complex_Type Cell_Complex_Type;
 	typedef typename Morse_Traits<Cell_Complex_Type>::morse_value_type Morse_Value_Type;

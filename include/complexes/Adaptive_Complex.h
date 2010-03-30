@@ -22,18 +22,13 @@ class Adaptive_Container {
 public:
 	/* typedefs */
 	typedef Default_Chain Chain;
-	typedef Default_Chain::Elementary_Chain Elementary_Chain;
-	typedef Default_Chain::Ring Ring;
+	typedef Chain::Cell Cell;
+	typedef Chain::Ring Ring;
 	typedef unsigned long size_type;
 
-	/* Conform to STL type container */
-	typedef Elementary_Chain key_type;
-	//typedef Elementary_Properties data_type;
-	//typedef Elementary_Properties mapped_type;
-	//typedef std::pair<Elementary_Chain, Elementary_Properties> value_type;
-	typedef bool data_type;
-	typedef bool mapped_type;
-	typedef std::pair<Elementary_Chain, bool> value_type;
+	/* Conform to STL concept of Simple Associative Container */
+	typedef Cell key_type;
+	typedef Cell value_type;
 
 	unsigned int space_dimension;
 	unsigned int chain_dimension;
@@ -226,9 +221,9 @@ public:
 
 	virtual Chain & Boundary_Map ( Chain &, const Container::const_iterator & ) const;
 	virtual Chain & Coboundary_Map ( Chain &, const Container::const_iterator & ) const;
-	virtual void Remove_Elementary_Chain ( const Elementary_Chain & );
+	virtual void Remove_Cell ( const Cell & );
 
-	std::vector< double > & Coordinates_Of_Elementary_Chain ( const Elementary_Chain & input,  std::vector< double > & coordinates);
+	std::vector< double > & Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates);
 
 
 	using Cell_Complex_Archetype<Adaptive_Container>::Boundary_Map;
@@ -251,8 +246,8 @@ public:
 	void Finalize();
 
 	/* these funcions will be private*/
-	std::vector<Elementary_Chain > & Find_Elementary_Cell( std::vector<Elementary_Chain> & output, const Elementary_Chain & input) const;
-	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Find_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, const Elementary_Chain & input, bool to_all_neighbours ) const;
+	std::vector<Cell > & Find_Elementary_Cell( std::vector<Cell> & output, const Cell & input) const;
+	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Find_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, const Cell & input, bool to_all_neighbours ) const;
 	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Descend_To_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Container::Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours) const;
 
 

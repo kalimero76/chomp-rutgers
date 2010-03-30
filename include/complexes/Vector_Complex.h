@@ -21,44 +21,106 @@
  *                            VECTOR COMPLEXES                                  *
  ********************************************************************************/
 
-/*
- * Vector Chain 
- */
- 
+/* Forward declarations */
+class Decomposition_Information;
+class Vector_Container;
+class Vector_Complex;
+
+/* * * * * * * * * * * * * * 
+ * class Vector_Container  *
+ * * * * * * * * * * * * * */
+
+class Vector_Container {
+public:
+	/* Cell Container types */	 
+	typedef Default_Chain Chain;
+	typedef Chain::Cell Cell;
+	typedef Chain::Ring Ring;
+    
+    /* Simple Associative Container types */
+	typedef Cell key_type;
+	typedef Cell value_type;
+    typedef unsigned long size_type;
+	
+    /* Member Variables */
+    unsigned int dimension;
+    size_type remembered_size;
+	size_type begin_index;
+    size_type end_index;
+    std::vector < Decomposition_Information > decomposition_data;
+    std::vector < Chain > boundary_data;
+    std::vector < Chain > coboundary_data;
+    
+    /* Forward Declarations */
+    class const_iterator;
+    class iterator;
+    
+    /* Member Functions */
+    size_type size ( void ) const;
+	const_iterator find ( const Cell & find_me ) const;
+	const_iterator begin ( void ) const;
+    const_iterator end ( void ) const;
+	iterator find ( const Cell & find_me );
+	iterator begin ( void );
+    iterator end ( void );
+    void resize ( size_type new_size );
+    
+    /* Nested Classes */
+    
+    /* * * * * * * * * * * * * * * * * * *
+     * Vector_Container::const_iterator  *
+     * * * * * * * * * * * * * * * * * * */
+    
+	class const_iterator {
+        const Vector_Container * referral;
+        mutable Vector_Container::Cell dereference_value;
+    public:
+		const_iterator ( void );
+		const_iterator ( const Vector_Container * const referral ); 
+        const_iterator ( const Vector_Container * const referral, const Cell & dereference_value );
+        const_iterator ( const iterator & convert_me );
+		bool operator != ( const const_iterator & right_hand_side ) const;        
+		const Vector_Container::value_type & operator * ( void ) const; 
+		const Vector_Container::value_type * operator -> ( void ) const;    
+        const_iterator & operator ++ ( void );
+        const_iterator & operator = ( const iterator & right_hand_side );
+    };
+
+    /* * * * * * * * * * * * * * * *
+     * Vector_Container::iterator  *
+     * * * * * * * * * * * * * * * */
+    
+	class iterator {
+        friend class Vector_Container::const_iterator;
+        const Vector_Container * referral;
+        mutable Vector_Container::Cell dereference_value;
+    public:
+		iterator ( void );
+		iterator ( const Vector_Container * const referral ); 
+        iterator ( const Vector_Container * const referral, const Cell & dereference_value ); 
+		bool operator != ( const iterator & right_hand_side ) const;        
+		const Vector_Container::value_type & operator * ( void ) const; 
+		const Vector_Container::value_type * operator -> ( void ) const;    
+        iterator & operator ++ ( void );
+    };
+};
+
+/* * * * * * * * * * * * * * * * * * *
+ * class Decomposition_Information   *
+ * * * * * * * * * * * * * * * * * * */
+
 class Decomposition_Information {
 public:
 	Decomposition_Information ( void );
 	mutable unsigned char flags; 
 	enum { ACE = 0x01, KING = 0x02, QUEEN = 0x04, ALIVE = 0x08, EXCISED = 0x10 };
-	mutable std::vector < std::pair < Default_Elementary_Chain, std::pair< Decomposition_Information, std::pair < Default_Chain, Default_Chain > > > > ::const_iterator husband;
+	mutable Vector_Container::const_iterator husband;
 	mutable unsigned int morse_value; 
 };
 
-/* * * * * * * * * * * * * * **
-** class Vector_Container  **
-** * * * * * * * * * * * * * */
-
-class Vector_Container : public std::vector < std::pair < Default_Elementary_Chain, std::pair< Decomposition_Information, std::pair < Default_Chain, Default_Chain > > > > {
-public:
-	/* typedefs */	 
-	typedef std::vector < std::pair < Default_Elementary_Chain, std::pair< Decomposition_Information, std::pair < Default_Chain, Default_Chain > > > >  vector_type;
-	typedef Default_Chain Chain;
-	typedef Default_Chain::Elementary_Chain Elementary_Chain;
-	typedef Default_Chain::Ring Ring;
-    typedef unsigned long size_type;
-	size_type remembered_size;
-	unsigned long beginning_index;
-	
-	/* Overrides */
-	vector_type::const_iterator find ( const Elementary_Chain & find_me ) const;
-	size_type size ( void ) const;
-	vector_type::const_iterator begin ( void ) const;
-};
-
-
-/* * * * * * * * * * * * * **
-** class Vector_Complex  **
-** * * * * * * * * * * * * */
+/* * * * * * * * * * * * * 
+ * class Vector_Complex  *
+ * * * * * * * * * * * * */
 
 class Vector_Complex : public Cell_Complex_Archetype < Vector_Container > {
 public:
@@ -72,20 +134,20 @@ public:
 	template < class Cell_Complex_Template >
 	Vector_Complex ( Cell_Complex_Template & original_complex );
 	
-	/* * * * * * * * * * * * * * * * * * * * * * * * **
-	** Pure Virtual Functions That Must Be Overriden **
-	** * * * * * * * * * * * * * * * * * * * * * * * */
+	/* * * * * * * * * * * * * *
+	 * Pure Virtual Functions  *
+	 * * * * * * * * * * * * * */
 	
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
 	virtual Chain & Boundary_Map ( Chain &, const Container::const_iterator & ) const;
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
 	virtual Chain & Coboundary_Map ( Chain &, const Container::const_iterator & ) const;
 	/** Remove an elementary chain from the complex. All terms from all chains involving this elementary chain will be deleted. NOT IMPLEMENTED. */
-	virtual void Remove_Elementary_Chain ( const Elementary_Chain & );
+	virtual void Remove_Cell ( const Cell & );
 	
-	/* * * * * * **
-	** Features  **
-	** * * * * * */
+	/* * * * * * *
+	 * Features  *
+	 * * * * * * */
 	
 	/** Returns a reference to the Boundary already stored. This is not a copy, so subsequently altering this chain alters the complex directly. */
 	virtual Chain & Boundary_Map ( const Container::iterator & );
@@ -102,7 +164,7 @@ public:
 	template < class First_Cell_Complex_Template, class Second_Cell_Complex_Template >
 	void Product_Complex ( const First_Cell_Complex_Template & first_complex, const Second_Cell_Complex_Template & second_complex );
 	
-/* morse decomposition interface implementations */
+    /* Morse Traits */
 	Vector_Container::const_iterator & Husband ( const Vector_Container::const_iterator & input ) const;
 	unsigned int & Morse_Value ( const Vector_Container::const_iterator & input) const;
 	unsigned char & Flags ( const Vector_Container::const_iterator & input ) const;

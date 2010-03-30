@@ -27,9 +27,8 @@ Cubical_Container::const_iterator::const_iterator( const Cubical_Container * con
 referral(referral), full_cube_number(full_cube_number), piece_number(piece_number) {}
 	
 const Cubical_Container::value_type & Cubical_Container::const_iterator::operator * ( void ) const {
-	dereference_value . first . name = piece_number + (full_cube_number << referral -> space_dimension);
-	dereference_value . first . dimension = referral -> cube_dimension; 
-	dereference_value . second = true; 
+	dereference_value . name = piece_number + (full_cube_number << referral -> space_dimension);
+	dereference_value . dimension = referral -> cube_dimension; 
 	return dereference_value; } /* endfunction */
 
 const Cubical_Container::value_type * Cubical_Container::const_iterator::operator -> ( void ) const { 
@@ -100,7 +99,7 @@ Cubical_Container::const_iterator Cubical_Container::end ( void ) const {
 	return return_value; }
 
 Cubical_Container::const_iterator Cubical_Container::find ( const Cubical_Container::key_type & key ) const {
-	/* key_type is Elementary_Chain, and we store the bitmap address in the name of the elementary chain, so find is easy. */
+	/* key_type is Cell, and we store the bitmap address in the name of the elementary chain, so find is easy. */
 	unsigned long mask = ( 1 << space_dimension ) - 1;
 	return const_iterator ( this, key . name >> space_dimension, key . name & mask); }
 
@@ -117,7 +116,7 @@ Cubical_Complex::Cubical_Complex ( const Cubical_Complex & copy_me) {
 	/* Shallow copy. */
 	is_a_full_complex = copy_me . is_a_full_complex;
 	dimension = copy_me . dimension;
-	Chain_Groups = copy_me . Chain_Groups;
+	cells = copy_me . cells;
 	data_allocated = copy_me . data_allocated;
 	
 	/* If deep copy isn't necessary, quit now. */
@@ -129,22 +128,22 @@ Cubical_Complex::Cubical_Complex ( const Cubical_Complex & copy_me) {
 	std::vector<bool> * bitmap = new std::vector<bool>;
 	
 	/* Deep Copy the important data. */
-	*dimension_sizes = * ( Chain_Groups [ 0 ] . dimension_sizes );
-	*jump_values = * ( Chain_Groups [ 0 ] . jump_values );
-	*bitmap = * ( Chain_Groups [ 0 ] . bitmap );
+	*dimension_sizes = * ( cells [ 0 ] . dimension_sizes );
+	*jump_values = * ( cells [ 0 ] . jump_values );
+	*bitmap = * ( cells [ 0 ] . bitmap );
 	
 	/* Make pointers to copies. */
 	for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		Chain_Groups [ dimension_index ] . dimension_sizes = dimension_sizes;
-		Chain_Groups [ dimension_index ] . jump_values = jump_values;
-		Chain_Groups [ dimension_index ] . bitmap = bitmap; } /* for */ } /* endfunction */
+		cells [ dimension_index ] . dimension_sizes = dimension_sizes;
+		cells [ dimension_index ] . jump_values = jump_values;
+		cells [ dimension_index ] . bitmap = bitmap; } /* for */ } /* endfunction */
 
 /* Deconstructor */
 Cubical_Complex::~Cubical_Complex ( void ) { 
   if ( data_allocated ) {
-    delete Chain_Groups [ 0 ] . dimension_sizes;
-    delete Chain_Groups [ 0 ] . jump_values;
-    delete Chain_Groups [ 0 ] . bitmap; 
+    delete cells [ 0 ] . dimension_sizes;
+    delete cells [ 0 ] . jump_values;
+    delete cells [ 0 ] . bitmap; 
   } /* if */
 } /* endfunction */
 
@@ -160,29 +159,29 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
 		number_of_full_cubes *= user_dimension_sizes [ index ]; } /* for */
 		
 	std::vector<bool> * bitmap = new std::vector<bool> ( number_of_full_cubes << this -> dimension, false );
-	Chain_Groups . resize ( this -> dimension + 1);
+	cells . resize ( this -> dimension + 1);
 	for ( unsigned long index = 0; index <= this -> dimension; ++ index ) {
-		Chain_Groups [ index ] . space_dimension = this -> dimension;
-		Chain_Groups [ index ] . cube_dimension = index;
-		Chain_Groups [ index ] . number_of_cubes = number_of_full_cubes;
-		Chain_Groups [ index ] . dimension_sizes = dimension_sizes;
-		Chain_Groups [ index ] . jump_values =  jump_values;
-		Chain_Groups [ index ] . bitmap = bitmap; 
-		Chain_Groups [ index ] . remembered_size = 0;
-		Chain_Groups [ index ] . first_address = number_of_full_cubes << ( this -> dimension ); } /* for */
+		cells [ index ] . space_dimension = this -> dimension;
+		cells [ index ] . cube_dimension = index;
+		cells [ index ] . number_of_cubes = number_of_full_cubes;
+		cells [ index ] . dimension_sizes = dimension_sizes;
+		cells [ index ] . jump_values =  jump_values;
+		cells [ index ] . bitmap = bitmap; 
+		cells [ index ] . remembered_size = 0;
+		cells [ index ] . first_address = number_of_full_cubes << ( this -> dimension ); } /* for */
 	data_allocated = true; } /* endfunction */
 	
 /* Insert_Elementary_Cell */
 
 void Cubical_Complex::Insert_Elementary_Cell ( const unsigned long address ) {
-	std::_Bit_reference place_reference = Chain_Groups [0] . bitmap -> operator [] ( address );
+	std::_Bit_reference place_reference = cells [0] . bitmap -> operator [] ( address );
 	if ( place_reference != true) { 
 		place_reference = true; 
 		unsigned int cell_dimension = 0;
 		for ( unsigned int dimension_index = 0;  dimension_index < this -> dimension ; ++ dimension_index ) 
 			if ( address & ( 1 << dimension_index ) ) ++ cell_dimension;
-		++ Chain_Groups[ cell_dimension ] . remembered_size;
-		if ( Chain_Groups [ cell_dimension ] . first_address > address ) Chain_Groups [ cell_dimension ] . first_address = address; 
+		++ cells[ cell_dimension ] . remembered_size;
+		if ( cells [ cell_dimension ] . first_address > address ) cells [ cell_dimension ] . first_address = address; 
   } /* if */ 
 } /* Cubical_Complex::Insert_Elementary_Cell */
 
@@ -191,8 +190,8 @@ void Cubical_Complex::Insert_Elementary_Cell ( const unsigned long address ) {
 void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {
 	std::vector<unsigned int> neighbor_coordinates( this -> dimension, 0);
 
-	const std::vector<unsigned int> * dimension_sizes = Chain_Groups [0] . dimension_sizes;
-	const std::vector<unsigned long> * jump_values = Chain_Groups [0] . jump_values;
+	const std::vector<unsigned int> * dimension_sizes = cells [0] . dimension_sizes;
+	const std::vector<unsigned long> * jump_values = cells [0] . jump_values;
 
 	/* Calculate the number of the read cube */
 	long full_cube_number = 0;
@@ -235,9 +234,9 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 		exit ( 1 ); } /* if */
 		
 	if ( data_allocated == true ) {
-		delete Chain_Groups [ 0 ] . dimension_sizes;
-		delete Chain_Groups [ 0 ] . jump_values;
-		delete Chain_Groups [ 0 ] . bitmap; } /* if */
+		delete cells [ 0 ] . dimension_sizes;
+		delete cells [ 0 ] . jump_values;
+		delete cells [ 0 ] . bitmap; } /* if */
 		
 	data_allocated = true;
 	
@@ -309,8 +308,8 @@ Cubical_Complex::Chain & Cubical_Complex::Boundary_Map ( Cubical_Complex::Chain 
 	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
 	/* The task is to determine each of its neighbors, their 'sign', and construct the boundary chain.			 */
 
-	if ( input -> first . dimension == 0 ) return output; /* Boundary of a 0-dimensional object is trivial */
-	const unsigned int boundary_dimension = input -> first . dimension - 1;
+	if ( input -> dimension == 0 ) return output; /* Boundary of a 0-dimensional object is trivial */
+	const unsigned int boundary_dimension = input -> dimension - 1;
 	
 	/* Consider the bit-representation of piece_number. For three-dimensional space, it is three bits
 	 *    101, perhaps. This corresponds to a square piece. Its boundaries come in 2 varieties:
@@ -326,7 +325,7 @@ Cubical_Complex::Chain & Cubical_Complex::Boundary_Map ( Cubical_Complex::Chain 
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
 	bool sign = false;
-	long address = input -> first . name;
+	long address = input -> name;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension; work_bit <<= 1, dimension_index++ ) {
 		/* Can we demote this bit? If not, "continue". */
 		if (  not ( address & work_bit) ) continue;
@@ -334,12 +333,12 @@ Cubical_Complex::Chain & Cubical_Complex::Boundary_Map ( Cubical_Complex::Chain 
 		/* Alter address to refer to a boundary in the current full cube */
 		address = address ^ work_bit;
 		/* Insert the piece in the current full cube */
-		if ( Chain_Groups [ boundary_dimension ] . bitmap -> operator [] ( address ) )
-			output . insert ( std::pair < Elementary_Chain, Ring > ( Elementary_Chain ( address,  boundary_dimension ), sign ? positive : negative ) );
+		if ( cells [ boundary_dimension ] . bitmap -> operator [] ( address ) )
+			output . insert ( std::pair < Cell, Ring > ( Cell ( address,  boundary_dimension ), sign ? positive : negative ) );
 		/* Insert the piece in the appropriate neighboring full cube */
-		long offset_address = address + ( Chain_Groups [ boundary_dimension ] . jump_values -> operator [] (dimension_index) << dimension );
-		if ( Chain_Groups [ boundary_dimension ] . bitmap -> operator [] ( offset_address ) )
-			output . insert ( std::pair < Elementary_Chain, Ring > ( Elementary_Chain ( offset_address,  boundary_dimension ), sign ? negative : positive ) ); 
+		long offset_address = address + ( cells [ boundary_dimension ] . jump_values -> operator [] (dimension_index) << dimension );
+		if ( cells [ boundary_dimension ] . bitmap -> operator [] ( offset_address ) )
+			output . insert ( std::pair < Cell, Ring > ( Cell ( offset_address,  boundary_dimension ), sign ? negative : positive ) ); 
 		/* Recover original address */
 		address = address ^ work_bit; } /* for */
 	return output;  } /* endfunction */
@@ -351,8 +350,8 @@ Cubical_Complex::Chain & Cubical_Complex::Coboundary_Map ( Cubical_Complex::Chai
 	/* The task is to determine each of its neighbors, their 'sign', and construct the coboundary chain.			 */
 	
 	
-	if ( input -> first . dimension == this -> dimension ) return output;  /* Coboundary of a full-dimensional object is trivial */
-	const unsigned int coboundary_dimension = input -> first . dimension + 1;
+	if ( input -> dimension == this -> dimension ) return output;  /* Coboundary of a full-dimensional object is trivial */
+	const unsigned int coboundary_dimension = input -> dimension + 1;
 	
 	/* Consider the bit-representation of piece_number. For three-dimensional space, it is three bits
 	 *    001, perhaps. This corresponds to an edge. Its boundaries come in 4 varieties:
@@ -368,26 +367,26 @@ Cubical_Complex::Chain & Cubical_Complex::Coboundary_Map ( Cubical_Complex::Chai
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
 	bool sign = false;
-	long address = input -> first . name;
+	long address = input -> name;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension; work_bit <<= 1, dimension_index++ ) {
 		/* Can we promote this bit? If not, "continue". */
 		if ( address & work_bit ) continue;
 		sign = not sign; /* or should this be with the continue ? */
 		address = address ^ work_bit;
-		if ( Chain_Groups [ coboundary_dimension ] . bitmap -> operator [] ( address ) )
-			output . insert ( std::pair < Elementary_Chain, Ring > ( Elementary_Chain ( address,  coboundary_dimension ), sign ? positive : negative  ) );
-		long offset_address = address - ( Chain_Groups [ coboundary_dimension ] . jump_values -> operator [] (dimension_index) << dimension );
-		if ( Chain_Groups [ coboundary_dimension ] . bitmap -> operator [] ( offset_address ) )
-			output . insert ( std::pair < Elementary_Chain, Ring > ( Elementary_Chain ( offset_address,  coboundary_dimension ), sign ? negative : positive  ) ); 
+		if ( cells [ coboundary_dimension ] . bitmap -> operator [] ( address ) )
+			output . insert ( std::pair < Cell, Ring > ( Cell ( address,  coboundary_dimension ), sign ? positive : negative  ) );
+		long offset_address = address - ( cells [ coboundary_dimension ] . jump_values -> operator [] (dimension_index) << dimension );
+		if ( cells [ coboundary_dimension ] . bitmap -> operator [] ( offset_address ) )
+			output . insert ( std::pair < Cell, Ring > ( Cell ( offset_address,  coboundary_dimension ), sign ? negative : positive  ) ); 
 		address = address ^ work_bit; } /* for */
 	return output;  } /* endfunction */
 
 
-void Cubical_Complex::Remove_Elementary_Chain ( const Cubical_Complex::Elementary_Chain & input) {
-	std::_Bit_reference bit_reference = Chain_Groups [ input . dimension ] . bitmap -> operator [] ( input . name );
+void Cubical_Complex::Remove_Cell ( const Cubical_Complex::Cell & input) {
+	std::_Bit_reference bit_reference = cells [ input . dimension ] . bitmap -> operator [] ( input . name );
 	if ( bit_reference == true ) {
 		bit_reference = false;
-		-- Chain_Groups [ input . dimension ] . remembered_size; } /* if */
+		-- cells [ input . dimension ] . remembered_size; } /* if */
 	return; }
 
 

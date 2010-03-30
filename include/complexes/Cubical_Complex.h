@@ -26,7 +26,7 @@ class Cubical_Container {
 public:
 	/* typedefs */	 
 	typedef Default_Chain Chain;
-	typedef Chain::Elementary_Chain Elementary_Chain;
+	typedef Chain::Cell Cell;
 	typedef Chain::Ring Ring;
 	typedef unsigned long size_type;
     
@@ -40,11 +40,9 @@ public:
 	size_type remembered_size;
 	mutable unsigned long first_address;
 	
-	/* STL container types */
-	typedef Elementary_Chain key_type;
-	typedef bool data_type;
-	typedef bool mapped_type;
-	typedef std::pair<Elementary_Chain, bool> value_type;
+	/* Simple Associative Container */
+	typedef Cell key_type;
+	typedef Cell value_type;
 
 	/* Nested Classes*/
 	 
@@ -56,18 +54,14 @@ public:
 	class const_iterator {
 	public:
 		const Cubical_Container * referral;
-		/** Because elementary chain's are stored implicitly,
+		/** Because cells are stored implicitly,
 		 * the arrow operator -> cannot be implemented without
-		 * having an actual reference somewhere. The private
-		 * variable dereference_value is the address returned
-		 * by ->. Whenever -> is called, dereference_value is 
+		 * having an actual reference somewhere. The address of the
+		 * variable "dereference_value" is the address returned
+		 * by the overloaded version of ->. 
+         * Whenever -> is called, dereference_value is 
 		 * updated, and never otherwise. 
-		 * Notice we return a pair, to conform to pair associative
-		 * containers. The second argument is a bool which is
-		 * to be 'true'. This corresponds with the view of a set
-		 * being a map from the set into {true, false}, where the
-		 * set is the preimage of 'true'. 
-		 * We have to make it mutable since -> should work for
+		 * We have to make "dereference_value" mutable since -> should work for
 		 * const const_iterator's as well.*/
 		mutable Cubical_Container::value_type dereference_value;
 		void next_piece_number ( void ); 
@@ -119,7 +113,7 @@ public:
 	virtual void Load_From_File ( const char * FileName );
 	virtual Chain & Boundary_Map ( Chain &, const Container::const_iterator & ) const;
 	virtual Chain & Coboundary_Map ( Chain &, const Container::const_iterator & ) const;
-	virtual void Remove_Elementary_Chain ( const Elementary_Chain & );
+	virtual void Remove_Cell ( const Cell & );
 	
 	/* Overloaded declarations in a derived class
 	 * hide the base class members */
