@@ -7,8 +7,8 @@
  *
  */ 
 
-#ifndef _CHOMP_DENSE_MATRIX_
-#define _CHOMP_DENSE_MATRIX_
+#ifndef CHOMP_DENSE_MATRIX_
+#define CHOMP_DENSE_MATRIX_
 
 #include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
 #include <vector>
@@ -29,11 +29,11 @@ void Dense_Matrix_Boundary_Map ( typename Dense < typename Cell_Complex::Ring >:
                                  std::vector < typename Cell_Complex::Cell > & translation_table,
                                  const Cell_Complex & complex, const unsigned int dimension );
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/matrix/Dense_Matrix.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "algorithms/matrix/Dense_Matrix.cpp"
 #endif
 

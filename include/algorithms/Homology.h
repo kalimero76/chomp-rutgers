@@ -7,8 +7,8 @@
  *
  */ 
 
-#ifndef _CHOMP_HOMOLOGY_
-#define _CHOMP_HOMOLOGY_
+#ifndef CHOMP_HOMOLOGY_
+#define CHOMP_HOMOLOGY_
 
 #include <vector>
 
@@ -25,11 +25,11 @@ template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators ( const Cell_Complex & the_complex );
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/Homology.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "algorithms/Homology.cpp"
 #endif
 

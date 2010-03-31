@@ -39,7 +39,7 @@ std::ostream & operator << (std::ostream & output_stream, const Default_Cell & p
 	output_stream << "(" << print_me . name << ", " << print_me . dimension << ")";
 	return output_stream; }
 	
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Template Instantiation */
 template class Chain_Archetype <  std::map < Default_Cell, Default_Ring > >;
 template std::ostream & operator << < std::map <  Default_Cell, Default_Ring > > 

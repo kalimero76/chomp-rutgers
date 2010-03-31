@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <time.h>
 
-#define _CHOMP_HEADER_ONLY_
+#define CHOMP_HEADER_ONLY_
 #include "complexes/Cubical_Complex.h"	/* for class Cubical_Complex */
 #include "complexes/Vector_Complex.h"	/* for class Vector_Complex */
 #include "complexes/Morse_Complex.h"    /* for Morse_Complex */

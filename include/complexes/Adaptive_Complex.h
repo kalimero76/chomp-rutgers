@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _CHOMP_ADAPTIVE_COMPLEX_
-#define _CHOMP_ADAPTIVE_COMPLEX_
+#ifndef CHOMP_ADAPTIVE_COMPLEX_
+#define CHOMP_ADAPTIVE_COMPLEX_
 
 
 
@@ -253,7 +253,7 @@ public:
 
 };
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "Adaptive_Complex.cpp"
 #endif
 

@@ -9,7 +9,7 @@
 
 #include "archetypes/Cell_Complex_Archetype.h"
 
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */
 
 #include "complexes/Cubical_Complex.h" 

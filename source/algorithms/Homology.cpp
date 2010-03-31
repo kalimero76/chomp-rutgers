@@ -10,7 +10,7 @@
 
 #include "algorithms/Homology.h"
 
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Explicit Template Instantiations */
 
 #include "complexes/Cubical_Complex.h"

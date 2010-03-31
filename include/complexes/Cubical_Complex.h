@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _CHOMP_CUBICAL_COMPLEX_
-#define _CHOMP_CUBICAL_COMPLEX_
+#ifndef CHOMP_CUBICAL_COMPLEX_
+#define CHOMP_CUBICAL_COMPLEX_
 
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
 #include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
@@ -130,11 +130,11 @@ public:
 	void Allocate_Bitmap ( const std::vector<unsigned int> & sizes );
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "complexes/Cubical_Complex.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "complexes/Cubical_Complex.cpp"
 #endif
 

@@ -9,7 +9,7 @@
 
 #include "algorithms/matrix/Sparse_Matrix.h"
 
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */
 
 template class Sparse_Matrix < long >; /* Default_Ring = long */

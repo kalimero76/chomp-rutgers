@@ -9,7 +9,7 @@
 
 #include "algorithms/matrix/Smith_Normal_Form.h"
 	
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */
 
 #include "algorithms/matrix/Sparse_Matrix.h" /* For default template implementation of Smith_Normal_Form */

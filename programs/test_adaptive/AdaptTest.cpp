@@ -6,7 +6,7 @@
 // Description : Hello World in C++, Ansi-style
 //============================================================================
 
-#define _CHOMP_HEADER_ONLY_
+#define CHOMP_HEADER_ONLY_
 
 #include <iostream>
 

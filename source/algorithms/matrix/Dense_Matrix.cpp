@@ -9,6 +9,6 @@
 
 #include "algorithms/matrix/Dense_Matrix.h"
 
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 
 #endif

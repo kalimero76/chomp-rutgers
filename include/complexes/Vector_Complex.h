@@ -8,8 +8,8 @@
  */
 
 
-#ifndef _CHOMP_VECTOR_COMPLEX_
-#define _CHOMP_VECTOR_COMPLEX_
+#ifndef CHOMP_VECTOR_COMPLEX_
+#define CHOMP_VECTOR_COMPLEX_
 
 #include <map> /* for map */
 #include <utility> /* for pair */
@@ -190,11 +190,11 @@ public:
 	typedef unsigned int morse_value_type;
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "complexes/Vector_Complex.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "complexes/Vector_Complex.cpp"
 #endif
 

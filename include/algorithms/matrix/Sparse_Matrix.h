@@ -7,8 +7,8 @@
  *
  */ 
 
-#ifndef _CHOMP_SPARSE_MATRIX_
-#define _CHOMP_SPARSE_MATRIX_
+#ifndef CHOMP_SPARSE_MATRIX_
+#define CHOMP_SPARSE_MATRIX_
 
 #include <map> /* for map<...> */
 #include <iostream> /* for streams */
@@ -48,11 +48,11 @@ template < class Cell_Complex >
 void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > & output_matrix, 
                                   const Cell_Complex & complex, const unsigned int dimension ); 
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/matrix/Sparse_Matrix.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "algorithms/matrix/Sparse_Matrix.cpp"
 #endif
 

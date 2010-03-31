@@ -5,8 +5,8 @@
  *
  */
  
-#ifndef _CHOMP_CELL_COMPLEX_ARCHETYPE_
-#define _CHOMP_CELL_COMPLEX_ARCHETYPE_
+#ifndef CHOMP_CELL_COMPLEX_ARCHETYPE_
+#define CHOMP_CELL_COMPLEX_ARCHETYPE_
 
 #include <vector> /* for the vector of chain groups in Cell_Complex_Archetype */
 
@@ -111,11 +111,11 @@ public:
 	virtual void Geometric_Preprocessing ( void );
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "archetypes/Cell_Complex_Archetype.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "archetypes/Cell_Complex_Archetype.cpp"
 #endif
 

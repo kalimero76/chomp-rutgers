@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _CHOMP_MORSE_COMPLEX_
-#define _CHOMP_MORSE_COMPLEX_
+#ifndef CHOMP_MORSE_COMPLEX_
+#define CHOMP_MORSE_COMPLEX_
 
 #include <map> /* for std::map */
 //#include <ext/hash_map> /* for std::hash_map */
@@ -112,11 +112,11 @@ public:
 	Morse_Value_Chain ( const Original_Chain & copy_me, const Morse_Complex_Template & morse_complex );
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "complexes/Morse_Complex.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "complexes/Morse_Complex.cpp"
 #endif
 

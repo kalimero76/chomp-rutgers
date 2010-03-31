@@ -8,7 +8,7 @@
 
 //#include <sys/time.h>
 
-#define _CHOMP_HEADER_ONLY_
+#define CHOMP_HEADER_ONLY_
 #include "Cubical_Complex.h"	/* for class Cubical_Complex */
 #include "Vector_Complex.h"		/* for class Vector_Complex */
 #include "Morse_Complex.h"      /* for Morse_Complex */

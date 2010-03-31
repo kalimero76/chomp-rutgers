@@ -8,7 +8,7 @@
  */
 
 #include "complexes/Morse_Complex.h"
-#ifndef _CHOMP_HEADER_ONLY_
+#ifndef CHOMP_HEADER_ONLY_
 /* Template instantiation */
 #include "complexes/Cubical_Complex.h"
 template class Morse_Complex<Cubical_Complex>;

@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _CHOMP_CHAIN_ARCHETYPE_
-#define _CHOMP_CHAIN_ARCHETYPE_
+#ifndef CHOMP_CHAIN_ARCHETYPE_
+#define CHOMP_CHAIN_ARCHETYPE_
 
 #include <ext/hash_map> /* for hash<> specialization */
 namespace std { using namespace __gnu_cxx; }
@@ -71,11 +71,11 @@ public:
  * ring types. */
 class Default_Chain : public Chain_Archetype <  std::map < Default_Cell, Default_Ring > > {};
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "archetypes/Chain_Archetype.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "archetypes/Chain_Archetype.cpp"
 #endif
 

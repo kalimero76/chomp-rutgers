@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef _CHOMP_ABSTRACT_COMPLEX_
-#define _CHOMP_ABSTRACT_COMPLEX_
+#ifndef CHOMP_ABSTRACT_COMPLEX_
+#define CHOMP_ABSTRACT_COMPLEX_
 
 #include <set> /* for map */
 #include <utility> /* for pair */
@@ -77,11 +77,11 @@ public:
     
 };
 
-#ifndef _CHOMP_LIBRARY_ONLY_
+#ifndef CHOMP_LIBRARY_ONLY_
 #include "complexes/Abstract_Complex.hpp"
 #endif
 
-#ifdef _CHOMP_HEADER_ONLY_
+#ifdef CHOMP_HEADER_ONLY_
 #include "complexes/Abstract_Complex.cpp"
 #endif
 
