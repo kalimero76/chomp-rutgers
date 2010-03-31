@@ -175,17 +175,13 @@ template <>
 class Morse_Traits <Vector_Complex> {
 public:
 	/* Tags for Morse_Traits for feature checking */
-	struct doesnt_store_husband_pointers {};
-	struct does_store_husband_pointers {};
-	struct doesnt_store_morse_values {};
-	struct does_store_morse_values {};
-	struct doesnt_store_flags {};
-	struct does_store_flags {};
+	struct yes {};
+  struct no {};
 
 	/* Default Tag Choices */
-	typedef does_store_husband_pointers does_it_store_husband_pointers;
-	typedef does_store_morse_values does_it_store_morse_values;
-	typedef does_store_flags does_it_store_flags;
+	typedef yes does_it_store_husband_pointers;
+	typedef yes does_it_store_morse_values;
+	typedef yes does_it_store_flags;
 	/* Default Data Types */
 	typedef unsigned int morse_value_type;
 };

@@ -389,5 +389,6 @@ void Cubical_Complex::Remove_Cell ( const Cubical_Complex::Cell & input) {
 		-- cells [ input . dimension ] . remembered_size; } /* if */
 	return; }
 
-
-
+#ifndef CHOMP_HEADER_ONLY_
+/* Template Instances */
+#endif

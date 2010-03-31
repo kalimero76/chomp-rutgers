@@ -104,7 +104,3 @@ begin ( void ) const {
 		const Container & search_group = cells [ dimension_index ];
 		if ( (return_value = search_group . begin () ) != search_group . end () ) break; } /* for */
 	return return_value;  } /* endfunction */
-	
-template < class Container_Template >
-void Cell_Complex_Archetype < Container_Template >::
-Geometric_Preprocessing ( void ) { /* trivial function */ }

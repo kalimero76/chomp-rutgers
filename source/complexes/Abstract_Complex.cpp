@@ -27,3 +27,7 @@ const Abstract_Complex::Chain & Abstract_Complex::Boundary_Map ( const Abstract_
 
 const Abstract_Complex::Chain & Abstract_Complex::Coboundary_Map ( const Abstract_Complex::Container::const_iterator & input ) const {
 	return cells [ input -> dimension ] . coboundary_data . find ( *input ) -> second;  }
+
+#ifndef CHOMP_HEADER_ONLY_
+/* Template Instances */
+#endif

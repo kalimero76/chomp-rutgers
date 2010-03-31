@@ -1164,3 +1164,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 	}
 	return possible_owners;
 }
+
+#ifndef CHOMP_HEADER_ONLY_
+/* Template Instances */
+#endif

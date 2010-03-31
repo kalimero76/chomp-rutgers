@@ -33,7 +33,6 @@ public:
 	typename Morse_Traits<Cell_Complex_Template>::morse_value_type & Morse_Value ( const typename Cell_Complex_Template::Container::const_iterator &) const ;
 	unsigned char & Flags ( const typename Cell_Complex_Template::Container::const_iterator & ) const;
 
-	
 	enum { ACE = 0x01, KING = 0x02, QUEEN = 0x04, ALIVE = 0x08, EXCISED = 0x10 };
 
 	bool Is_an_Ace ( unsigned char ) const; 
@@ -43,13 +42,13 @@ public:
 	bool Is_Excised ( unsigned char ) const; 
 
 public:
-	typedef Cell_Complex_Template Cell_Complex_Type;
+	typedef Cell_Complex_Template Cell_Complex;
 	const Cell_Complex_Template & original_complex; /* notice features in complex will have to be specifically declared mutable */
 	
-	Morse_Complex ( const Cell_Complex_Template & original_complex); 
+	Morse_Complex ( const Cell_Complex & original_complex); 
 	void Ace_King_Queen_Algorithm ( void );
 	void Morse_Boundary_Algorithm ( void );
-	typename Cell_Complex_Template::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex_Template::Chain & canonical_chain, const Abstract_Complex::Chain & morse_chain );
+	typename Cell_Complex::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex::Chain & canonical_chain, const Abstract_Complex::Chain & morse_chain );
 	
 };
 
@@ -61,17 +60,14 @@ template < class Cell_Complex_Template >
 class Morse_Traits {
 public:
 	/* Tags for Morse_Traits for feature checking */
-	struct doesnt_store_husband_pointers {};
-	struct does_store_husband_pointers {};
-	struct doesnt_store_morse_values {};
-	struct does_store_morse_values {};
-	struct doesnt_store_flags {};
-	struct does_store_flags {};
+	struct yes {};
+  struct no {};
 
 	/* Default Tag Choices */
-	typedef doesnt_store_husband_pointers does_it_store_husband_pointers;
-	typedef doesnt_store_morse_values does_it_store_morse_values;
-	typedef doesnt_store_flags does_it_store_flags;
+	typedef no does_it_store_husband_pointers;
+	typedef no does_it_store_morse_values;
+	typedef no does_it_store_flags;
+  
 	/* Default Data Types */
 	typedef unsigned int morse_value_type;
 };
@@ -87,7 +83,7 @@ template < class Morse_Complex_Template > std::ostream & operator << ( std::ostr
 template < class Morse_Complex_Template >
 class Morse_Value_Cell {
 public:
-	typedef typename Morse_Complex_Template::Cell_Complex_Type Cell_Complex_Template;
+	typedef typename Morse_Complex_Template::Cell_Complex Cell_Complex_Template;
 	typedef typename Morse_Traits<Cell_Complex_Template>::morse_value_type Morse_Value_Type;
 	Morse_Value_Type morse_value;
 	typename Cell_Complex_Template::Container::const_iterator location;
@@ -100,12 +96,12 @@ public:
 };
 
 template < class Morse_Complex_Template >
-class Morse_Value_Chain : public  Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex_Template >, typename Morse_Complex_Template::Cell_Complex_Type::Ring > > {
+class Morse_Value_Chain : public  Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex_Template >, typename Morse_Complex_Template::Cell_Complex::Ring > > {
 public:		
-	typedef typename Morse_Complex_Template::Cell_Complex_Type Cell_Complex_Type;
-	typedef typename Morse_Traits<Cell_Complex_Type>::morse_value_type Morse_Value_Type;
-	typedef typename Cell_Complex_Type::Chain Original_Chain;
-	typedef typename Cell_Complex_Type::Container::const_iterator Original_const_iterator;
+	typedef typename Morse_Complex_Template::Cell_Complex Cell_Complex;
+	typedef typename Morse_Traits<Cell_Complex>::morse_value_type Morse_Value_Type;
+	typedef typename Cell_Complex::Chain Original_Chain;
+	typedef typename Cell_Complex::Container::const_iterator Original_const_iterator;
 	Morse_Value_Chain ( void );
 	/* Copy an original chain into the Morse Value Chain format by
 	 * fetching the Morse Values and storing iterators instead */

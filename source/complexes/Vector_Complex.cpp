@@ -197,4 +197,6 @@ Morse_Traits<Vector_Complex>::morse_value_type & Vector_Complex::Morse_Value ( c
 unsigned char & Vector_Complex::Flags ( const Vector_Container::const_iterator & input ) const {
 	return cells [ input -> dimension ] . decomposition_data [ input -> name ] . flags; }
 
-
+#ifndef CHOMP_HEADER_ONLY_
+/* Template Instances */
+#endif

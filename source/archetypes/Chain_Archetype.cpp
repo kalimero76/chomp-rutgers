@@ -48,12 +48,12 @@ template std::ostream & operator << < std::map <  Default_Cell, Default_Ring > >
 #include "complexes/Morse_Complex.h"
 
 #include "complexes/Cubical_Complex.h"
-template class Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex_Type::Ring > >;
-template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex_Type::Ring > > 
-	( std::ostream & , const Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex_Type::Ring > > & ) ;
+template class Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex::Ring > >;
+template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex::Ring > > 
+	( std::ostream & , const Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Cubical_Complex> >, Morse_Complex<Cubical_Complex>::Cell_Complex::Ring > > & ) ;
 
 #include "complexes/Abstract_Complex.h"
-template class Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex_Type::Ring > >;
-template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex_Type::Ring > > 
-	( std::ostream & , const Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex_Type::Ring > > & ) ;
+template class Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex::Ring > >;
+template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex::Ring > > 
+	( std::ostream & , const Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex> >, Morse_Complex<Abstract_Complex>::Cell_Complex::Ring > > & ) ;
 #endif

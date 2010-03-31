@@ -10,5 +10,5 @@
 #include "algorithms/matrix/Dense_Matrix.h"
 
 #ifndef CHOMP_HEADER_ONLY_
-
+/* Template Instances */
 #endif
