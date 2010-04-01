@@ -210,7 +210,7 @@ void Vector_Complex::Product_Complex ( const First_Cell_Complex_Template & first
                     [ std::pair < unsigned long, unsigned long > ( first_element -> name, second_element -> name ) ];
                     Vector_Complex::Ring unit(1);
                     if ( first_element -> dimension & 1 ) unit = Vector_Complex::Ring(-1);
-                    /* produce boundary via formula d(a x b) = da x b - a x db */
+                    /* produce boundary via formula d(a x b) = da x b +- a x db */
                     typename First_Cell_Complex_Template::Chain first_original_boundary; 
                     first_complex . Boundary_Map ( first_original_boundary, first_element );
                     typename Second_Cell_Complex_Template::Chain second_original_boundary; 
@@ -221,7 +221,7 @@ void Vector_Complex::Product_Complex ( const First_Cell_Complex_Template & first
                     //std::cout << " A \n";
                     _translate_chain_tensor_product <First_Cell_Complex_Template, Second_Cell_Complex_Template> ( boundary_chain, first_original_boundary, *second_element, Tables );
                     _translate_chain_tensor_product <First_Cell_Complex_Template, Second_Cell_Complex_Template> ( boundary_chain, negative_first_element, second_original_boundary, Tables );
-                    /* produce coboundary via formula d(a x b) = da x b - a x db */
+                    /* produce coboundary via formula d(a x b) = da x b +- a x db */
                     typename First_Cell_Complex_Template::Chain first_original_coboundary; 
                     first_complex . Coboundary_Map ( first_original_coboundary, first_element );
                     typename Second_Cell_Complex_Template::Chain second_original_coboundary; 

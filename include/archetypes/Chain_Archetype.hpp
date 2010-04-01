@@ -7,7 +7,20 @@
  *
  */ 
 
+#include <ext/hash_map> /* for hash<> specialization */
+namespace std { using namespace __gnu_cxx; }
 #include <map> /* For map<...> */
+
+namespace __gnu_cxx {
+  template <>
+  struct hash<Default_Cell> {
+    hash<unsigned long> internal_hasher;
+    size_t operator () (const Default_Cell & hash_me) const {
+			return internal_hasher ( hash_me . name ); 
+    } 
+  };
+} /* end namespace */
+
 
 /*
  * Chain_Archetype Implementation
@@ -24,6 +37,15 @@ operator += ( const Chain_Archetype < Pair_Associative_Container > & right_hand_
 
 template < class Pair_Associative_Container > 
 Chain_Archetype < Pair_Associative_Container > & Chain_Archetype < Pair_Associative_Container > ::
+operator -= ( const Chain_Archetype < Pair_Associative_Container > & right_hand_side ) {
+  /* This might be made slightly better: as long as the rings are the same, we don't need the r.h.s. to have same implementation */
+  /* But for now we can safely assume that all chains getting added together are the same format */
+	for ( typename Chain_Archetype < Pair_Associative_Container > :: const_iterator term = right_hand_side . begin ();
+       term != right_hand_side . end (); term ++ ) this -> operator -= ( *term );
+	return *this; } /* endfunction */
+
+template < class Pair_Associative_Container > 
+Chain_Archetype < Pair_Associative_Container > & Chain_Archetype < Pair_Associative_Container > ::
 operator += ( const typename Chain_Archetype < Pair_Associative_Container >::Chain_Term & term ) {
 /* This might be made slightly better: as long as the rings are the same, we don't need the r.h.s. to have same implementation */
 /* But for now we can safely assume that all chains getting added together are the same format */
@@ -31,6 +53,18 @@ operator += ( const typename Chain_Archetype < Pair_Associative_Container >::Cha
 	if ( existing_term == this -> end () ) {
         if ( term . second != 0 ) this -> insert ( term ); // no term? then introduce it, we are done.
 	} else if ( ( existing_term -> second += term . second ) == 0 )	// side effect does the work... 
+		this -> erase ( existing_term );									// and if term zeros out we erase it.
+	return *this; } /* endfunction */
+
+template < class Pair_Associative_Container > 
+Chain_Archetype < Pair_Associative_Container > & Chain_Archetype < Pair_Associative_Container > ::
+operator -= ( const typename Chain_Archetype < Pair_Associative_Container >::Chain_Term & term ) {
+  /* This might be made slightly better: as long as the rings are the same, we don't need the r.h.s. to have same implementation */
+  /* But for now we can safely assume that all chains getting added together are the same format */
+	typename Chain_Archetype < Pair_Associative_Container > :: iterator existing_term = find ( term . first );
+	if ( existing_term == this -> end () ) {
+    if ( term . second != 0 ) this -> insert ( term ); // no term? then introduce it, we are done.
+	} else if ( ( existing_term -> second -= term . second ) == 0 )	// side effect does the work... 
 		this -> erase ( existing_term );									// and if term zeros out we erase it.
 	return *this; } /* endfunction */
 

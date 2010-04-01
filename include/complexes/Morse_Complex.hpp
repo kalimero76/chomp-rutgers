@@ -375,7 +375,7 @@ operator < ( const Morse_Value_Cell & right_hand_side ) const {
 
 template < class Morse_Complex_Template >
 std::ostream & operator << (std::ostream & output_stream, const Morse_Value_Cell < Morse_Complex_Template > & print_me) {
-	output_stream << "(" << print_me . location -> name << ", " << print_me . location -> dimension << "; " << print_me . morse_value << ")";
+	output_stream << * print_me . location << ", " << print_me . morse_value << ")";
   return output_stream; }
 
 template < class Morse_Complex_Template >

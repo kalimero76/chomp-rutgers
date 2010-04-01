@@ -1,12 +1,23 @@
 /*
  *  Vector_Complex.h
  *  
- *
  *  Created by Shaun Harker on 1/5/10.
- *  Copyright 2010 __MyCompanyName__. All rights reserved.
  *
  */
 
+/* problems.
+ uses morse traits "excised" to determine missing indices and
+ implement Remove_Cell. This currently causes no problems, but
+ could lead to bugs if Morse Complex is rewritten. In general,
+ this situation shouldn't be handled this way:
+ current plan:  
+ * Rewrite Morse Complex to use class Subcomplex for decomposition.
+ * Rewrite Vector Complex to support Remove_Cell in a different manner,
+ probably through the inclusion of std::vector<bool> bitmap variable.
+ 
+ There is also a potential problem when trying to make a vector complex from
+ a comples that does not use default cells.
+ */
 
 #ifndef CHOMP_VECTOR_COMPLEX_
 #define CHOMP_VECTOR_COMPLEX_
@@ -36,73 +47,73 @@ public:
 	typedef Default_Chain Chain;
 	typedef Chain::Cell Cell;
 	typedef Chain::Ring Ring;
-    
-    /* Simple Associative Container types */
+  
+  /* Simple Associative Container types */
 	typedef Cell key_type;
 	typedef Cell value_type;
-    typedef unsigned long size_type;
+  typedef unsigned long size_type;
 	
-    /* Member Variables */
-    unsigned int dimension;
-    size_type remembered_size;
+  /* Member Variables */
+  unsigned int dimension;
+  size_type remembered_size;
 	size_type begin_index;
-    size_type end_index;
-    std::vector < Decomposition_Information > decomposition_data;
-    std::vector < Chain > boundary_data;
-    std::vector < Chain > coboundary_data;
-    
-    /* Forward Declarations */
-    class const_iterator;
-    class iterator;
-    
-    /* Member Functions */
-    size_type size ( void ) const;
+  size_type end_index;
+  std::vector < Decomposition_Information > decomposition_data;
+  std::vector < Chain > boundary_data;
+  std::vector < Chain > coboundary_data;
+  
+  /* Forward Declarations */
+  class const_iterator;
+  class iterator;
+  
+  /* Member Functions */
+  size_type size ( void ) const;
 	const_iterator find ( const Cell & find_me ) const;
 	const_iterator begin ( void ) const;
-    const_iterator end ( void ) const;
+  const_iterator end ( void ) const;
 	iterator find ( const Cell & find_me );
 	iterator begin ( void );
-    iterator end ( void );
-    void resize ( size_type new_size );
-    
-    /* Nested Classes */
-    
-    /* * * * * * * * * * * * * * * * * * *
-     * Vector_Container::const_iterator  *
-     * * * * * * * * * * * * * * * * * * */
-    
+  iterator end ( void );
+  void resize ( size_type new_size );
+  
+  /* Nested Classes */
+  
+  /* * * * * * * * * * * * * * * * * * *
+   * Vector_Container::const_iterator  *
+   * * * * * * * * * * * * * * * * * * */
+  
 	class const_iterator {
-        const Vector_Container * referral;
-        mutable Vector_Container::Cell dereference_value;
-    public:
+    const Vector_Container * referral;
+    mutable Vector_Container::Cell dereference_value;
+  public:
 		const_iterator ( void );
 		const_iterator ( const Vector_Container * const referral ); 
-        const_iterator ( const Vector_Container * const referral, const Cell & dereference_value );
-        const_iterator ( const iterator & convert_me );
+    const_iterator ( const Vector_Container * const referral, const Cell & dereference_value );
+    const_iterator ( const iterator & convert_me );
 		bool operator != ( const const_iterator & right_hand_side ) const;        
 		const Vector_Container::value_type & operator * ( void ) const; 
 		const Vector_Container::value_type * operator -> ( void ) const;    
-        const_iterator & operator ++ ( void );
-        const_iterator & operator = ( const iterator & right_hand_side );
-    };
-
-    /* * * * * * * * * * * * * * * *
-     * Vector_Container::iterator  *
-     * * * * * * * * * * * * * * * */
-    
+    const_iterator & operator ++ ( void );
+    const_iterator & operator = ( const iterator & right_hand_side );
+  };
+  
+  /* * * * * * * * * * * * * * * *
+   * Vector_Container::iterator  *
+   * * * * * * * * * * * * * * * */
+  
 	class iterator {
-        friend class Vector_Container::const_iterator;
-        const Vector_Container * referral;
-        mutable Vector_Container::Cell dereference_value;
-    public:
+    friend class Vector_Container::const_iterator;
+    const Vector_Container * referral;
+    mutable Vector_Container::Cell dereference_value;
+  public:
 		iterator ( void );
 		iterator ( const Vector_Container * const referral ); 
-        iterator ( const Vector_Container * const referral, const Cell & dereference_value ); 
+    iterator ( const Vector_Container * const referral, const Cell & dereference_value ); 
 		bool operator != ( const iterator & right_hand_side ) const;        
 		const Vector_Container::value_type & operator * ( void ) const; 
 		const Vector_Container::value_type * operator -> ( void ) const;    
-        iterator & operator ++ ( void );
-    };
+    iterator & operator ++ ( void );
+  };
 };
 
 /* * * * * * * * * * * * * * * * * * *
@@ -164,7 +175,7 @@ public:
 	template < class First_Cell_Complex_Template, class Second_Cell_Complex_Template >
 	void Product_Complex ( const First_Cell_Complex_Template & first_complex, const Second_Cell_Complex_Template & second_complex );
 	
-    /* Morse Traits */
+  /* Morse Traits */
 	Vector_Container::const_iterator & Husband ( const Vector_Container::const_iterator & input ) const;
 	unsigned int & Morse_Value ( const Vector_Container::const_iterator & input) const;
 	unsigned char & Flags ( const Vector_Container::const_iterator & input ) const;
@@ -177,7 +188,7 @@ public:
 	/* Tags for Morse_Traits for feature checking */
 	struct yes {};
   struct no {};
-
+  
 	/* Default Tag Choices */
 	typedef yes does_it_store_husband_pointers;
 	typedef yes does_it_store_morse_values;

@@ -93,9 +93,13 @@ public:
 	/** Find an elementary chain in the complex. */
 	virtual typename Container::const_iterator find ( const Cell & ) const;
 	
-	/** Return an iterator to an elementary chain in the complex of lowest possible dimension. */
+	/** Return cells [ k ] . begin () for the smallest k for which 
+      cells [ k ] . begin () != cells [ k ] . end () */
 	virtual typename Container::const_iterator begin ( void ) const;
 	
+	/** Return cells [ dimension ] . end () */
+	virtual typename Container::const_iterator end ( void ) const;
+  
 	/* * * * * * * * * * * * * * * * * * * * * **
 	**  Write-only Chain Complex Manipulations **
 	** * * * * * * * * * * * * * * * * * * * * */

@@ -14,7 +14,7 @@
  *  Decomposition_Information Definitions  *
  * * * * * * * * * * * * * * * * * * * * * */
 
-Decomposition_Information::Decomposition_Information ( void ) : flags(0) {};
+Decomposition_Information::Decomposition_Information ( void ) : flags(0) {}
 
 /* * * * * * * * * * * * * * * * * * * * * * * * * *
  *  Vector_Container::const_iterator Definitions   *
@@ -133,7 +133,7 @@ void Vector_Container::resize ( Vector_Container::size_type new_size ) {
  *  Vector_Complex Definitions   *
  * * * * * * * * * * * * * * * * */
 
-Vector_Complex::Vector_Complex ( void ) {};
+Vector_Complex::Vector_Complex ( void ) {}
 
 Vector_Complex::Chain & Vector_Complex::Boundary_Map ( Vector_Complex::Chain & output, const Vector_Complex::Container::const_iterator & input) const {
 	return ( output = Boundary_Map ( input ) ); }

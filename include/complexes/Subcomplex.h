@@ -41,20 +41,18 @@ public:
 
 template < class Cell_Complex >
 class Subcomplex : public Cell_Complex_Archetype < Subcomplex_Container < Cell_Complex > > {
-  /* Templates do not inherit typedefs. (Why not?) 
-     Thus we have to "re-typedef" them.            */
+public:
+  /* typedefs */
+  typedef Subcomplex_Container < Cell_Complex > Container;
   typedef typename Cell_Complex::Chain Chain;
   typedef typename Cell_Complex::Cell Cell;
 	typedef typename Cell_Complex::Ring Ring;
-  typedef Subcomplex_Container < Cell_Complex > Container;
   typedef typename Container::const_iterator const_iterator;
-  using Cell_Complex_Archetype < Subcomplex_Container < Cell_Complex > > :: cells;
-  /* Member variables */
-  const Cell_Complex & super_complex;
-  Chain project_chain ( const Chain & project_me ) const;
-public:
+  using Cell_Complex_Archetype < Container > :: cells;
+  
   /* Constructor */
   Subcomplex ( const Cell_Complex & super_complex );
+  
 	/* * * * * * * * * * * * * * * * * * * * * * * * *
    * Pure Virtual Functions That Must Be Overriden *
    * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -65,7 +63,11 @@ public:
 	virtual Chain & Coboundary_Map ( Chain &, const const_iterator & ) const;
 	/** Remove an elementary chain from the complex. All terms from all chains involving this elementary chain will be deleted. NOT IMPLEMENTED. */
 	virtual void Remove_Cell ( const Cell & );
-	
+
+private:
+  /* Member variables */
+  const Cell_Complex & super_complex;
+  Chain project_chain ( const Chain & project_me ) const;
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_
