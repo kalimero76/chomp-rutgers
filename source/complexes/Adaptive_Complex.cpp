@@ -7,7 +7,7 @@
  *
  */
 
-#include "Adaptive_Complex.h"
+#include "complexes/Adaptive_Complex.h"
 
 /*
  * Adaptive tree implementaion
@@ -486,10 +486,10 @@ void Adaptive_Container::Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< 
 	for( dimension_index = 0; dimension_index < tree_dimension; ++dimension_index )
 		for( std::map<int, bool>::iterator cell_iterator = (*full_cube_cells)[dimension_index].begin(); cell_iterator != (*full_cube_cells)[dimension_index].end(); ++cell_iterator){
 			//If cell is not in smaller neighbours
-			if( !Cell_Is_Subset_Of_Union( *cell_iterator, &smaller_neighbours_intersection ) ){
+			if( !Cell_Is_Subset_Of_Union( cell_iterator -> first, &smaller_neighbours_intersection ) ){
 				//if cube has a full dimensional cell or cell is in bigger neigbhour
-				if( leaf->elementary_cells[ tree_dimension ].size() > 0 || Cell_Is_Subset_Of_Union( *cell_iterator, &bigger_neighbours_intersection ) ){
-					leaf->elementary_cells[ dimension_index ].insert ( std::pair< int , bool >( *cell_iterator, true) );
+				if( leaf->elementary_cells[ tree_dimension ].size() > 0 || Cell_Is_Subset_Of_Union( cell_iterator -> first, &bigger_neighbours_intersection ) ){
+					leaf->elementary_cells[ dimension_index ].insert ( std::pair< int , bool >( cell_iterator -> first, true) );
 					++dimension_sizes[ dimension_index ];
 				}
 			}

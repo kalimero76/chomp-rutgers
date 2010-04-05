@@ -12,8 +12,8 @@
 
 
 
-#include "Chain_Archetype.h" /* for Default_Chain */
-#include "Cell_Complex_Archetype.h" /* for Cell_Complex */
+#include "archetypes/Chain_Archetype.h" /* for Default_Chain */
+#include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
 
 
 /** class Adaptive_Container. **/
@@ -170,11 +170,11 @@ public:
 		const Adaptive_Container * referral;
 		mutable Adaptive_Container::value_type dereference_value;
 
-		unsigned long full_cube_number; /* shouldn't this be private? */
-		std::map<int, bool>::const_iterator piece_iterator; /* shouldn't this be private? */
+		unsigned long full_cube_number;
+		std::map<int, bool>::const_iterator piece_iterator;
 
 		const_iterator ( void );
-		const_iterator ( const Adaptive_Container * const); /* const correctness? */
+		const_iterator ( const Adaptive_Container * const);
 
 		const_iterator & operator ++ ( void );
 		bool operator != ( const const_iterator & ) const;
@@ -254,7 +254,7 @@ public:
 };
 
 #ifdef CHOMP_HEADER_ONLY_
-#include "Adaptive_Complex.cpp"
+#include "complexes/Adaptive_Complex.cpp"
 #endif
 
 #endif
