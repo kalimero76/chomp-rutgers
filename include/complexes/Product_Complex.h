@@ -36,9 +36,9 @@ class Product_Cell {
   typedef Second_Cell_Complex_Template Second_Cell_Complex;
   friend class Product_Container < First_Cell_Complex, Second_Cell_Complex >;
   friend class Product_Complex < First_Cell_Complex, Second_Cell_Complex >;
+public:
   typename First_Cell_Complex::Cell first;
   typename Second_Cell_Complex::Cell second;
-public:
   unsigned int dimension;
   Product_Cell ( void );
   Product_Cell ( const typename First_Cell_Complex::Cell & first_cell, 
@@ -99,7 +99,7 @@ public:
   
 	class const_iterator {
     const Product_Container * referral;
-    Product_Cell<First_Cell_Complex, Second_Cell_Complex> dereference_value;
+    mutable Product_Cell<First_Cell_Complex, Second_Cell_Complex> dereference_value;
   public:
     typename First_Cell_Complex::const_iterator first;
     typename Second_Cell_Complex::const_iterator second;
@@ -109,7 +109,8 @@ public:
                     const typename First_Cell_Complex::const_iterator & first,
                     const typename Second_Cell_Complex::const_iterator & second );
     //const_iterator ( const iterator & convert_me );
-		bool operator != ( const const_iterator & right_hand_side ) const;        
+		bool operator != ( const const_iterator & right_hand_side ) const; 
+    bool operator == ( const const_iterator & right_hand_side ) const;        
 		const typename Product_Container::value_type & operator * ( void ) const; 
 		const typename Product_Container::value_type * operator -> ( void ) const;    
     const_iterator & operator ++ ( void );
@@ -120,6 +121,8 @@ private:
   /* Member Variables */
   unsigned int dimension;
   size_type remembered_size;
+  const_iterator remember_begin;
+  const_iterator remember_end;
   const First_Cell_Complex * first_factor;
   const Second_Cell_Complex * second_factor;
 };
@@ -146,10 +149,11 @@ public:
   /* Constructor */
   Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor );
 
+  using Cell_Complex_Archetype < Container > :: Boundary_Map;
+  using Cell_Complex_Archetype < Container > :: Coboundary_Map;
 	/* * * * * * * * * * * * * * * * * * *
    * Pure Virtual Functions Overrides  *
    * * * * * * * * * * * * * * * * * * */
-	
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
 	virtual Chain & Boundary_Map ( Chain &, const const_iterator & ) const;
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */

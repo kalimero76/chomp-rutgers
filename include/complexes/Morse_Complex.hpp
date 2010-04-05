@@ -136,8 +136,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
    using const_iterators from the original complex. */
   
 	/* Copy the complex. */
-	//std::cout << "AKQ: Copying complex.\n";
-  
+#ifdef MORSE_DEBUG
+	std::cout << "AKQ: Copying complex.\n";
+#endif
 	Cell_Complex_Template copy_complex = original_complex ; /* = original complex */
   
   
@@ -154,8 +155,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
 	std::deque< Cell > working_queue;
   
 	/* Perform initial sweep for K-Q excisions */
-	//std::cout << "AKQ: Initial excision sweep.\n";
-  
+#ifdef MORSE_DEBUG
+	std::cout << "AKQ: Initial excision sweep.\n";
+#endif
 	for ( unsigned int dimension_index = 0; dimension_index <= copy_complex . dimension; ++ dimension_index )
 		for ( const_iterator cell_iterator = copy_complex . cells [ dimension_index ] . begin ();
          cell_iterator != copy_complex . cells [ dimension_index ] . end (); ++ cell_iterator )
@@ -164,16 +166,21 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
 	/* Copy working queue into set. */
 	std::set< Cell > working_set ( working_queue . begin (), working_queue . end () );
   
-	//std::cout << "Entering main AKQ loop. Initial size = " << copy_complex . size () << "\n";
-  
+#ifdef MORSE_DEBUG
+	std::cout << "Entering main AKQ loop. Initial size = " << copy_complex . size () << "\n";
+#endif
 	/* Loop while complex is non-empty. */
 	int old_percent = 0;
 	while ( copy_complex . size () ) {
 		/* Perform K-Q excisions until none remain. */
-		//std::cout << "Entered KQ phase\n";
+#ifdef MORSE_DEBUG
+    std::cout << "Entered KQ phase\n";
+#endif
 		while ( not working_queue . empty () ) {
-			//std::cout << "=== TOP OF KQ Phase Loop ===\n";
-			//std::cout << "\n\n";
+#ifdef MORSE_DEBUG
+			std::cout << "=== TOP OF KQ Phase Loop ===\n";
+			std::cout << "\n\n";
+#endif
 			int percent = 100 - ( copy_complex . size () * 100 ) / original_complex . size ();
 			if ( percent > old_percent ) {
 				std::cout << "\r" << copy_complex . size () << " " << original_complex . size () << " (" << percent << ") ";
@@ -186,9 +193,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
 			while ( not working_queue . empty () && working_set . find ( working_queue . front () ) == working_set . end () ) working_queue . pop_front ();
 			if ( working_queue . empty () ) break;
 			Cell cell = working_queue . front ();
-      
-      //std::cout << "Looking at cell " << cell << "\n";
-      
+#ifdef MORSE_DEBUG
+      std::cout << "Looking at cell " << cell << "\n";
+#endif
 			/* The cell is in "copy_complex". We obtain a const_iterator for it. */
 			const_iterator cell_iterator = copy_complex . find ( cell );
 			
@@ -214,9 +221,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
            * Locate the pair in the original complex. */
           const_iterator King = original_complex . find ( cell );
           const_iterator Queen = original_complex . find ( queen_term . first );
-          
-          //std::cout << "----- AKQ: Removing the KQ pair " << *King << " " << *Queen << " -----\n";
-          
+#ifdef MORSE_DEBUG
+          std::cout << "----- AKQ: Removing the KQ pair " << *King << " " << *Queen << " -----\n";
+#endif
           /* Loop through King's boundaries that are not Queen to gather information. */
           Chain original_boundary_chain;
           
@@ -248,8 +255,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
           
           /* Find the coboundary of the lower dimensional part. */
           Chain coboundary_chain; copy_complex . Coboundary_Map ( coboundary_chain, queen_term . first );
-          //std::cout << "    (queen term) coboundary of " << queen_term . first << " = " << coboundary_chain << "\n";
-          
+#ifdef MORSE_DEBUG
+          std::cout << "    (queen term) coboundary of " << queen_term . first << " = " << coboundary_chain << "\n";
+#endif
           /* Loop through coboundary terms and add them to working list. */
           for ( typename Chain::const_iterator coboundary_term = coboundary_chain . begin ();
                coboundary_term != coboundary_chain . end (); coboundary_term ++ ) {
@@ -270,8 +278,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
           
         case 0:
 				{ /* scope */
-          //std::cout << "----- AKQ: No boundaries for " << cell << " -----\n";
-          
+#ifdef MORSE_DEBUG
+          std::cout << "----- AKQ: No boundaries for " << cell << " -----\n";
+#endif
           /* Find the coboundary. */
           Chain coboundary_chain;
           copy_complex . Coboundary_Map( coboundary_chain, cell_iterator );
@@ -293,15 +302,17 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
           break;
 				} /* scope */
         default:
-          //std::cout << "----- AKQ: More than two boundaries for " << cell << " -----\n";
+#ifdef MORSE_DEBUG
+          std::cout << "----- AKQ: More than two boundaries for " << cell << " -----\n";
+#endif
           /* We are done with queue element. We can remove it. */
           working_queue . pop_front ();
           working_set . erase ( cell );
 			} /* switch */
 		} /* while */
-    
-		//std::cout << "KQ Phase exited. Copy complex size = " << copy_complex . size () << " \n";
-    
+#ifdef MORSE_DEBUG
+		std::cout << "KQ Phase exited. Copy complex size = " << copy_complex . size () << " \n";
+#endif
 		/* Now the K-Q pairs are excised. If complex is now empty, break loop. */
 		if ( copy_complex . size () == 0 ) break;
     
@@ -314,9 +325,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
 		
 		/* Identify the Ace cell in the original complex. */
 		const_iterator Ace = original_complex . find ( cell );
-    
-		//std::cout << "----- AKQ: Excising the Ace " << *Ace << " -----\n";
-    
+#ifdef MORSE_DEBUG
+		std::cout << "----- AKQ: Excising the Ace " << *Ace << " -----\n";
+#endif
 		/* Figure out what the Morse value should be by boundary checking. */
 		Chain original_boundary_chain;
 		original_complex . Boundary_Map ( original_boundary_chain, Ace );
@@ -353,8 +364,9 @@ void Morse_Complex<Cell_Complex_Template>::Ace_King_Queen_Algorithm ( void ) {
     
 	} /* while */
 	/* We are done. */
-	//std::cout << "AKQ Decomposition Complete\n";
-  
+#ifdef MORSE_DEBUG
+	std::cout << "AKQ Decomposition Complete\n";
+#endif
 } /* endfunction */
 
 
@@ -399,7 +411,7 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 	/* Convenient typedefs. */
 	typedef typename Cell_Complex_Template::Container::const_iterator Original_const_iterator;
 	typedef typename Cell_Complex_Template::Chain Original_Chain;
-	typedef Abstract_Complex::Chain Morse_Chain;
+	typedef Chain Morse_Chain;
 	typedef typename Morse_Traits<Cell_Complex_Template>::morse_value_type Morse_Value_Type;
   
 	typedef typename Morse_Value_Chain < Morse_Complex > :: iterator Work_Chain_iterator;
@@ -422,7 +434,7 @@ void Morse_Complex<Cell_Complex_Template>::Morse_Boundary_Algorithm ( void ) {
 	int number_computed = 0;
 	/* Now we loop through the Aces and find their Morse Boundaries. */
 	for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		for ( typename Abstract_Complex::Container::iterator element = morse_complex . cells [ dimension_index ] . begin ();
+		for ( iterator element = morse_complex . cells [ dimension_index ] . begin ();
          element != morse_complex . cells [ dimension_index ] . end (); ++ element ) {
       
 			int percent = ( number_computed * 100 ) / morse_complex . size ();

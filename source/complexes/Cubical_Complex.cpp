@@ -60,10 +60,17 @@ Cubical_Container::const_iterator & Cubical_Container::const_iterator::operator 
 		while ( full_cube_number < number_of_cubes ) {
 			if ( (*(referral -> bitmap)) [ address ] ) return *this ; 
 			full_cube_number ++ ;
-			address += hop_length; } /* while */
+			address += hop_length; 
+    } /* while */
 		next_piece_number (); 
-		if ( piece_number == hop_length) return *this;  
-		full_cube_number = 0; } /* while */ } /* endfunction */
+		if ( piece_number == hop_length) {
+      /* Then we have reached end () */
+      full_cube_number = number_of_cubes; // in case they tried to increment end() itself
+      return *this;  
+    }
+		full_cube_number = 0; 
+  } /* while */ 
+} /* endfunction */
 
 bool Cubical_Container::const_iterator::operator != ( const const_iterator & right_hand_side ) const {
 	if ( piece_number != right_hand_side . piece_number ) return true;
@@ -71,9 +78,9 @@ bool Cubical_Container::const_iterator::operator != ( const const_iterator & rig
 	return false; }
 	
 bool Cubical_Container::const_iterator::operator == ( const const_iterator & right_hand_side ) const {
-	if ( piece_number == right_hand_side . piece_number ) return true;
-	if ( full_cube_number == right_hand_side . full_cube_number ) return true;
-	return false; }
+	if ( piece_number != right_hand_side . piece_number ) return false;
+	if ( full_cube_number != right_hand_side . full_cube_number ) return false;
+	return true; }
 	
 /*
  * Cubical_Container implementations 

@@ -15,7 +15,9 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 Product_Cell ( const typename First_Cell_Complex::Cell & first, 
               const typename Second_Cell_Complex::Cell & second ) 
-: first(first), second(second) {}
+: first(first), second(second) {
+  dimension = first . dimension + second . dimension;
+}
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 bool Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
@@ -74,14 +76,14 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
 Product_Container<First_Cell_Complex, Second_Cell_Complex>::
 begin ( void ) const {
-  return const_iterator ( this, first_factor -> begin (), second_factor -> begin () );
+  return remember_begin;
 }
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
 Product_Container<First_Cell_Complex, Second_Cell_Complex>::
 end ( void ) const {
-  return const_iterator ( this, first_factor -> end (), second_factor -> end () );
+  return remember_end;
 }
 
 /*
@@ -145,6 +147,13 @@ operator != ( const const_iterator & right_hand_side ) const {
 }
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
+bool Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
+operator == ( const const_iterator & right_hand_side ) const {
+  if ( first != right_hand_side . first || second != right_hand_side . second ) return false;
+  return true;
+}
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
 const typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::value_type & 
 Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
 operator * ( void ) const {
@@ -177,19 +186,30 @@ operator ++ ( void ) {
    that the < operator of the parent Cell definitions respect dimensionality in the obvious
    manner.
    */
-  const unsigned int first_dimension = first -> dimension;
-  const unsigned int second_dimension = second -> dimension;
+  unsigned int first_dimension = first -> dimension;
+  unsigned int second_dimension = second -> dimension;
   ++ second;
   if ( second == referral -> second_factor -> cells [ second_dimension ] . end () ) ++ first;
   else return * this; /* Advanced one within type to (same, next) */
   
   if ( first == referral -> first_factor -> cells [ first_dimension ] . end () ) {
-    if ( second_dimension == 0 || first_dimension == first_factor . dimension ) {
+    if ( second_dimension == 0 || first_dimension == referral -> first_factor -> dimension ) {
       return * this; /* Advanced to end() */
     } else {
-      first = referral -> first_factor -> cells [ first_dimension + 1 ] . begin ();
-      second = second_factor -> cells [ second_dimension - 1 ] . begin ();
-      return * this; /* Advanced to beginning of next type. */
+      while ( 1 ) {
+        if ( first_dimension >= referral -> first_factor -> dimension || second_dimension == 0 ) break;
+        ++ first_dimension;
+        -- second_dimension;
+        first = referral -> first_factor -> cells [ first_dimension ] . begin ();
+        second = referral -> second_factor -> cells [ second_dimension ] . begin ();
+        if ( first == referral -> first_factor -> cells [ first_dimension ] . end ()  || 
+             second == referral -> second_factor -> cells [ second_dimension ] . end () ) continue;
+        return *this; /* Advanced to beginning of next non-empty type. */
+      }
+      /* we have reached the end */
+      first = referral -> first_factor -> cells [ first_dimension ] . end ();
+      second = referral -> second_factor -> cells [ second_dimension ] . end ();
+      return * this; /* advanced to end () */
     }
   } else {
     second = referral -> second_factor -> cells [ second_dimension ] . begin ();
@@ -221,6 +241,26 @@ first_factor(first_factor), second_factor(second_factor) {
   for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
     cells [ dimension_index ] . dimension = dimension_index; 
     cells [ dimension_index ] . remembered_size = 0;
+    
+    /* Give the ends (also give default values for the begin's in case the group ends up empty */
+    if ( first_factor . dimension < dimension_index ) {
+      cells [ dimension_index ] . remember_end = const_iterator ( & cells [ dimension_index ], first_factor . cells [ first_factor . dimension ] . end (), second_factor . cells [ dimension_index - first_factor . dimension ] . end () );
+      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ first_factor . dimension ] . end (), second_factor . cells [ dimension_index - first_factor . dimension ] . end () );
+    } else {
+      cells [ dimension_index ] . remember_end = const_iterator ( & cells [ dimension_index ], first_factor . cells [ dimension_index ] . end (), second_factor . cells [ 0 ] . end () );
+      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ dimension_index ] . end (), second_factor . cells [ 0 ] . end () );
+    }
+    
+    /* Find the beginnings */
+    for ( unsigned int index = 0; index <= dimension_index; ++ index ) {
+      if ( second_factor . dimension < dimension_index - index ) continue;
+      if ( first_factor . dimension < index ) break;
+      if ( first_factor . cells [ index ] . begin () == first_factor . cells [ index ] . end () ) continue;
+      if ( second_factor . cells [ dimension_index - index ] . begin () == second_factor . cells [ dimension_index - index ] . end () ) continue;
+      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ index ] . begin (), second_factor . cells [ dimension_index - index ] . begin () );
+      if ( first_factor . cells [ index ] . begin () != first_factor . cells [ index ] . end () && second_factor . cells [ dimension_index - index ] . begin () != second_factor . cells [ dimension_index - index ] . end () ) break;
+    }
+
   }
   /* Store the sizes of the containers */
   for ( unsigned int first_dimension_index = 0; first_dimension_index <= first_factor . dimension; ++ first_dimension_index ) {
@@ -274,8 +314,7 @@ Boundary_Map ( Chain & boundary, const const_iterator & cell_iterator) const {
   /* Construct boundary */
   const typename First_Cell_Complex::Cell & first_cell = * cell_iterator . first;
   const typename Second_Cell_Complex::Cell & second_cell = * cell_iterator . second;
-  //boundary += 
-  tensor_product ( first_boundary, second_cell );
+  boundary += tensor_product ( first_boundary, second_cell );
   if ( cell_iterator . first -> dimension & 1 ) boundary -= tensor_product ( first_cell, second_boundary );
   else boundary += tensor_product ( first_cell, second_boundary );
   return boundary;
@@ -295,8 +334,12 @@ Coboundary_Map ( Chain & coboundary, const const_iterator & cell_iterator ) cons
   /* Construct coboundary */
   const typename First_Cell_Complex::Cell & first_cell = * cell_iterator . first;
   const typename Second_Cell_Complex::Cell & second_cell = * cell_iterator . second;
+  //std::cout << "pc: cob(" << first_cell << ", " << second_cell << ") = \n"; 
   coboundary += tensor_product ( first_coboundary, second_cell );
+  //std::cout << coboundary << "\n";
   if ( cell_iterator . first -> dimension & 1 ) coboundary -= tensor_product ( first_cell, second_coboundary );
   else coboundary += tensor_product ( first_cell, second_coboundary );
+  //std::cout << coboundary << "\n";
+
   return coboundary;
 }

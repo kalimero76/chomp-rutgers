@@ -6,6 +6,19 @@
 template < class Cell_Complex >
 Subcomplex<Cell_Complex>::
 Subcomplex ( const Cell_Complex & super_complex ) : super_complex(super_complex) {
+  dimension = super_complex . dimension;
+  cells . resize ( dimension + 1 );
+  unsigned long count = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
+    std::cout << "dimension = " << dimension_index << "\n";
+    for ( typename Cell_Complex::const_iterator cell = super_complex . cells [ dimension_index ] . begin (); 
+         cell != super_complex . cells [ dimension_index ] . end (); ++ cell ) {
+      cells [ dimension_index ] . insert ( *cell );
+      ++ count;
+      //std::cout << "Inserting " << *cell << "\n";
+    }
+    std::cout << "count = " << count << "\n";
+  }
 } /* Subcomplex */
 
 template < class Cell_Complex >
@@ -30,12 +43,15 @@ template < class Cell_Complex >
 typename Cell_Complex::Chain & Subcomplex<Cell_Complex>::
 Coboundary_Map ( Chain & coboundary, const const_iterator & input) const {
   Chain super_coboundary;
-  super_complex . Boundary_Map ( super_coboundary, *input );
+  super_complex . Coboundary_Map ( super_coboundary, *input );
+  //std::cout << "super_coboundary = " << super_coboundary << "\n";
   return coboundary = project_chain ( super_coboundary );
 } /* Coboundary_Map */
 
 template < class Cell_Complex >
 void Subcomplex<Cell_Complex>::
 Remove_Cell ( const Cell & remove_me ) {
+  //std::cout << "Removing " << 
   cells [ remove_me . dimension ] . erase ( remove_me );
+  //<< " cells.\n";
 } /* Remove_Cell */

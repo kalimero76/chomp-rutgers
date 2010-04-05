@@ -105,7 +105,7 @@ public:
 	** * * * * * * * * * * * * * * * * * * * * */
 	
 	/** Remove an Elementary Chain from the complex */
-	virtual void Remove_Cell ( const Cell &) = 0;
+	//virtual void Remove_Cell ( const Cell &) = 0;
 	
 };
 

@@ -23,7 +23,7 @@ template < class Cell_Complex_Template > class Morse_Complex;
 
 /** Morse_Complex class. */
 template < class Cell_Complex_Template >
-class Morse_Complex : public Abstract_Complex {
+class Morse_Complex : public Abstract_Complex < typename Cell_Complex_Template::Chain > {
 public: 
 	mutable std::map < typename Cell_Complex_Template::Cell, typename Cell_Complex_Template::Container::const_iterator > husband_pointers;
 	mutable std::map < typename Cell_Complex_Template::Cell, typename Morse_Traits<Cell_Complex_Template>::morse_value_type > morse_values;
@@ -42,13 +42,27 @@ public:
 	bool Is_Excised ( unsigned char ) const; 
 
 public:
+  /* typedefs */
+  typedef typename Abstract_Complex<typename Cell_Complex_Template::Chain>::Container Container;
+  typedef typename Container::Chain Chain;
+  typedef typename Container::Cell Cell;
+	typedef typename Container::Ring Ring;
+  typedef typename Container::const_iterator const_iterator;
+  typedef typename Container::iterator iterator;
+
+  /* Member variables */
+  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: cells;
+  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: dimension;
+  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: Boundary_Map;
+  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: Coboundary_Map;
+  
 	typedef Cell_Complex_Template Cell_Complex;
 	const Cell_Complex_Template & original_complex; /* notice features in complex will have to be specifically declared mutable */
 	
 	Morse_Complex ( const Cell_Complex & original_complex); 
 	void Ace_King_Queen_Algorithm ( void );
 	void Morse_Boundary_Algorithm ( void );
-	typename Cell_Complex::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex::Chain & canonical_chain, const Abstract_Complex::Chain & morse_chain );
+	typename Cell_Complex::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex::Chain & canonical_chain, const Chain & morse_chain );
 	
 };
 

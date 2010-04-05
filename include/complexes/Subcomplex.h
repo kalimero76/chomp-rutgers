@@ -49,6 +49,7 @@ public:
 	typedef typename Cell_Complex::Ring Ring;
   typedef typename Container::const_iterator const_iterator;
   using Cell_Complex_Archetype < Container > :: cells;
+  using Cell_Complex_Archetype < Container > :: dimension;
   
   /* Constructor */
   Subcomplex ( const Cell_Complex & super_complex );
@@ -56,7 +57,9 @@ public:
 	/* * * * * * * * * * * * * * * * * * * * * * * * *
    * Pure Virtual Functions That Must Be Overriden *
    * * * * * * * * * * * * * * * * * * * * * * * * */
-	
+	using Cell_Complex_Archetype < Container > :: Boundary_Map;
+  using Cell_Complex_Archetype < Container > :: Coboundary_Map;
+  
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
 	virtual Chain & Boundary_Map ( Chain &, const const_iterator & ) const;
 	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */

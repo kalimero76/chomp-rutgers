@@ -20,19 +20,20 @@
  ********************************************************************************/
 
 /* Forward Declarations */
-class Abstract_Container;
-class Abstract_Complex;
+template < class > class Abstract_Container;
+template < class > class Abstract_Complex;
 
 /* * * * * * * * * * * * * * **
  ** class Abstract_Container  **
  ** * * * * * * * * * * * * * */
 
-class Abstract_Container : public std::set < Default_Cell >  {
+template < class Chain_Type = Default_Chain >
+class Abstract_Container : public std::set < typename Chain_Type::Cell >  {
 public:
 	/* typedefs */	 
-	typedef Default_Chain Chain;
-  typedef Chain::Cell Cell;
-	typedef Chain::Ring Ring;
+	typedef Chain_Type Chain;
+  typedef typename Chain::Cell Cell;
+	typedef typename Chain::Ring Ring;
   std::map < Cell, Chain > boundary_data;
   std::map < Cell, Chain > coboundary_data;
   
@@ -41,10 +42,22 @@ public:
 /* * * * * * * * * * * * * **
  ** class Abstract_Complex  **
  ** * * * * * * * * * * * * */
-
-class Abstract_Complex : public Cell_Complex_Archetype < Abstract_Container > {
+template < class Chain_Type = Default_Chain >
+class Abstract_Complex : public Cell_Complex_Archetype < Abstract_Container < Chain_Type > > {
 public:
-	/* See Cell_Complex_Archetype */
+  /* typedefs */
+  typedef Abstract_Container < Chain_Type > Container;
+	typedef Chain_Type Chain;
+  typedef typename Chain::Cell Cell;
+	typedef typename Chain::Ring Ring;
+  typedef typename Container::const_iterator const_iterator;
+  typedef typename Container::iterator iterator;
+
+  /* Member variables */
+  using Cell_Complex_Archetype < Container > :: cells;
+  using Cell_Complex_Archetype < Container > :: dimension;
+  using Cell_Complex_Archetype < Container > :: Boundary_Map; 
+	using Cell_Complex_Archetype < Container > :: Coboundary_Map;
   
 	/* * * * * * * * * * * * * * * * * * * * * * * * *
    * Pure Virtual Functions That Must Be Overriden *
@@ -60,14 +73,11 @@ public:
   /* * * * * * * * * * *
 	 * New Functionality *
 	 * * * * * * * * * * */
-  
-	using Cell_Complex_Archetype<Abstract_Container>::Boundary_Map; 
-	using Cell_Complex_Archetype<Abstract_Container>::Coboundary_Map;
 	
 	/** Returns a reference to the Boundary already stored. This is not a copy, so subsequently altering this chain alters the complex directly. */
-	virtual Chain & Boundary_Map ( const Container::iterator & );
+	virtual Chain & Boundary_Map ( const iterator & );
 	/** Returns a reference to the Coboundary already stored. This is not a copy, so, subsequently altering this chain alters the complex directly. */
-	virtual Chain & Coboundary_Map ( const Container::iterator & );
+	virtual Chain & Coboundary_Map ( const iterator & );
 	/** Returns a const reference to the Boundary already stored. This is not a copy, but cannot be altered. */
 	virtual const Chain & Boundary_Map ( const const_iterator & ) const;
 	/** Returns a const reference to the Coboundary already stored. This is not a copy, but cannot be altered. */
