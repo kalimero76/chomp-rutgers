@@ -261,7 +261,7 @@ int main (int argc, char * const argv[]) {
 	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
 			
 	/* Manifold Example */
-	manifold_example ( 7 );
+	manifold_example ( 8 );
 	
 	imperfect_product_example ();
 	
