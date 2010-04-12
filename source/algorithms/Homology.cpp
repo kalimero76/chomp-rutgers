@@ -17,9 +17,9 @@
 template void Homology < Cubical_Complex > ( const Cubical_Complex & );
 
 #include "complexes/Abstract_Complex.h"
-template void Homology < Abstract_Complex > ( const Abstract_Complex & );
+template void Homology < Abstract_Complex <> > ( const Abstract_Complex <> & );
 
 #include "complexes/Morse_Complex.h"
 template void Homology < Morse_Complex < Cubical_Complex > > ( const Morse_Complex < Cubical_Complex > & );
-template void Homology < Morse_Complex < Abstract_Complex > > ( const Morse_Complex < Abstract_Complex > & );
+template void Homology < Morse_Complex < Abstract_Complex <> > > ( const Morse_Complex < Abstract_Complex <> > & );
 #endif

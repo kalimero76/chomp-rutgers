@@ -15,7 +15,7 @@
 #include "complexes/Cubical_Complex.h" 
 template class Cell_Complex_Archetype < Cubical_Container >;
 #include "complexes/Abstract_Complex.h" 
-template class Cell_Complex_Archetype < Abstract_Container >;
+template class Cell_Complex_Archetype < Abstract_Container <> >;
 #include "complexes/Vector_Complex.h" 
 template class Cell_Complex_Archetype < Vector_Container >;
 #endif
