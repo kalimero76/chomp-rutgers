@@ -53,7 +53,7 @@ std::ostream & operator << ( std::ostream & output_stream, const Product_Cell<Fi
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-Product_Container ( const First_Cell_Complex & first_factor, const First_Cell_Complex & second_factor )
+Product_Container ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor )
 : first_factor(&first_factor), second_factor(&second_factor) {}
 
 template < class First_Cell_Complex, class Second_Cell_Complex >

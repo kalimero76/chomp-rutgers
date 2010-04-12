@@ -82,7 +82,7 @@ public:
   //friend class iterator;
   
   /* Member Functions */
-  Product_Container ( const First_Cell_Complex & first_factor, const First_Cell_Complex & second_factor );
+  Product_Container ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor );
   size_type size ( void ) const;
 	const_iterator find ( const Cell & find_me ) const;
 	const_iterator begin ( void ) const;
