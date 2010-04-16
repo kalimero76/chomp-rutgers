@@ -258,12 +258,12 @@ int main (int argc, char * const argv[]) {
 	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
 
 	/* Run 5D tests */
-	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
+	run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
 			
 	/* Manifold Example */
-	manifold_example ( 8 );
+	//manifold_example ( 8 );
 	
-	imperfect_product_example ();
+	//imperfect_product_example ();
 	
 return 0;
 }

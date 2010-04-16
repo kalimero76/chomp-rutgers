@@ -161,10 +161,10 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
 	std::vector<unsigned long> * jump_values = new std::vector<unsigned long> (this -> dimension, 0);
 	unsigned long number_of_full_cubes = 1;
 	for ( unsigned long index = 0; index < this -> dimension; ++ index ) { 
-		( *dimension_sizes ) [ index ] = user_dimension_sizes [ index ];
+		( *dimension_sizes ) [ index ] = ( 1 + user_dimension_sizes [ index ] );
 		( *jump_values ) [ index ] = number_of_full_cubes;
-		number_of_full_cubes *= user_dimension_sizes [ index ]; } /* for */
-		
+		number_of_full_cubes *= ( 1 + user_dimension_sizes [ index ] ); 
+  } /* for */
 	std::vector<bool> * bitmap = new std::vector<bool> ( number_of_full_cubes << this -> dimension, false );
 	cells . resize ( this -> dimension + 1);
 	for ( unsigned long index = 0; index <= this -> dimension; ++ index ) {
@@ -175,8 +175,10 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
 		cells [ index ] . jump_values =  jump_values;
 		cells [ index ] . bitmap = bitmap; 
 		cells [ index ] . remembered_size = 0;
-		cells [ index ] . first_address = number_of_full_cubes << ( this -> dimension ); } /* for */
-	data_allocated = true; } /* endfunction */
+		cells [ index ] . first_address = number_of_full_cubes << ( this -> dimension ); 
+  } /* for */
+	data_allocated = true; 
+} /* Allocate_Bitmap */
 	
 /* Insert_Elementary_Cell */
 

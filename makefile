@@ -18,14 +18,15 @@ CXX_STANDALONE := $(CXX) $(CXXFLAGS)
 
 all: library
 
-ARCHETYPE_OBJECTS := Cell_Complex_Archetype.o Chain_Archetype.o 
+ARCHETYPE_OBJECTS := Cell_Complex_Archetype.o Chain_Archetype.o Toplex_Archetype.o
 ALGORITHM_OBJECTS := Homology.o matrix/Smith_Normal_Form.o matrix/Sparse_Matrix.o matrix/Dense_Matrix.o
 COMPLEX_OBJECTS := Abstract_Complex.o Cubical_Complex.o Morse_Complex.o Vector_Complex.o Subcomplex.o Product_Complex.o Adaptive_Complex.o
+TOPLEX_OBJECTS := Cubical_Toplex.o
 
 LIBRARY_OBJECTS := $(patsubst %.o, build/archetypes/%.o, $(ARCHETYPE_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/algorithms/%.o, $(ALGORITHM_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/complexes/%.o, $(COMPLEX_OBJECTS) )
-
+LIBRARY_OBJECTS += $(patsubst %.o, build/toplexes/%.o, $(TOPLEX_OBJECTS) )
 
 library: $(LIBRARY_OBJECTS)
 	ar rcs lib/libchomp-rutgers.a $(LIBRARY_OBJECTS)

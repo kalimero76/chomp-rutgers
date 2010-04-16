@@ -127,6 +127,9 @@ public:
 
 	void Insert_Elementary_Cell ( const unsigned long address  );
 	void Add_Full_Cube ( const std::vector<unsigned int> & coordinates );
+  /** Allocate_Bitmap
+      Initializes bitmap so that the complex may contain a full cubical complex
+      which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1) */
 	void Allocate_Bitmap ( const std::vector<unsigned int> & sizes );
 };
 
