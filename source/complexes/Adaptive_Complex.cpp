@@ -103,7 +103,7 @@ void Adaptive_Container::Adaptive_Tree::Leaf_LookUp::Initialize(Adaptive_Contain
 			while( node_visitor->Left_Child() != NULL);
 		else{
 			test_node = node_visitor->Current_Node();
-			//The conditions must be evaluated from left to right. Is that true?
+			//The conditions must be evaluated from left to right. Is that true? //yes -SRH
 			while( test_node->parent != NULL && test_node == test_node->parent->right_child )
 				test_node = node_visitor->Parent();
 			if( node_visitor->Parent() == NULL )

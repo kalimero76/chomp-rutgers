@@ -95,7 +95,7 @@ public:
 
 		};
 
-		/* To compare positins of to cubes. One is obtaied be going backward along acsending_path
+		/* To compare positions of two cubes. One is obtained be going backward along acsending_path
 		 * while the other one is obtained by procedure of finding neighbors
 		 */
 		class Relative_Positions {
