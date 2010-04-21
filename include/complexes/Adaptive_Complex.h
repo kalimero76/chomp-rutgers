@@ -208,10 +208,6 @@ public:
 	/** Copy constructor (deep copy required) */
 	Adaptive_Complex ( const Adaptive_Complex &);
 
-
-	/** Copy constructor (deep copy required) */
-	//Adaptive_Complex ( const Adaptive_Complex & );
-
 	/** Deconstructor (deep deconstruction required) */
 	~Adaptive_Complex ( void );
 

@@ -42,7 +42,7 @@ public:
 	/** We typedef the ring type used by the underlying container. */
 	typedef typename Container::Chain::Ring Ring;
 	/** We typedef the size_type used by the underlying container. */
-    typedef typename Container::size_type size_type;
+  typedef typename Container::size_type size_type;
     
 	/* * * * **
 	** Data  **
