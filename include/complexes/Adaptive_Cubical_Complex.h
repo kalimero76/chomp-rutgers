@@ -31,6 +31,11 @@ public:
   typedef Adaptive_Cubical_const_iterator const_iterator;
   typedef const_iterator iterator;
   
+  /* Constructors */
+  Adaptive_Cubical_Container ( void );
+  Adaptive_Cubical_Container ( unsigned int dimension );
+  ~Adaptive_Cubical_Container ( void );
+  
   /* "Simple Associative Container" concept (just the basics)*/
   iterator find ( const key_type & );
   void erase ( iterator erase_me );
@@ -49,7 +54,7 @@ private:
   friend class Adaptive_Cubical_const_iterator;
   /* Data */
   unsigned int dimension_;
-  Node ** tree_data_;
+  std::vector < Node * > tree_data_;
   
 };
 
@@ -57,6 +62,7 @@ private:
 class Adaptive_Cubical_const_iterator {
 public:
   Adaptive_Cubical_const_iterator ( void );  
+  Adaptive_Cubical_const_iterator ( const Adapative_Cubical_Container * const referral );  
   Adaptive_Cubical_const_iterator & operator ++ ( void );
   bool operator != ( const Adaptive_Cubical_const_iterator & right_hand_side ) const;
   bool operator == ( const Adaptive_Cubical_const_iterator & right_hand_side ) const;
@@ -65,6 +71,8 @@ public:
   const Adaptive_Cubical_Container::value_type * operator -> ( void ) const;
 private:
   Node * leaf_;
+  const Adapative_Cubical_Container * referral_;
+  unsigned long type_;
 };
 
 /** class Adaptive_Cubical_Complex **/
