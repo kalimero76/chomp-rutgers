@@ -72,7 +72,7 @@ public:
   ~Adaptive_Cubical_Container ( void );
   
   /* "Simple Associative Container" concept (just the basics)*/
-  iterator find ( const key_type & ) const;
+  iterator find ( const key_type & find_me ) const;
   void erase ( const iterator & erase_me );
   
   /* "Cell Container" concept */

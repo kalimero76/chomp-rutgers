@@ -28,15 +28,43 @@ template < class > class Abstract_Complex;
  ** * * * * * * * * * * * * * */
 
 template < class Chain_Type = Default_Chain >
-class Abstract_Container : public std::set < typename Chain_Type::Cell >  {
+class Abstract_Container {
 public:
 	/* typedefs */	 
 	typedef Chain_Type Chain;
   typedef typename Chain::Cell Cell;
 	typedef typename Chain::Ring Ring;
-  std::map < Cell, Chain > boundary_data;
-  std::map < Cell, Chain > coboundary_data;
+  typedef size_t size_type;
+  typedef Cell value_type;
+  typedef Cell key_type;
+  /* Comment: the following are identical in SGI defined STL library. */
+  typedef typename std::set<Cell>::const_iterator const_iterator;
+  typedef typename std::set<Cell>::iterator iterator;
+
+  /* Simple Associative Container, Unique Associative Container, Cell Container, Boundary Container */
+  Abstract_Container ( void );
+  Abstract_Container ( unsigned int dimension );
+  iterator find ( const key_type & find_me );
+  const_iterator find ( const key_type & find_me ) const;
+  std::pair<iterator, bool> insert ( const value_type & insert_me );
+  void erase ( iterator erase_me );
+  iterator begin ( unsigned int dimension ) const;
+  iterator end ( unsigned int dimension ) const;
+  size_type size ( unsigned int dimension ) const;
+  Chain & boundary ( const iterator & input );
+  const Chain & boundary ( const const_iterator & input ) const;
+  Chain & coboundary ( const iterator & input );
+  const Chain & coboundary ( const const_iterator & input ) const;
+  unsigned int dimension ( void ) const;
   
+private:
+  std::set < Cell > cells_;
+  std::vector < const_iterator > begin_;
+  std::vector < const_iterator > end_;
+  std::vector < size_type > size_;
+  std::map < Cell, Chain > boundary_;
+  std::map < Cell, Chain > coboundary_;
+  unsigned int dimension_;
 };
 
 /* * * * * * * * * * * * * **
@@ -54,21 +82,9 @@ public:
   typedef typename Container::iterator iterator;
 
   /* Member variables */
-  using Cell_Complex_Archetype < Container > :: cells;
   using Cell_Complex_Archetype < Container > :: dimension;
   using Cell_Complex_Archetype < Container > :: Boundary_Map; 
 	using Cell_Complex_Archetype < Container > :: Coboundary_Map;
-  
-	/* * * * * * * * * * * * * * * * * * * * * * * * *
-   * Pure Virtual Functions That Must Be Overriden *
-   * * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
-	virtual Chain & Boundary_Map ( Chain &, const const_iterator & ) const;
-	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
-	virtual Chain & Coboundary_Map ( Chain &, const const_iterator & ) const;
-	/** Remove an elementary chain from the complex. All terms from all chains involving this elementary chain will be deleted. NOT IMPLEMENTED. */
-	virtual void Remove_Cell ( const Cell & );
 	
   /* * * * * * * * * * *
 	 * New Functionality *

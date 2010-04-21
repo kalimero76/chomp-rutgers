@@ -15,7 +15,7 @@
  * * * * * * * * * * * * * * * * */
 
 template < class Container_Template >
-class Cell_Complex_Archetype {
+class Cell_Complex_Archetype : public Container_Template {
 public:
 
 	/* * * * * * * * * * * * * * * **
@@ -39,74 +39,63 @@ public:
 	typedef typename Container::Chain::Cell Cell;
 	/** We typedef the const_iterator type used by the underlying container */
 	typedef typename Container::const_iterator const_iterator;
+  typedef const_iterator iterator;
 	/** We typedef the ring type used by the underlying container. */
 	typedef typename Container::Chain::Ring Ring;
 	/** We typedef the size_type used by the underlying container. */
   typedef typename Container::size_type size_type;
-    
-	/* * * * **
-	** Data  **
-	** * * * */
 	
-	/** Store maximum dimension in the complex. */
-	unsigned int dimension;
-	/** Store a vector of Containers to hold Chain Groups. */
-	std::vector<Container> cells;
-	
+  /* expected from base class */
+  using Container_Template::begin;
+  using Container_Template::end;
+  using Container_Template::size;
+  using Container_Template::find;
+  using Container_Template::erase;
+  using Container_Template::boundary;
+  using Container_Template::coboundary;
+  using Container_Template::dimension;
+
+  
 	/* * * * * * * * * * * * * * * * * * * * * * **
 	**  Read-only Chain Complex Member Functions **
 	** * * * * * * * * * * * * * * * * * * * * * */
 	
-	/** Calculate Boundary and copy answer into the supplied chain */
-	virtual Chain & Boundary_Map ( Chain &, const Cell & ) const;
-	
-	/** Calculate Boundary and copy answer into the supplied chain */
-	virtual Chain & Boundary_Map ( Chain &, const const_iterator & ) const = 0;
-
-	/** Calculate Boundary and copy answer into the supplied chain */
-	virtual Chain & Boundary_Map ( Chain &, const Chain & ) const;
-		
-	/** Calculate Coboundary and copy answer into the supplied chain */
-	virtual Chain & Coboundary_Map ( Chain &, const Cell & ) const;
-	
-	/** Calculate Coboundary and copy answer into the supplied chain */
-	virtual Chain & Coboundary_Map ( Chain &, const const_iterator & ) const = 0;
-
-	/** Calculate Coboundary and copy answer into the supplied chain */
-	virtual Chain & Coboundary_Map ( Chain &, const Chain & ) const;
-	
-	/** Count the number of Elementary Chains in the boundary of a single Elementary Chain */
-	virtual size_type Count_Boundaries ( const const_iterator & ) const;
-
-	/** Count the number of Elementary Chains in the boundary of a single Elementary Chain */
-	virtual size_type Count_Boundaries ( const Cell & ) const;
-	
-	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
-	virtual size_type Count_Coboundaries ( const const_iterator & ) const;
-
-	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
-	virtual size_type Count_Coboundaries ( const Cell & ) const;
-	
-	/** Report number of Elementary Chains in complex. */
-	virtual size_type size ( void ) const;
-	
-	/** Find an elementary chain in the complex. */
-	virtual typename Container::const_iterator find ( const Cell & ) const;
-	
-	/** Return cells [ k ] . begin () for the smallest k for which 
-      cells [ k ] . begin () != cells [ k ] . end () */
-	virtual typename Container::const_iterator begin ( void ) const;
-	
-	/** Return cells [ dimension ] . end () */
-	virtual typename Container::const_iterator end ( void ) const;
+  /** Calculate Boundary and copy answer into the supplied chain */
+	Chain & Boundary_Map ( Chain &, const const_iterator & ) const;
   
-	/* * * * * * * * * * * * * * * * * * * * * **
-	**  Write-only Chain Complex Manipulations **
-	** * * * * * * * * * * * * * * * * * * * * */
+	/** Calculate Boundary and copy answer into the supplied chain */
+	Chain & Boundary_Map ( Chain &, const Cell & ) const;
 	
-	/** Remove an Elementary Chain from the complex */
-	//virtual void Remove_Cell ( const Cell &) = 0;
+	/** Calculate Boundary and copy answer into the supplied chain */
+	Chain & Boundary_Map ( Chain &, const Chain & ) const;
+		
+  /** Calculate Coboundary and copy answer into the supplied chain */
+	Chain & Coboundary_Map ( Chain &, const const_iterator & ) const;
+  
+	/** Calculate Coboundary and copy answer into the supplied chain */
+	Chain & Coboundary_Map ( Chain &, const Cell & ) const;
 	
+	/** Calculate Coboundary and copy answer into the supplied chain */
+	Chain & Coboundary_Map ( Chain &, const Chain & ) const;
+	
+	/** Count the number of Elementary Chains in the boundary of a single Elementary Chain */
+	size_type Count_Boundaries ( const const_iterator & ) const;
+
+	/** Count the number of Elementary Chains in the boundary of a single Elementary Chain */
+	size_type Count_Boundaries ( const Cell & ) const;
+	
+	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
+	size_type Count_Coboundaries ( const const_iterator & ) const;
+
+	/** Count the number of Elementary Chains in the coboundary of a single Elementary Chain */
+	size_type Count_Coboundaries ( const Cell & ) const;
+	
+  /* Simple Associative Container */
+  iterator begin ( void ) const;
+  iterator end ( void ) const;
+  size_type size ( void ) const;
+  
+  /* TODO : add functions to increase conformity to S.A.C. */
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_

@@ -17,10 +17,13 @@
  *                             CUBICAL COMPLEXES                                *
  ********************************************************************************/
 
+class Cubical_const_iterator;
+class Cubical_Container;
+class Cubical_Complex;
 
-/* * * * * * * * * * * * * **
-** class Cubical_Container **
-** * * * * * * * * * * * * */
+/* * * * * * * * * * * * * *
+ * class Cubical_Container *
+ * * * * * * * * * * * * * */
 
 class Cubical_Container {
 public:
@@ -29,104 +32,72 @@ public:
 	typedef Chain::Cell Cell;
 	typedef Chain::Ring Ring;
 	typedef unsigned long size_type;
-    
-    /* data */
-	unsigned int space_dimension;
-	unsigned int cube_dimension; 
-	unsigned long number_of_cubes;
-	std::vector<unsigned int> * dimension_sizes; 
-	std::vector<unsigned long> * jump_values; 
-	std::vector<bool> * bitmap; 
-	size_type remembered_size;
-	mutable unsigned long first_address;
-	
-	/* Simple Associative Container */
 	typedef Cell key_type;
 	typedef Cell value_type;
-
-	/* Nested Classes*/
-	 
-	class const_iterator;
-	friend class const_iterator;
-	
-	/* const_iterator */
-	 
-	class const_iterator {
-	public:
-		const Cubical_Container * referral;
-		/** Because cells are stored implicitly,
-		 * the arrow operator -> cannot be implemented without
-		 * having an actual reference somewhere. The address of the
-		 * variable "dereference_value" is the address returned
-		 * by the overloaded version of ->. 
-         * Whenever -> is called, dereference_value is 
-		 * updated, and never otherwise. 
-		 * We have to make "dereference_value" mutable since -> should work for
-		 * const const_iterator's as well.*/
-		mutable Cubical_Container::value_type dereference_value;
-		void next_piece_number ( void ); 
-		unsigned long full_cube_number; 
-		unsigned long piece_number; 
-		const_iterator ( void );
-		const_iterator ( const Cubical_Container * const); 
-		const_iterator ( const Cubical_Container * const referral, const unsigned long full_cube_number, const unsigned long piece_number );
-
-		const_iterator & operator ++ ( void );
-		bool operator != ( const const_iterator & ) const;
-		bool operator == ( const const_iterator & ) const;
-
-		const Cubical_Container::value_type & operator * ( void ) const; 
-		const Cubical_Container::value_type * operator -> ( void ) const;
-	};
-	size_type size ( void ) const;
-	const_iterator begin ( void ) const;
-	const_iterator end ( void ) const;
-	const_iterator find ( const key_type & ) const;
-
+  typedef Cubical_const_iterator const_iterator;
+  typedef const_iterator iterator;
+  /* Simple Associative Container, Unique Associative Container, Cell Container */
+  std::pair<iterator, bool> insert ( const value_type & insert_me );
+  void erase ( const iterator & erase_me );
+  iterator begin ( unsigned int dimension ) const;
+  iterator end ( unsigned int dimension ) const;
+  iterator find ( const key_type & find_me ) const;
+  size_type size ( unsigned int dimension ) const;
+  Chain boundary ( const const_iterator & input ) const;
+  Chain coboundary ( const const_iterator & input ) const;
+  unsigned int dimension ( void ) const;
+private:  
+	friend class Cubical_const_iterator;
+	unsigned int dimension_; 
+	std::vector<unsigned int> dimension_sizes; 
+	std::vector<unsigned long> jump_values; 
+	std::vector<bool> bitmap; 
+  std::vector<const_iterator> begin_;
+  std::vector<const_iterator> end_;
+  std::vector<size_type> size_;
+	mutable unsigned long first_address;
+  unsigned long number_of_cubes;
 };
 
-/* * * * * * * * * * * * **
-** class Cubical_Complex **
-** * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * *
+ * class Cubical_const_iterator  *
+ * * * * * * * * * * * * * * * * */
+
+class Cubical_const_iterator {
+public:
+  Cubical_const_iterator ( void );
+  Cubical_const_iterator ( const Cubical_Container * const); 
+  Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long full_cube_number, const unsigned long piece_number );
+  Cubical_const_iterator & operator ++ ( void );
+  bool operator != ( const Cubical_const_iterator & ) const;
+  bool operator == ( const Cubical_const_iterator & ) const;
+  const Cubical_Container::value_type & operator * ( void ) const; 
+  const Cubical_Container::value_type * operator -> ( void ) const;
+private:
+  const Cubical_Container * referral;
+  mutable Cubical_Container::value_type dereference_value;
+  unsigned int dimension_;
+  unsigned long full_cube_number; 
+  unsigned long piece_number;
+  void next_piece_number ( void ); 
+};
+
+/* * * * * * * * * * * * *
+ * class Cubical_Complex *
+ * * * * * * * * * * * * */
 
 class Cubical_Complex : public Cell_Complex_Archetype < Cubical_Container > {
-	/* Optimizations */
-	bool is_a_full_complex;
-	bool data_allocated;
-	
 public:
-	/* See Cell_Complex_Archetype */
+  /** Load_From_File 
+      Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
+	void Load_From_File ( const char * FileName );
 	
-	/** Constructor */
-	Cubical_Complex ( void );
+  /** Insert_Elementary_Cell */
+  void Insert_Elementary_Cell ( const unsigned long address  );
 	
-	/** Copy constructor (deep copy required) */
-	Cubical_Complex ( const Cubical_Complex & );
-	
-	/** Deconstructor (deep deconstruction required) */
-	~Cubical_Complex ( void );
-	
-	/* * * * * * * * * * * * * * * * * * * * * * * * **
-	** Pure Virtual Functions That Must Be Overriden **
-	** * * * * * * * * * * * * * * * * * * * * * * * */
-	
-	virtual void Load_From_File ( const char * FileName );
-	virtual Chain & Boundary_Map ( Chain &, const Container::const_iterator & ) const;
-	virtual Chain & Coboundary_Map ( Chain &, const Container::const_iterator & ) const;
-	virtual void Remove_Cell ( const Cell & );
-	
-	/* Overloaded declarations in a derived class
-	 * hide the base class members */
-	 
-	using Cell_Complex_Archetype<Cubical_Container>::Boundary_Map;  
-	using Cell_Complex_Archetype<Cubical_Container>::Coboundary_Map;
-	
-	/* * * * * * * * * * * **
-	** All other functions **
-	** * * * * * * * * * * */
-
-	void Insert_Elementary_Cell ( const unsigned long address  );
-	void Add_Full_Cube ( const std::vector<unsigned int> & coordinates );
+  /** Add_Full_Cube */
+  void Add_Full_Cube ( const std::vector<unsigned int> & coordinates );
+  
   /** Allocate_Bitmap
       Initializes bitmap so that the complex may contain a full cubical complex
       which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1) */
