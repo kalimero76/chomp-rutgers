@@ -1,9 +1,8 @@
 /*
  *  Cubical_Complex.h
- *  srh_chomp
  *
  *  Created by Shaun Harker on 9/14/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009. All rights reserved.
  *
  */
 
@@ -48,15 +47,15 @@ public:
   unsigned int dimension ( void ) const;
 private:  
 	friend class Cubical_const_iterator;
+  friend class Cubical_Complex;
 	unsigned int dimension_; 
-	std::vector<unsigned int> dimension_sizes; 
-	std::vector<unsigned long> jump_values; 
-	std::vector<bool> bitmap; 
+	std::vector<unsigned int> dimension_sizes_; 
+	std::vector<unsigned long> jump_values_; 
+	std::vector<bool> bitmap_; 
   std::vector<const_iterator> begin_;
   std::vector<const_iterator> end_;
   std::vector<size_type> size_;
-	mutable unsigned long first_address;
-  unsigned long number_of_cubes;
+  unsigned long bitmap_size_;
 };
 
 /* * * * * * * * * * * * * * * * *
@@ -67,19 +66,18 @@ class Cubical_const_iterator {
 public:
   Cubical_const_iterator ( void );
   Cubical_const_iterator ( const Cubical_Container * const); 
-  Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long full_cube_number, const unsigned long piece_number );
+  Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long address, const unsigned int dimension ); 
   Cubical_const_iterator & operator ++ ( void );
   bool operator != ( const Cubical_const_iterator & ) const;
   bool operator == ( const Cubical_const_iterator & ) const;
-  const Cubical_Container::value_type & operator * ( void ) const; 
-  const Cubical_Container::value_type * operator -> ( void ) const;
+  Cubical_Container::value_type operator * ( void ) const; 
 private:
-  const Cubical_Container * referral;
-  mutable Cubical_Container::value_type dereference_value;
+  friend class Cubical_Container;
+  friend class Cubical_Complex;
+  const Cubical_Container * referral_;
+  unsigned long address_;
   unsigned int dimension_;
-  unsigned long full_cube_number; 
-  unsigned long piece_number;
-  void next_piece_number ( void ); 
+  void next_type ( void ); 
 };
 
 /* * * * * * * * * * * * *
