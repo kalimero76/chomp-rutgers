@@ -10,6 +10,9 @@
 
 template < class Cell_Complex >
 void inspect ( Cell_Complex & my_complex ) {
+  std::cout << "Inspecting the complex.\n";
+  std::cout << "The complex has dimension " << my_complex . dimension () << "\n";
+  std::cout << "The complex has size " << my_complex . size () << "\n";
   for ( typename Cell_Complex::const_iterator iter = my_complex . begin (); iter != my_complex . end (); ++ iter ) {
     typename Cell_Complex::Chain my_chain, another_chain;
     my_complex . Boundary_Map ( my_chain, iter );

@@ -194,6 +194,7 @@ void Cubical_const_iterator::next_type ( void ) {
 
 Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
 	const unsigned long hop_length = 1 << (referral_ -> dimension_);
+  address_ += hop_length; 
 	while ( 1 ) {
 		/* Advance full_cube_number until we run out of cubes. */
 		while ( address_ < referral_ -> bitmap_size_ ) {
