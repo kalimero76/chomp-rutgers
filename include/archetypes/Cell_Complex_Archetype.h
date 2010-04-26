@@ -30,21 +30,16 @@ public:
 	/* * * * * * * * * * **
 	** Type Definitions  **
 	** * * * * * * * * * */
-	
-	/** We typedef the underlying container. */
-	typedef Container_Template Container; 
-	/** We typedef the chain type used by the underlying container. */
+  typedef Container_Template Container; 
 	typedef typename Container::Chain Chain;
-	/** We typedef the elementary chain type used by the underlying container. */
-	typedef typename Container::Chain::Cell Cell;
-	/** We typedef the const_iterator type used by the underlying container */
+	typedef typename Container::Cell Cell;
 	typedef typename Container::const_iterator const_iterator;
   typedef const_iterator iterator;
-	/** We typedef the ring type used by the underlying container. */
-	typedef typename Container::Chain::Ring Ring;
-	/** We typedef the size_type used by the underlying container. */
+	typedef typename Container::Ring Ring;
   typedef typename Container::size_type size_type;
-	
+	typedef typename Container::value_type value_type;
+  typedef typename Container::key_type key_type;
+  
   /* expected from base class */
   using Container_Template::begin;
   using Container_Template::end;

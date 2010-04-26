@@ -20,19 +20,27 @@
  ********************************************************************************/
 
 /* Forward Declarations */
+template < class > class Abstract_Chain;
 template < class > class Abstract_Container;
 template < class > class Abstract_Complex;
 
-/* * * * * * * * * * * * * * **
- ** class Abstract_Container  **
- ** * * * * * * * * * * * * * */
 
-template < class Chain_Type = Default_Chain >
+/* * * * * * * * * * * * *
+ * class Abstract_Chain  *
+ * * * * * * * * * * * * */
+
+template < class Cell_Type = Default_Cell > class Abstract_Chain : public Chain_Archetype < std::map < typename std::set<Cell_Type>::const_iterator, Default_Ring > > {};
+
+/* * * * * * * * * * * * * * *
+ * class Abstract_Container  *
+ * * * * * * * * * * * * * * */
+
+template < class Cell_Type = Default_Cell >
 class Abstract_Container {
 public:
 	/* typedefs */	 
-	typedef Chain_Type Chain;
-  typedef typename Chain::Cell Cell;
+  typedef Cell_Type Cell;
+	typedef Abstract_Chain<Cell> Chain;
 	typedef typename Chain::Ring Ring;
   typedef size_t size_type;
   typedef Cell value_type;
@@ -70,17 +78,19 @@ private:
 /* * * * * * * * * * * * * **
  ** class Abstract_Complex  **
  ** * * * * * * * * * * * * */
-template < class Chain_Type = Default_Chain >
-class Abstract_Complex : public Cell_Complex_Archetype < Abstract_Container < Chain_Type > > {
+template < class Cell_Type = Default_Cell >
+class Abstract_Complex : public Cell_Complex_Archetype < Abstract_Container < Cell_Type > > {
 public:
-  /* typedefs */
-  typedef Abstract_Container < Chain_Type > Container;
-	typedef Chain_Type Chain;
-  typedef typename Chain::Cell Cell;
-	typedef typename Chain::Ring Ring;
+  typedef Abstract_Container < Cell_Type > Container;
+  typedef typename Container::Chain Chain;
+  typedef typename Container::Cell Cell;
+  typedef typename Container::Ring Ring;
   typedef typename Container::const_iterator const_iterator;
   typedef typename Container::iterator iterator;
-
+  typedef typename Container::size_type size_type;
+  typedef typename Container::value_type value_type;
+  typedef typename Container::key_type key_type;
+  
   /* Member variables */
   using Cell_Complex_Archetype < Container > :: dimension;
   using Cell_Complex_Archetype < Container > :: Boundary_Map; 

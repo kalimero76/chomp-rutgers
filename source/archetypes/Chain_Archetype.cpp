@@ -14,30 +14,36 @@
  */
 
 Default_Cell::Default_Cell ( void ) { 
-	name = 0;
-	dimension = 0; }
+	data_ = 0;
+	dimension_ = 0; 
+} /* Default_Cell::Default_Cell */
 
-Default_Cell::Default_Cell ( const unsigned long name, const unsigned int dimension ) : name(name), dimension(dimension) { }
+Default_Cell::Default_Cell ( const unsigned long data, const unsigned int dimension ) : data_(data), dimension_(dimension) { 
+} /* Default_Cell::Default_Cell */
 
 bool Default_Cell::operator < ( const Default_Cell & right_hand_side ) const {
-	if ( dimension < right_hand_side . dimension ) return true;
-	if ( dimension > right_hand_side . dimension ) return false;
-	if ( name < right_hand_side . name ) return true;
-	return false; } 
+	if ( dimension_ < right_hand_side . dimension_ ) return true;
+	if ( dimension_ > right_hand_side . dimension_ ) return false;
+	if ( data_ < right_hand_side . data_ ) return true;
+	return false; 
+} /* Default_Cell::operator < */
 	
 bool Default_Cell::operator == ( const Default_Cell & right_hand_side ) const {
-	if ( dimension != right_hand_side . dimension ) return false;
-	if ( name != right_hand_side . name ) return false;
-	return true; }
+	if ( dimension_ != right_hand_side . dimension_ ) return false;
+	if ( data_ != right_hand_side . data_ ) return false;
+	return true; 
+} /* Default_Cell::operator == */
 
 bool Default_Cell::operator != ( const Default_Cell & right_hand_side ) const {
-	if ( dimension != right_hand_side . dimension ) return true;
-	if ( name != right_hand_side . name ) return true;
-	return false; }
+	if ( dimension_ != right_hand_side . dimension_ ) return true;
+	if ( data_ != right_hand_side . data_ ) return true;
+	return false; 
+} /* Default_Cell::operator != */
 
-std::ostream & operator << (std::ostream & output_stream, const Default_Cell & print_me) {
-	output_stream << "(" << print_me . name << ", " << print_me . dimension << ")";
-	return output_stream; }
+std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & print_me ) {
+	output_stream << "(" << print_me . data_ << ", " << print_me . dimension_ << ")";
+	return output_stream; 
+} /* operator << */
 	
 #ifndef CHOMP_HEADER_ONLY_
 /* Template Instantiation */

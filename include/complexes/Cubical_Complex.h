@@ -15,10 +15,24 @@
 /********************************************************************************
  *                             CUBICAL COMPLEXES                                *
  ********************************************************************************/
-
-class Cubical_const_iterator;
+class Cubical_Cell;
+class Cubical_Chain;
 class Cubical_Container;
+class Cubical_const_iterator;
 class Cubical_Complex;
+
+/* * * * * * * * * * * *
+ * class Cubical_Cell  *
+ * * * * * * * * * * * */
+
+typedef Default_Cell Cubical_Cell;
+
+/* * * * * * * * * * * *
+ * class Cubical_Chain *
+ * * * * * * * * * * * */
+
+/* This representation wastes memory */
+class Cubical_Chain : public Chain_Archetype < std::map < Cubical_const_iterator, Default_Ring > > {};
 
 /* * * * * * * * * * * * * *
  * class Cubical_Container *
@@ -64,6 +78,7 @@ private:
 
 class Cubical_const_iterator {
 public:
+  typedef Cubical_Cell Cell;
   Cubical_const_iterator ( void );
   Cubical_const_iterator ( const Cubical_Container * const); 
   Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long address, const unsigned int dimension ); 
@@ -89,10 +104,7 @@ public:
   /** Load_From_File 
       Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
 	void Load_From_File ( const char * FileName );
-	
-  /** Insert_Elementary_Cell */
-  void Insert_Elementary_Cell ( const unsigned long address  );
-	
+
   /** Add_Full_Cube */
   void Add_Full_Cube ( const std::vector<unsigned int> & coordinates );
   

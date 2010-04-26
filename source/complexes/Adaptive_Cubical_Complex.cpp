@@ -119,7 +119,6 @@ Adaptive_Cubical_Container::Chain Adaptive_Cubical_Container::boundary ( const c
     unsigned int & index = work_item . second;
     
     /* Find the left-matching cells. */
-   
 
     /* Set node to the root of the appropriate tree */
     node = tree_data_ [ cell . type_ ];
