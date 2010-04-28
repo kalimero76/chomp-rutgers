@@ -19,20 +19,51 @@
 
 /* Forward Declarations */
 
+template < class Cell_Complex > class Subcomplex_Chain;
 template < class Cell_Complex > class Subcomplex_Container;
 template < class Cell_Complex > class Subcomplex;
+
+/* * * * * * * * * * * * * *
+ * class Subcomplex_Chain  *
+ * * * * * * * * * * * * * */
+template < class Cell_Complex >
+class Subcomplex_Chain : public Chain_Archetype < std::map < typename std::set < typename Cell_Complex::const_iterator >::const_iterator, Default_Ring > > {
+};
 
 /* * * * * * * * * * * * * * * *
  * class Subcomplex_Container  *
  * * * * * * * * * * * * * * * */
 
 template < class Cell_Complex >
-class Subcomplex_Container : public std::set < typename Cell_Complex::Cell >  {
+class Subcomplex_Container {
 public:
 	/* typedefs */	 
-	typedef typename Cell_Complex::Chain Chain;
-  typedef typename Cell_Complex::Cell Cell;
+	typedef Subcomplex_Chain<Cell_Complex> Chain;
+  typedef typename Cell_Complex::const_iterator Cell;
 	typedef typename Cell_Complex::Ring Ring;
+	typedef unsigned long size_type;
+	typedef Cell key_type;
+	typedef Cell value_type;
+  typedef typename std::set < typename Cell_Complex::const_iterator >::const_iterator const_iterator;
+  typedef const_iterator iterator;
+  /* Simple Associative Container, Unique Associative Container, Cell Container */
+  std::pair<iterator, bool> insert ( const value_type & insert_me );
+  void erase ( const iterator & erase_me );
+  iterator find ( const key_type & find_me ) const;
+  iterator begin ( unsigned int dimension ) const;
+  iterator end ( unsigned int dimension ) const;
+  size_type size ( unsigned int dimension ) const;
+  Chain boundary ( const const_iterator & input ) const;
+  Chain coboundary ( const const_iterator & input ) const;
+  unsigned int dimension ( void ) const;
+  Chain project ( const typename Cell_Complex::Chain & project_me ) const;
+  typename Cell_Complex::Chain include ( const Chain & include_me ) const;
+private:
+  public std::set < typename Cell_Complex::const_iterator > data_;
+  std::vector<const_iterator> begin_;
+  std::vector<const_iterator> end_;
+  std::vector<size_type> size_;
+  const Cell_Complex & super_complex_;
 };
 
 /* * * * * * * * * * *
@@ -42,35 +73,8 @@ public:
 template < class Cell_Complex >
 class Subcomplex : public Cell_Complex_Archetype < Subcomplex_Container < Cell_Complex > > {
 public:
-  /* typedefs */
-  typedef Subcomplex_Container < Cell_Complex > Container;
-  typedef typename Cell_Complex::Chain Chain;
-  typedef typename Cell_Complex::Cell Cell;
-	typedef typename Cell_Complex::Ring Ring;
-  typedef typename Container::const_iterator const_iterator;
-  using Cell_Complex_Archetype < Container > :: cells;
-  using Cell_Complex_Archetype < Container > :: dimension;
-  
   /* Constructor */
   Subcomplex ( const Cell_Complex & super_complex );
-  
-	/* * * * * * * * * * * * * * * * * * * * * * * * *
-   * Pure Virtual Functions That Must Be Overriden *
-   * * * * * * * * * * * * * * * * * * * * * * * * */
-	using Cell_Complex_Archetype < Container > :: Boundary_Map;
-  using Cell_Complex_Archetype < Container > :: Coboundary_Map;
-  
-	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
-	virtual Chain & Boundary_Map ( Chain &, const const_iterator & ) const;
-	/** Returns a copy of the Boundary information. This is only a copy, so subsequently altering this chain does not alter the complex directly. */
-	virtual Chain & Coboundary_Map ( Chain &, const const_iterator & ) const;
-	/** Remove an elementary chain from the complex. All terms from all chains involving this elementary chain will be deleted. NOT IMPLEMENTED. */
-	virtual void Remove_Cell ( const Cell & );
-
-private:
-  /* Member variables */
-  const Cell_Complex & super_complex;
-  Chain project_chain ( const Chain & project_me ) const;
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_

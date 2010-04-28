@@ -3,7 +3,7 @@
  *  srh_chomp
  *
  *  Created by Shaun Harker on 9/14/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009. All rights reserved.
  *
  */
 
@@ -30,9 +30,14 @@ public:
 	bool operator != ( const Default_Cell & right_hand_side ) const;
 	friend std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & print_me );
   friend class __gnu_cxx::hash<Default_Cell>;
+  unsigned long & data ( void );
+  const unsigned long & data ( void ) const;
+  unsigned int & dimension ( void );
+  const unsigned int & dimension ( void ) const;
+
 private:
-  unsigned int dimension_;
   unsigned long data_;
+  unsigned int dimension_;
 };
 
 

@@ -24,12 +24,20 @@ template < class > class Abstract_Chain;
 template < class > class Abstract_Container;
 template < class > class Abstract_Complex;
 
-
+/* TODO : wrap the const_iterator and don't do this suspicious case. also need iter.dimension() anyway */
 /* * * * * * * * * * * * *
  * class Abstract_Chain  *
  * * * * * * * * * * * * */
 
-template < class Cell_Type = Default_Cell > class Abstract_Chain : public Chain_Archetype < std::map < typename std::set<Cell_Type>::const_iterator, Default_Ring > > {};
+template < class Cell_Type >
+class Abstract_const_iterator_compare {
+public:
+  bool operator () ( const typename std::set<Cell_Type>::const_iterator & left, const typename std::set<Cell_Type>::const_iterator & right ) {
+    return * reinterpret_cast<const unsigned long *> ( &left ) < * reinterpret_cast<const unsigned long *> ( &right );
+  }
+};
+
+template < class Cell_Type = Default_Cell > class Abstract_Chain : public Chain_Archetype < std::map < typename std::set<Cell_Type>::const_iterator, Default_Ring, Abstract_const_iterator_compare<Cell_Type> > > {};
 
 /* * * * * * * * * * * * * * *
  * class Abstract_Container  *

@@ -28,7 +28,7 @@ void test_example ( void ) {
   std::vector < unsigned int > cube_position ( 2, 5 );
   my_cubical_complex . Allocate_Bitmap ( sizes );
   my_cubical_complex . Add_Full_Cube ( cube_position );
-  my_cubical_complex . erase ( my_cubical_complex . begin ( 2 ) );	
+  //my_cubical_complex . erase ( my_cubical_complex . begin ( 2 ) );	
   inspect ( my_cubical_complex );
 } /* generator_example */
 

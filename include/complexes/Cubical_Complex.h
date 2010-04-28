@@ -15,7 +15,6 @@
 /********************************************************************************
  *                             CUBICAL COMPLEXES                                *
  ********************************************************************************/
-class Cubical_Cell;
 class Cubical_Chain;
 class Cubical_Container;
 class Cubical_const_iterator;
@@ -41,8 +40,8 @@ class Cubical_Chain : public Chain_Archetype < std::map < Cubical_const_iterator
 class Cubical_Container {
 public:
 	/* typedefs */	 
-	typedef Default_Chain Chain;
-	typedef Chain::Cell Cell;
+	typedef Cubical_Chain Chain;
+	typedef Cubical_Cell Cell;
 	typedef Chain::Ring Ring;
 	typedef unsigned long size_type;
 	typedef Cell key_type;
@@ -83,8 +82,9 @@ public:
   Cubical_const_iterator ( const Cubical_Container * const); 
   Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long address, const unsigned int dimension ); 
   Cubical_const_iterator & operator ++ ( void );
-  bool operator != ( const Cubical_const_iterator & ) const;
-  bool operator == ( const Cubical_const_iterator & ) const;
+  bool operator != ( const Cubical_const_iterator & right_hand_side ) const;
+  bool operator == ( const Cubical_const_iterator & right_hand_side ) const;
+  bool operator < ( const Cubical_const_iterator & right_hand_side ) const;
   Cubical_Container::value_type operator * ( void ) const; 
 private:
   friend class Cubical_Container;

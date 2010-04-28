@@ -32,8 +32,8 @@ Cubical_Container::iterator Cubical_Container::end ( unsigned int dimension ) co
 } /* Cubical_Container::end */
 
 Cubical_Container::iterator Cubical_Container::find ( const Cubical_Container::key_type & key ) const {
-  if ( bitmap_ [ key . name ] == false ) return end_ [ dimension_ ];
-	return const_iterator ( this, key . name, key . dimension );
+  if ( bitmap_ [ key . data () ] == false ) return end_ [ dimension_ ];
+	return const_iterator ( this, key . data (), key . dimension () );
 } /* Cubical_Container::find */
 
 void Cubical_Container::erase ( const iterator & erase_me ) {
@@ -52,17 +52,17 @@ void Cubical_Container::erase ( const iterator & erase_me ) {
 } /* Cubical_Container::erase */
 
 std::pair<Cubical_Container::iterator, bool> Cubical_Container::insert ( const value_type & insert_me ) {
-	std::_Bit_reference bit_reference = bitmap_ [ insert_me . name ];
+	std::_Bit_reference bit_reference = bitmap_ [ insert_me . data () ];
 	if ( bit_reference == false ) { 
 		bit_reference = true; 
     /* Update size_ */
-		++ size_ [ insert_me . dimension ]; 
+		++ size_ [ insert_me . dimension () ]; 
     /* Update begin_, end_ */
     const_iterator iter = find ( insert_me );
     ++ iter;
-    if ( iter == begin_ [ insert_me . dimension ] ) {
-      begin_ [ insert_me . dimension ] = find ( insert_me );
-      if ( insert_me . dimension  > 0 ) end_ [ insert_me . dimension - 1 ] = begin_ [ insert_me . dimension ];
+    if ( iter == begin_ [ insert_me . dimension () ] ) {
+      begin_ [ insert_me . dimension () ] = find ( insert_me );
+      if ( insert_me . dimension ()  > 0 ) end_ [ insert_me . dimension () - 1 ] = begin_ [ insert_me . dimension () ];
     } /* if */
     return std::pair < iterator, bool > ( find ( insert_me ), true );
   } else {
@@ -101,11 +101,11 @@ Cubical_Container::Chain Cubical_Container::boundary ( const const_iterator & in
 		address = address ^ work_bit;
 		/* Insert the piece in the current full cube */
 		if ( bitmap_ [ address ] )
-			output . insert ( std::pair < Cell, Ring > ( Cell ( address,  boundary_dimension ), sign ? positive : negative ) );
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, address,  boundary_dimension ), sign ? positive : negative ) );
 		/* Insert the piece in the appropriate neighboring full cube */
 		long offset_address = address + ( jump_values_ [ dimension_index ] << dimension_ );
 		if ( bitmap_ [ offset_address ] )
-			output . insert ( std::pair < Cell, Ring > ( Cell ( offset_address,  boundary_dimension ), sign ? negative : positive ) ); 
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, offset_address,  boundary_dimension ), sign ? negative : positive ) ); 
 		/* Recover original address */
     address = address ^ work_bit; 
   } /* for */
@@ -141,10 +141,10 @@ Cubical_Container::Chain Cubical_Container::coboundary ( const iterator & input 
 		sign = not sign; /* or should this be with the continue ? */
 		address = address ^ work_bit;
 		if ( bitmap_ [ address ] )
-			output . insert ( std::pair < Cell, Ring > ( Cell ( address,  coboundary_dimension ), sign ? positive : negative  ) );
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, address,  coboundary_dimension ), sign ? positive : negative  ) );
 		long offset_address = address - ( jump_values_ [ dimension_index ] << dimension_ );
 		if ( bitmap_ [ offset_address ] )
-			output . insert ( std::pair < Cell, Ring > ( Cell ( offset_address,  coboundary_dimension ), sign ? negative : positive  ) ); 
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, offset_address,  coboundary_dimension ), sign ? negative : positive  ) ); 
     address = address ^ work_bit; 
   } /* for */
   return output;  
@@ -221,6 +221,9 @@ bool Cubical_const_iterator::operator == ( const Cubical_const_iterator & right_
 	return true; 
 } /* Cubical_const_iterator::operator == */
 
+bool Cubical_const_iterator::operator < ( const Cubical_const_iterator & right_hand_side ) const {
+  return address_ < right_hand_side . address_;
+} /* Cubical_const_iterator::operator < */
 
 /* * * * * * * * * * * * * * * *
  * Cubical_Complex definitions *

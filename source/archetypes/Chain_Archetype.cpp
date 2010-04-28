@@ -40,6 +40,22 @@ bool Default_Cell::operator != ( const Default_Cell & right_hand_side ) const {
 	return false; 
 } /* Default_Cell::operator != */
 
+unsigned long & Default_Cell::data ( void ) {
+  return data_;
+} /* Default_Cell::data */
+
+const unsigned long & Default_Cell::data ( void ) const {
+  return data_;
+} /* Default_Cell::data */
+
+unsigned int & Default_Cell::dimension ( void ) {
+  return dimension_;
+} /* Default_Cell::dimension */
+
+const unsigned int & Default_Cell::dimension ( void ) const {
+  return dimension_;
+} /* Default_Cell::dimension */
+
 std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & print_me ) {
 	output_stream << "(" << print_me . data_ << ", " << print_me . dimension_ << ")";
 	return output_stream; 

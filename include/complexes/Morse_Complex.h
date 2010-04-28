@@ -3,123 +3,64 @@
  *  
  *
  *  Created by Shaun Harker on 10/21/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009. All rights reserved.
  *
  */
 
 #ifndef CHOMP_MORSE_COMPLEX_
 #define CHOMP_MORSE_COMPLEX_
 
-#include <map> /* for std::map */
-//#include <ext/hash_map> /* for std::hash_map */
-//namespace std { using namespace __gnu_cxx; }
-#include <set> /* for std::set */
-#include "complexes/Abstract_Complex.h" /* for class Abstract_Complex */
-
+#include <vector>
 
 /* Forward Declarations */
-template < class Cell_Complex_Template > class Morse_Traits;
-template < class Cell_Complex_Template > class Morse_Complex;
+template < class Cell_Complex > class Morse_Complex;
 
-/** Morse_Complex class. */
-template < class Cell_Complex_Template >
-class Morse_Complex : public Abstract_Complex < typename Cell_Complex_Template::Chain > {
+/* * * * * * * * * * * *
+ * class Morse_Complex *
+ * * * * * * * * * * * */
+template < class Cell_Complex >
+class Morse_Complex : public Cell_Complex {
 public: 
-	mutable std::map < typename Cell_Complex_Template::Cell, typename Cell_Complex_Template::Container::const_iterator > husband_pointers;
-	mutable std::map < typename Cell_Complex_Template::Cell, typename Morse_Traits<Cell_Complex_Template>::morse_value_type > morse_values;
-	mutable std::map < typename Cell_Complex_Template::Cell, unsigned char > flags;	
-
-	typename Cell_Complex_Template::Container::const_iterator & Husband ( const typename Cell_Complex_Template::Container::const_iterator & ) const;
-	typename Morse_Traits<Cell_Complex_Template>::morse_value_type & Morse_Value ( const typename Cell_Complex_Template::Container::const_iterator &) const ;
-	unsigned char & Flags ( const typename Cell_Complex_Template::Container::const_iterator & ) const;
-
-	enum { ACE = 0x01, KING = 0x02, QUEEN = 0x04, ALIVE = 0x08, EXCISED = 0x10 };
-
-	bool Is_an_Ace ( unsigned char ) const; 
-	bool Is_a_King ( unsigned char ) const; 
-	bool Is_a_Queen ( unsigned char ) const; 
-	bool Is_Alive ( unsigned char ) const; 
-	bool Is_Excised ( unsigned char ) const; 
-
-public:
   /* typedefs */
-  typedef typename Abstract_Complex<typename Cell_Complex_Template::Chain>::Container Container;
-  typedef typename Container::Chain Chain;
-  typedef typename Container::Cell Cell;
-	typedef typename Container::Ring Ring;
-  typedef typename Container::const_iterator const_iterator;
-  typedef typename Container::iterator iterator;
-
-  /* Member variables */
-  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: cells;
-  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: dimension;
-  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: Boundary_Map;
-  using Abstract_Complex < typename Cell_Complex_Template::Chain > :: Coboundary_Map;
+  typedef Cell_Complex::Ring Ring;
+	typedef Cell_Complex::Cell Cell;
+  typedef Cell_Complex::Chain Chain;
+	typedef unsigned long size_type;
+	typedef Cell_Complex::Cell key_type;
+	typedef Cell_Complex::Cell value_type;
+  typedef Cell_Complex::const_iterator const_iterator;
+  typedef Cell_Complex::const_iterator iterator;
+  /* Simple Associative Container, Unique Associative Container, Cell Container */
+  using Cell_Complex::insert;
+  using Cell_Complex::erase;
+  using Cell_Complex::begin;
+  using Cell_Complex::end;
+  using Cell_Complex::find;
+  using Cell_Complex::size;
+  using Cell_Complex::boundary;
+  using Cell_Complex::coboundary;
+  using Cell_Complex::dimension;
   
-	typedef Cell_Complex_Template Cell_Complex;
-	const Cell_Complex_Template & original_complex; /* notice features in complex will have to be specifically declared mutable */
-	
-	Morse_Complex ( const Cell_Complex & original_complex); 
-	void Ace_King_Queen_Algorithm ( void );
-	void Morse_Boundary_Algorithm ( void );
-	typename Cell_Complex::Chain & Chain_Correspondence_Algorithm ( typename Cell_Complex::Chain & canonical_chain, const Chain & morse_chain );
-	
-};
+  /** constructor */
+  Morse_Complex ( const Cell_Complex & cell_complex );
+  /** husband */
+	const_iterator & husband ( const const_iterator & );
+  /** value */
+	typename unsigned int & value ( const const_iterator & );
+  /** flags */
+	unsigned char & flags ( const const_iterator & );
+  /** canonicalize */
+  Chain canonicalize ( const Chain & input ) const;
+  /** complete */
+  Chain complete ( const Chain & input ) const;
+  /** project */
+  Chain project ( const Chain & input ) const;
 
-	
-/** Default Morse traits class. The defaults say that the features are missing. This tells Morse_Complex to
- * pick up the slack. If a complex has a feature mentioned here, specialize this template and choose the non-
- * default choice. */
-template < class Cell_Complex_Template >
-class Morse_Traits {
-public:
-	/* Tags for Morse_Traits for feature checking */
-	struct yes {};
-  struct no {};
-
-	/* Default Tag Choices */
-	typedef no does_it_store_husband_pointers;
-	typedef no does_it_store_morse_values;
-	typedef no does_it_store_flags;
-  
-	/* Default Data Types */
-	typedef unsigned int morse_value_type;
-};
-
-/* Classes used by Morse_Complex implementation -- maybe ought to put in .hpp */
-
-/* A Chain Class for the upcoming algorithm */
-// Forward Declaration of friend functions for ABC_Chain
-template < class Morse_Complex_Template > class Morse_Value_Cell ;
-template < class Morse_Complex_Template > std::ostream & operator << ( std::ostream &, const Morse_Value_Cell< Morse_Complex_Template > &);
-
-
-template < class Morse_Complex_Template >
-class Morse_Value_Cell {
-public:
-	typedef typename Morse_Complex_Template::Cell_Complex Cell_Complex_Template;
-	typedef typename Morse_Traits<Cell_Complex_Template>::morse_value_type Morse_Value_Type;
-	Morse_Value_Type morse_value;
-	typename Cell_Complex_Template::Container::const_iterator location;
-	/* Constructor */
-	Morse_Value_Cell ( Morse_Value_Type morse_value,  typename Cell_Complex_Template::Container::const_iterator location );
-	/* We order the Morse Values so the larger morse values are near 'begin' */
-	bool operator < ( const Morse_Value_Cell & right_hand_side ) const;
-	friend std::ostream & operator << < Morse_Complex_Template > ( std::ostream &, const Morse_Value_Cell & );
-
-};
-
-template < class Morse_Complex_Template >
-class Morse_Value_Chain : public  Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex_Template >, typename Morse_Complex_Template::Cell_Complex::Ring > > {
-public:		
-	typedef typename Morse_Complex_Template::Cell_Complex Cell_Complex;
-	typedef typename Morse_Traits<Cell_Complex>::morse_value_type Morse_Value_Type;
-	typedef typename Cell_Complex::Chain Original_Chain;
-	typedef typename Cell_Complex::Container::const_iterator Original_const_iterator;
-	Morse_Value_Chain ( void );
-	/* Copy an original chain into the Morse Value Chain format by
-	 * fetching the Morse Values and storing iterators instead */
-	Morse_Value_Chain ( const Original_Chain & copy_me, const Morse_Complex_Template & morse_complex );
+private:
+  const Cell_Complex & cell_complex_;
+  std::vector < typename Cell_Complex_Template::Container::const_iterator > husband_;
+	std::vector < unsigned int > value_;
+	std::vector < unsigned char > flags_;	
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_
