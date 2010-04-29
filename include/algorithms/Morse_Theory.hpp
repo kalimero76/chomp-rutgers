@@ -8,10 +8,11 @@
  */
 
 #include "Morse_Theory.h"
-
+#include "complexes/Subcomplex.h"
+#define MORSE_DEBUG
 /* Ace-King-Queen Algorithm */
-template < class Cell_Complex>
-Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell_complex ) {
+template < class Cell_Complex >
+Morse_Complex<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell_complex ) {
 	/* We begin with any complex. */
   
 	/* This is a specific implementation of the Ace-King-Queen algorithm
@@ -25,9 +26,12 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
 #ifdef MORSE_DEBUG
 	std::cout << "AKQ: Copying complex.\n";
 #endif
-	Subcomplex<Cell_Complex> copy_complex ( cell_complex );
-  typedef typename Subcomplex<Cell_Complex>::const_iterator sub_const_iterator;
-  typedef typename Subcomplex<Cell_Complex>::Chain sub_Chain;
+  using namespace morse_detail;
+  Morse_Complex<Cell_Complex> original_complex ( cell_complex );
+	Subcomplex< Morse_Complex < Cell_Complex > > copy_complex ( original_complex );
+  typedef long Ring;
+  typedef typename Subcomplex< Morse_Complex < Cell_Complex > >::const_iterator sub_const_iterator;
+  typedef typename Subcomplex< Morse_Complex < Cell_Complex > >::Chain sub_Chain;
   typedef typename Cell_Complex::const_iterator original_const_iterator;
   typedef typename Cell_Complex::Chain original_Chain;
 
@@ -102,19 +106,19 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
           bool alive = false;
           for ( typename original_Chain::const_iterator chain_term_iterator = original_boundary_chain . begin ();
                chain_term_iterator != original_boundary_chain . end (); ++ chain_term_iterator ) {
-            if ( chain_term_iterator -> first == *Queen ) continue;
-            unsigned long int observed_value = value ( chain_term_iterator -> first );
+            if ( chain_term_iterator -> first == Queen ) continue;
+            unsigned long int observed_value = original_complex . value ( chain_term_iterator -> first );
             if ( observed_value > current_value ) current_value = observed_value;
-            if ( Is_Alive ( flags ( Mistress ) ) ) alive = true; 
+            if ( Is_Alive ( original_complex . flags ( chain_term_iterator -> first ) ) ) alive = true; 
           } /* for */
           
           /* Assign Morse Value */
-          value ( King ) = value ( Queen ) = current_value + 1;
+          original_complex . value ( King ) = original_complex . value ( Queen ) = current_value + 1;
           /* Assign Husband */
-          husband ( Queen ) = King;
+          original_complex . husband ( Queen ) = King;
           /* Assign Flags */
-          flags ( King ) = KING;
-          flags ( Queen ) = alive ? QUEEN | ALIVE : QUEEN;
+          original_complex . flags ( King ) = KING;
+          original_complex . flags ( Queen ) = alive ? QUEEN | ALIVE : QUEEN;
           
           /* Excise the King. */
           working_queue . pop_front ();
@@ -124,7 +128,7 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
           /* Find the coboundary of the lower dimensional part. */
           sub_Chain coboundary_chain = copy_complex . coboundary ( queen_term . first );
 #ifdef MORSE_DEBUG
-          std::cout << "    (queen term) coboundary of " << queen_term . first << " = " << coboundary_chain << "\n";
+          std::cout << "    (queen term) coboundary of " << * * queen_term . first ; // << " = " << coboundary_chain << "\n";
 #endif
           /* Loop through coboundary terms and add them to working list. */
           for ( typename sub_Chain::const_iterator coboundary_term = coboundary_chain . begin ();
@@ -147,7 +151,7 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
         case 0:
 				{ /* scope */
 #ifdef MORSE_DEBUG
-          std::cout << "----- AKQ: No boundaries for " << cell << " -----\n";
+          std::cout << "----- AKQ: No boundaries for " << * * cell_iterator << " -----\n";
 #endif
           /* Find the coboundary. */
           sub_Chain coboundary_chain = copy_complex . coboundary ( cell_iterator );
@@ -170,7 +174,7 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
 				} /* scope */
         default:
 #ifdef MORSE_DEBUG
-          std::cout << "----- AKQ: More than two boundaries for " << cell << " -----\n";
+          std::cout << "----- AKQ: More than two boundaries for " << * * cell_iterator << " -----\n";
 #endif
           /* We are done with queue element. We can remove it. */
           working_queue . pop_front ();
@@ -188,7 +192,7 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
 		sub_const_iterator cell_iterator = copy_complex . begin ();
 		
 		/* Identify the Ace cell in the original complex. */
-		const_iterator Ace = * cell_iterator;
+		original_const_iterator Ace = * cell_iterator;
 #ifdef MORSE_DEBUG
 		std::cout << "----- AKQ: Excising the Ace " << *Ace << " -----\n";
 #endif
@@ -197,11 +201,11 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
 		unsigned long int current_value = 0;
 		for ( typename original_Chain::const_iterator chain_term_iterator = original_boundary_chain . begin ();
           chain_term_iterator != original_boundary_chain . end (); ++ chain_term_iterator ) {
-			unsigned long observed_value = value ( chain_term_iterator -> first );
+			unsigned long observed_value = original_complex . value ( chain_term_iterator -> first );
       if ( observed_value > current_value ) current_value = observed_value; 
     } /* for */
-		value ( Ace ) = current_value + 1;
-		flags ( Ace ) = ACE | ALIVE;
+		original_complex . value ( Ace ) = current_value + 1;
+		original_complex . flags ( Ace ) = ACE | ALIVE;
     
 		/* Put all the coboundary elements of the Ace in the working list */
 		sub_Chain coboundary_chain = copy_complex . coboundary ( cell_iterator );
@@ -223,4 +227,5 @@ Decomposition<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell
 #ifdef MORSE_DEBUG
 	std::cout << "AKQ Decomposition Complete\n";
 #endif
+  return original_complex;
 } /* endfunction */

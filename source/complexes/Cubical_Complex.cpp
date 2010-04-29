@@ -222,8 +222,13 @@ bool Cubical_const_iterator::operator == ( const Cubical_const_iterator & right_
 } /* Cubical_const_iterator::operator == */
 
 bool Cubical_const_iterator::operator < ( const Cubical_const_iterator & right_hand_side ) const {
-  return address_ < right_hand_side . address_;
+  if ( dimension_ == right_hand_side . dimension_ ) return address_ < right_hand_side . address_;
+  return dimension_ < right_hand_side . dimension_;
 } /* Cubical_const_iterator::operator < */
+
+unsigned int Cubical_const_iterator::dimension () const {
+  return dimension_;
+}  /* Cubical_const_iterator::dimension */
 
 /* * * * * * * * * * * * * * * *
  * Cubical_Complex definitions *

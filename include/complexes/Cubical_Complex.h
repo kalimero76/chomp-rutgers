@@ -86,6 +86,7 @@ public:
   bool operator == ( const Cubical_const_iterator & right_hand_side ) const;
   bool operator < ( const Cubical_const_iterator & right_hand_side ) const;
   Cubical_Container::value_type operator * ( void ) const; 
+  unsigned int dimension () const;
 private:
   friend class Cubical_Container;
   friend class Cubical_Complex;

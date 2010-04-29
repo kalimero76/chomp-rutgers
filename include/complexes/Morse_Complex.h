@@ -22,14 +22,14 @@ template < class Cell_Complex >
 class Morse_Complex : public Cell_Complex {
 public: 
   /* typedefs */
-  typedef Cell_Complex::Ring Ring;
-	typedef Cell_Complex::Cell Cell;
-  typedef Cell_Complex::Chain Chain;
+  typedef typename Cell_Complex::Ring Ring;
+	typedef typename Cell_Complex::Cell Cell;
+  typedef typename Cell_Complex::Chain Chain;
 	typedef unsigned long size_type;
-	typedef Cell_Complex::Cell key_type;
-	typedef Cell_Complex::Cell value_type;
-  typedef Cell_Complex::const_iterator const_iterator;
-  typedef Cell_Complex::const_iterator iterator;
+	typedef typename Cell_Complex::Cell key_type;
+	typedef typename Cell_Complex::Cell value_type;
+  typedef typename Cell_Complex::const_iterator const_iterator;
+  typedef typename Cell_Complex::const_iterator iterator;
   /* Simple Associative Container, Unique Associative Container, Cell Container */
   using Cell_Complex::insert;
   using Cell_Complex::erase;
@@ -46,7 +46,7 @@ public:
   /** husband */
 	const_iterator & husband ( const const_iterator & );
   /** value */
-	typename unsigned int & value ( const const_iterator & );
+	unsigned int & value ( const const_iterator & );
   /** flags */
 	unsigned char & flags ( const const_iterator & );
   /** canonicalize */
@@ -57,8 +57,8 @@ public:
   Chain project ( const Chain & input ) const;
 
 private:
-  const Cell_Complex & cell_complex_;
-  std::vector < typename Cell_Complex_Template::Container::const_iterator > husband_;
+  std::map < const_iterator, unsigned int > index_;
+  std::vector < typename Cell_Complex::Container::const_iterator > husband_;
 	std::vector < unsigned int > value_;
 	std::vector < unsigned char > flags_;	
 };

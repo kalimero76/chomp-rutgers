@@ -6,6 +6,8 @@
 //#define MORSE_DEBUG
 #define CHOMP_HEADER_ONLY_
 #include "complexes/Cubical_Complex.h"	/* for class Cubical_Complex */
+#include "complexes/Morse_Complex.h"
+#include "algorithms/Morse_Theory.h"
 #include "algorithms/Homology.h"		/* for function Homology(...)*/
 
 template < class Cell_Complex >
@@ -20,6 +22,8 @@ void inspect ( Cell_Complex & my_complex ) {
     std::cout << " bd ( " << *iter << ") = " << my_complex . Boundary_Map ( my_chain, iter ) << "\n";
     std::cout << " cbd ( " << *iter << ") = " << my_complex . Coboundary_Map ( another_chain, iter ) << "\n";
   } /* for */
+  
+  
 } /* inspect */
 
 void test_example ( void ) {
@@ -28,8 +32,13 @@ void test_example ( void ) {
   std::vector < unsigned int > cube_position ( 2, 5 );
   my_cubical_complex . Allocate_Bitmap ( sizes );
   my_cubical_complex . Add_Full_Cube ( cube_position );
-  //my_cubical_complex . erase ( my_cubical_complex . begin ( 2 ) );	
+  my_cubical_complex . erase ( my_cubical_complex . begin ( 2 ) );	
   inspect ( my_cubical_complex );
+  
+  Morse_Complex < Cubical_Complex > my_morse_complex = Ace_King_Queen_Algorithm ( my_cubical_complex );
+
+  inspect ( my_morse_complex );
+  
 } /* generator_example */
 
 int main (int argc, char * const argv[]) {
