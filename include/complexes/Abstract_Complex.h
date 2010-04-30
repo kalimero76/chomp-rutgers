@@ -3,7 +3,7 @@
  *  
  *
  *  Created by Shaun Harker on 10/6/09.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009. All rights reserved.
  *
  */
 
@@ -21,30 +21,27 @@
 
 /* Forward Declarations */
 template < class > class Abstract_Chain;
-template < class > class Abstract_Container;
 template < class > class Abstract_Complex;
+template < class > class Abstract_const_iterator;
 
-/* TODO : wrap the const_iterator and don't do this suspicious case. also need iter.dimension() anyway */
 /* * * * * * * * * * * * *
  * class Abstract_Chain  *
  * * * * * * * * * * * * */
 
-template < class Cell_Type >
-class Abstract_const_iterator_compare {
+template < class Cell_Type = Default_Cell > 
+class Abstract_Chain : public Chain_Archetype<std::map<Abstract_const_iterator<Cell_Type>, Default_Ring> > {
 public:
-  bool operator () ( const typename std::set<Cell_Type>::const_iterator & left, const typename std::set<Cell_Type>::const_iterator & right ) {
-    return * reinterpret_cast<const unsigned long *> ( &left ) < * reinterpret_cast<const unsigned long *> ( &right );
-  }
+  typedef Abstract_Complex<Cell_Type> complex_type;
+  Abstract_Chain ( void );
+  Abstract_Chain ( const complex_type & container );
 };
 
-template < class Cell_Type = Default_Cell > class Abstract_Chain : public Chain_Archetype < std::map < typename std::set<Cell_Type>::const_iterator, Default_Ring, Abstract_const_iterator_compare<Cell_Type> > > {};
-
-/* * * * * * * * * * * * * * *
- * class Abstract_Container  *
- * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * *
+ * class Abstract_Complex  *
+ * * * * * * * * * * * * * */
 
 template < class Cell_Type = Default_Cell >
-class Abstract_Container {
+class Abstract_Complex {
 public:
 	/* typedefs */	 
   typedef Cell_Type Cell;
@@ -53,17 +50,17 @@ public:
   typedef size_t size_type;
   typedef Cell value_type;
   typedef Cell key_type;
-  /* Comment: the following are identical in SGI defined STL library. */
-  typedef typename std::set<Cell>::const_iterator const_iterator;
-  typedef typename std::set<Cell>::iterator iterator;
-
-  /* Simple Associative Container, Unique Associative Container, Cell Container, Boundary Container */
-  Abstract_Container ( void );
-  Abstract_Container ( unsigned int dimension );
-  iterator find ( const key_type & find_me );
-  const_iterator find ( const key_type & find_me ) const;
+  typedef Abstract_const_iterator<Cell_Type> const_iterator;
+  typedef const_iterator iterator;
+  /* Basic Container */
   std::pair<iterator, bool> insert ( const value_type & insert_me );
   void erase ( iterator erase_me );
+  iterator find ( const key_type & find_me );
+  const_iterator find ( const key_type & find_me ) const;
+  iterator begin ( void ) const;
+  iterator end ( void ) const;
+  size_type size ( void ) const;
+  /* Boundary Container */
   iterator begin ( unsigned int dimension ) const;
   iterator end ( unsigned int dimension ) const;
   size_type size ( unsigned int dimension ) const;
@@ -72,8 +69,11 @@ public:
   Chain & coboundary ( const iterator & input );
   const Chain & coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
-  
+  /* Abstract Container */
+  Abstract_Complex ( void );
+  Abstract_Complex ( unsigned int dimension );
 private:
+  friend class Abstract_const_iterator<Cell_Type>;
   std::set < Cell > cells_;
   std::vector < const_iterator > begin_;
   std::vector < const_iterator > end_;
@@ -83,40 +83,31 @@ private:
   unsigned int dimension_;
 };
 
-/* * * * * * * * * * * * * **
- ** class Abstract_Complex  **
- ** * * * * * * * * * * * * */
-template < class Cell_Type = Default_Cell >
-class Abstract_Complex : public Cell_Complex_Archetype < Abstract_Container < Cell_Type > > {
+/* * * * * * * * * * * * * * * * * 
+ * class Abstract_const_iterator *
+ * * * * * * * * * * * * * * * * */
+
+template < class Cell_Type >
+class Abstract_const_iterator {
 public:
-  typedef Abstract_Container < Cell_Type > Container;
-  typedef typename Container::Chain Chain;
-  typedef typename Container::Cell Cell;
-  typedef typename Container::Ring Ring;
-  typedef typename Container::const_iterator const_iterator;
-  typedef typename Container::iterator iterator;
-  typedef typename Container::size_type size_type;
-  typedef typename Container::value_type value_type;
-  typedef typename Container::key_type key_type;
-  
-  /* Member variables */
-  using Cell_Complex_Archetype < Container > :: dimension;
-  using Cell_Complex_Archetype < Container > :: Boundary_Map; 
-	using Cell_Complex_Archetype < Container > :: Coboundary_Map;
-	
-  /* * * * * * * * * * *
-	 * New Functionality *
-	 * * * * * * * * * * */
-	
-	/** Returns a reference to the Boundary already stored. This is not a copy, so subsequently altering this chain alters the complex directly. */
-	virtual Chain & Boundary_Map ( const iterator & );
-	/** Returns a reference to the Coboundary already stored. This is not a copy, so, subsequently altering this chain alters the complex directly. */
-	virtual Chain & Coboundary_Map ( const iterator & );
-	/** Returns a const reference to the Boundary already stored. This is not a copy, but cannot be altered. */
-	virtual const Chain & Boundary_Map ( const const_iterator & ) const;
-	/** Returns a const reference to the Coboundary already stored. This is not a copy, but cannot be altered. */
-	virtual const Chain & Coboundary_Map ( const const_iterator & ) const;
-  
+  typedef Abstract_Complex<Cell_Type> complex_type;
+  Abstract_const_iterator ( void );
+  Abstract_const_iterator ( const complex_type * const); 
+  Abstract_const_iterator ( const complex_type * const container, 
+                            typename std::set<Cell_Type>::const_iterator data, 
+                            const unsigned int dimension ); 
+  Abstract_const_iterator & operator ++ ( void );
+  bool operator != ( const Abstract_const_iterator & right_hand_side ) const;
+  bool operator == ( const Abstract_const_iterator & right_hand_side ) const;
+  bool operator < ( const Abstract_const_iterator & right_hand_side ) const;
+  Cell_Type operator * ( void ) const; 
+  unsigned int dimension () const;
+  const complex_type & container () const;
+private:
+  friend class Abstract_Complex<Cell_Type>;
+  const complex_type * container_;
+  typename std::set<Cell_Type>::const_iterator data_;
+  unsigned int dimension_;
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_

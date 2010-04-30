@@ -1,5 +1,5 @@
 /*
- *  Morse_Complex.h
+ *  Decomplex.h
  *  
  *
  *  Created by Shaun Harker on 10/21/09.
@@ -7,68 +7,80 @@
  *
  */
 
-#ifndef CHOMP_MORSE_COMPLEX_
-#define CHOMP_MORSE_COMPLEX_
+#ifndef CHOMP_Decomplex_
+#define CHOMP_Decomplex_
 
 #include <vector>
 
 /* Forward Declarations */
-template < class Cell_Complex > class Morse_Complex;
+template < class Cell_Complex > class Decomplex;
 
 /* * * * * * * * * * * *
- * class Morse_Complex *
+ * class Decomplex *
  * * * * * * * * * * * */
+
 template < class Cell_Complex >
-class Morse_Complex : public Cell_Complex {
+class Decomplex {
 public: 
-  /* typedefs */
-  typedef typename Cell_Complex::Ring Ring;
-	typedef typename Cell_Complex::Cell Cell;
-  typedef typename Cell_Complex::Chain Chain;
+	/* typedefs */	 
+	typedef Decomplex_Chain<Cell_Complex> Chain;
+  typedef typename Cell_Complex::Cell Cell;
+	typedef typename Cell_Complex::Ring Ring;
 	typedef unsigned long size_type;
-	typedef typename Cell_Complex::Cell key_type;
-	typedef typename Cell_Complex::Cell value_type;
-  typedef typename Cell_Complex::const_iterator const_iterator;
-  typedef typename Cell_Complex::const_iterator iterator;
-  /* Simple Associative Container, Unique Associative Container, Cell Container */
-  using Cell_Complex::insert;
-  using Cell_Complex::erase;
-  using Cell_Complex::begin;
-  using Cell_Complex::end;
-  using Cell_Complex::find;
-  using Cell_Complex::size;
-  using Cell_Complex::boundary;
-  using Cell_Complex::coboundary;
-  using Cell_Complex::dimension;
-  
+	typedef Cell key_type;
+	typedef Cell value_type;
+  typedef Subcomplex_const_iterator<Cell_Complex> const_iterator;
+  typedef const_iterator iterator;
+  /* Basic Container */ 
+  std::pair<iterator, bool> insert ( const value_type & insert_me );
+  void erase ( const iterator & erase_me );
+  iterator find ( const key_type & find_me ) const;
+  iterator begin ( void ) const;
+  iterator end ( void ) const;
+  size_type size ( void ) const;
+  /* Cell Complex */
+  iterator begin ( unsigned int dimension ) const;
+  iterator end ( unsigned int dimension ) const;
+  size_type size ( unsigned int dimension ) const;
+  Chain boundary ( const const_iterator & input ) const;
+  Chain coboundary ( const const_iterator & input ) const;
+  unsigned int dimension ( void ) const;
+  /* Decomposable Complex */
   /** constructor */
-  Morse_Complex ( const Cell_Complex & cell_complex );
+  Decomplex ( const Cell_Complex & cell_complex );
   /** husband */
 	const_iterator & husband ( const const_iterator & );
+  const const_iterator & husband ( const const_iterator & ) const;
   /** value */
 	unsigned int & value ( const const_iterator & );
+  const unsigned int & value ( const const_iterator & ) const;
   /** flags */
 	unsigned char & flags ( const const_iterator & );
-  /** canonicalize */
-  Chain canonicalize ( const Chain & input ) const;
-  /** complete */
-  Chain complete ( const Chain & input ) const;
-  /** project */
-  Chain project ( const Chain & input ) const;
+  const unsigned char & flags ( const const_iterator & ) const;
 
 private:
+  const Cell_Complex & cell_complex_;
   std::map < const_iterator, unsigned int > index_;
-  std::vector < typename Cell_Complex::Container::const_iterator > husband_;
+  std::vector < typename Cell_Complex::const_iterator > husband_;
 	std::vector < unsigned int > value_;
 	std::vector < unsigned char > flags_;	
 };
 
+/* * * * * * * * * * * * *
+ * class Decomplex_Chain *
+ * * * * * * * * * * * * */
+
+template < class Cell_Complex >
+class Decomplex_Chain {
+};
+
+
 #ifndef CHOMP_LIBRARY_ONLY_
-#include "complexes/Morse_Complex.hpp"
+#include "complexes/Decomplex.hpp"
 #endif
 
 #ifdef CHOMP_HEADER_ONLY_
-#include "complexes/Morse_Complex.cpp"
+#include "complexes/Decomplex.cpp"
 #endif
 
 #endif

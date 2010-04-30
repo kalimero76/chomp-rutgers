@@ -80,6 +80,26 @@ operator *= ( const Chain_Archetype <Pair_Associative_Container> :: Ring & right
 } /* Chain_Archetype<>::operator *= */
 
 template < class Pair_Associative_Container > 
+const typename Chain_Archetype<Pair_Associative_Container>::complex_type & Chain_Archetype<Pair_Associative_Container>::container () const {
+  return * container_;
+} /* Chain_Archetype<>::container */
+
+template < class Pair_Associative_Container > 
+template < class InputIterator >
+Chain_Archetype<Pair_Associative_Container>::Chain_Archetype ( InputIterator first, InputIterator last, const typename Pair_Associative_Container::key_compare & comp, const complex_type & container ) 
+: Pair_Associative_Container ( first, last, comp ), container_(&container) {
+} /* Chain_Archetype<>::Chain_Archetype */
+
+template < class Pair_Associative_Container > 
+Chain_Archetype<Pair_Associative_Container>::Chain_Archetype ( const complex_type & container ) 
+: container_(&container) {
+} /* Chain_Archetype<>::Chain_Archetype */
+
+template < class Pair_Associative_Container > 
+Chain_Archetype<Pair_Associative_Container>::Chain_Archetype ( void ) {
+} /* Chain_Archetype<>::Chain_Archetype */
+
+template < class Pair_Associative_Container > 
 std::ostream & operator << ( std::ostream & output_stream, const Chain_Archetype<Pair_Associative_Container> & print_me) {
 	bool first_print = true;
 	/* If chain is empty, output 0 and return */

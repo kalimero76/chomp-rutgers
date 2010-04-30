@@ -10,10 +10,29 @@
 #ifndef CHOMP_MORSE_THEORY_H
 #define CHOMP_MORSE_THEORY_H
 
-#include "complexes/Morse_Complex.h"
+#include "complexes/Abstract_Complex.h"
 
-template < class Cell_Complex>
-Morse_Complex<Cell_Complex> Ace_King_Queen_Algorithm ( const Cell_Complex & cell_complex );
+namespace morse {
+  
+  template < class Cell_Complex > void 
+  decompose ( Cell_Complex & cell_complex );
+  
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  alpha ( const typename Cell_Complex::Chain & input );
+  
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  beta ( const typename Cell_Complex::Chain & input );
+  
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  gamma ( const typename Cell_Complex::Chain & input );
+  
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  project ( const typename Cell_Complex::Chain & input );
+  
+  template < class Cell_Complex > Abstract_Complex< typename Cell_Complex::const_iterator> 
+  reduction ( const Cell_Complex & complex );
+
+} /* namespace morse */
 
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/Morse_Theory.hpp"

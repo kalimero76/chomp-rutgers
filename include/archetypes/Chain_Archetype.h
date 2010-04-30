@@ -48,16 +48,24 @@ template < class Pair_Associative_Container > std::ostream & operator << ( std::
 template < class Pair_Associative_Container > 
 class Chain_Archetype : public Pair_Associative_Container {
 public:
-	typedef typename Pair_Associative_Container::mapped_type Ring;	/* SGI's STL calls this data_type as well, but GCC doesn't dig it. */
+  /* typedefs */
+  typedef typename Pair_Associative_Container::key_type::complex_type complex_type;
+	typedef typename Pair_Associative_Container::mapped_type Ring;	/* SGI's STL calls this data_type as well, but GCC doesn't. */
 	typedef typename Pair_Associative_Container::value_type Chain_Term;
+  /* Chain */
 	Chain_Archetype & operator += ( const Chain_Archetype & );
   Chain_Archetype & operator -= ( const Chain_Archetype & );
 	Chain_Archetype & operator += ( const Chain_Term & );
   Chain_Archetype & operator -= ( const Chain_Term & );
 	Chain_Archetype & operator *= ( const Ring & );
 	friend std::ostream & operator << < Pair_Associative_Container > ( std::ostream &, const Chain_Archetype & );
-
-	/* todo: should use an overloaded binary * not a member, but friended by class so we can multiply scalars from the left as users will want to do */
+  const complex_type & container () const;
+  template < class InputIterator >
+  Chain_Archetype ( InputIterator first, InputIterator last, const typename Pair_Associative_Container::key_compare & comp, const complex_type & container );
+  Chain_Archetype ( const complex_type & container );
+  Chain_Archetype ( void );
+private:
+  const complex_type * container_;
 }; /* Chain_Archetype */
 
 #ifndef CHOMP_LIBRARY_ONLY_

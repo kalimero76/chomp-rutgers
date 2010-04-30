@@ -11,47 +11,100 @@
 
 #include "complexes/Cubical_Complex.h"
 
-/* * * * * * * * * * * * * * * * *
- * Cubical_Container definitions *
- * * * * * * * * * * * * * * * * */
+/* * * * * * * * * * * * * * * * * * * *
+ * Cubical_const_iterator definitions  *
+ * * * * * * * * * * * * * * * * * * * */
 
-unsigned int Cubical_Container::dimension ( void ) const {
+Cubical_const_iterator::Cubical_const_iterator ( void ) : container_(NULL), dimension_(0) { 
+} /* Cubical_const_iterator::Cubical_const_iterator */
+
+Cubical_const_iterator::Cubical_const_iterator ( const Cubical_Complex * const container, const unsigned long address, const unsigned int dimension ) : 
+container_(container), address_(address), dimension_(dimension) {
+} /* Cubical_const_iterator::Cubical_const_iterator */
+
+Cubical_Complex::value_type Cubical_const_iterator::operator * ( void ) const {
+	return Cubical_Complex::Cell ( address_, dimension_ ); 
+} /* Cubical_const_iterator::operator * */
+
+void Cubical_const_iterator::next_type ( void ) {
+	const unsigned long maximum = 1 << container_ -> dimension_ ; 
+  unsigned long piece_number = address_ & ( maximum - 1 );
+	while ( 1 ) {
+		++ piece_number;
+		if ( piece_number == maximum ) {
+			if ( dimension_ == container_ -> dimension_ ) { 
+        /* There are no more types. Cycle to beginning. */
+        dimension_ = 0; 
+        piece_number = 0;
+        break;
+      } else {
+        ++ dimension_;
+        piece_number = 0;
+      }
+    } /* if */
+		unsigned long temp = piece_number;
+		unsigned int sum = 0;
+		for ( unsigned int bit = 0; bit < container_ -> dimension_; ++ bit ) {
+			sum += temp % 2;
+			temp = temp >> 1; 
+    } /* for */
+		if ( sum == dimension_ ) break; 
+  } /* while */
+  address_ = piece_number;
+} /* Cubical_const_iterator::next_piece_number */
+
+Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
+	const unsigned long hop_length = 1 << (container_ -> dimension_);
+  address_ += hop_length; 
+	while ( 1 ) {
+		/* Advance full_cube_number until we run out of cubes. */
+		while ( address_ < container_ -> bitmap_size_ ) {
+			if ( container_ -> bitmap_ [ address_ ] ) return *this ; 
+			address_ += hop_length; 
+    } /* while */
+    /* Zero out the cube_number and get next piece */
+		next_type (); 
+		if ( address_ == 0 ) {
+      /* Then we have reached end () */
+      address_ = container_ -> bitmap_size_;
+      return *this;  
+    } /* if */
+  } /* while */ 
+} /* Cubical_const_iterator::operator ++ */
+
+bool Cubical_const_iterator::operator != ( const Cubical_const_iterator & right_hand_side ) const {
+	if ( address_ != right_hand_side . address_ ) return true;
+	return false; 
+} /* Cubical_const_iterator::operator != */
+
+bool Cubical_const_iterator::operator == ( const Cubical_const_iterator & right_hand_side ) const {
+	if ( address_ != right_hand_side . address_ ) return false;
+	return true; 
+} /* Cubical_const_iterator::operator == */
+
+bool Cubical_const_iterator::operator < ( const Cubical_const_iterator & right_hand_side ) const {
+  if ( dimension_ == right_hand_side . dimension_ ) return address_ < right_hand_side . address_;
+  return dimension_ < right_hand_side . dimension_;
+} /* Cubical_const_iterator::operator < */
+
+unsigned int Cubical_const_iterator::dimension () const {
   return dimension_;
-} /* Cubical_Container::dimension */
+} /* Cubical_const_iterator::dimension */
 
-Cubical_Container::size_type Cubical_Container::size ( unsigned int dimension ) const {
-	return size_ [ dimension ]; 
-} /* Cubical_Container::size */
-	
-Cubical_Container::iterator Cubical_Container::begin ( unsigned int dimension  ) const {
-	return begin_ [ dimension ];
-} /* Cubical_Container::begin */
+const Cubical_Complex & Cubical_const_iterator::container () const {
+  return * container_;
+} /* Cubical_const_iterator::container */
 
-Cubical_Container::iterator Cubical_Container::end ( unsigned int dimension ) const {	
-  return end_ [ dimension ];
-} /* Cubical_Container::end */
+std::ostream & operator << ( std::ostream & output_stream, const Cubical_const_iterator & print_me) {
+  output_stream << * print_me;
+  return output_stream;
+} /* operator << */
 
-Cubical_Container::iterator Cubical_Container::find ( const Cubical_Container::key_type & key ) const {
-  if ( bitmap_ [ key . data () ] == false ) return end_ [ dimension_ ];
-	return const_iterator ( this, key . data (), key . dimension () );
-} /* Cubical_Container::find */
+/* * * * * * * * * * * * * * * *
+ * Cubical_Complex definitions *
+ * * * * * * * * * * * * * * * */
 
-void Cubical_Container::erase ( const iterator & erase_me ) {
-	std::_Bit_reference bit_reference = bitmap_ [ erase_me . address_ ];
-	if ( bit_reference == true ) {
-		bit_reference = false;
-    /* Update size_ */
-    -- size_ [ erase_me . dimension_ ]; 
-    /* Update begin_, end_ */
-    if ( erase_me == begin_ [ erase_me . dimension_ ] ) {
-      ++ begin_ [ erase_me . dimension_ ];
-      if ( erase_me . dimension_  > 0 ) end_ [ erase_me . dimension_ - 1 ] = begin_ [ erase_me . dimension_ ];
-    }
-  } /* if */
-  return; 
-} /* Cubical_Container::erase */
-
-std::pair<Cubical_Container::iterator, bool> Cubical_Container::insert ( const value_type & insert_me ) {
+std::pair<Cubical_Complex::iterator, bool> Cubical_Complex::insert ( const value_type & insert_me ) {
 	std::_Bit_reference bit_reference = bitmap_ [ insert_me . data () ];
 	if ( bit_reference == false ) { 
 		bit_reference = true; 
@@ -68,10 +121,57 @@ std::pair<Cubical_Container::iterator, bool> Cubical_Container::insert ( const v
   } else {
     return std::pair < iterator, bool > ( find ( insert_me ), false ); 
   } /* if-else */
-} /* Cubical_Container::insert */
+} /* Cubical_Complex::insert */
 
-Cubical_Container::Chain Cubical_Container::boundary ( const const_iterator & input ) const {
-  Chain output;
+void Cubical_Complex::erase ( const iterator & erase_me ) {
+	std::_Bit_reference bit_reference = bitmap_ [ erase_me . address_ ];
+	if ( bit_reference == true ) {
+		bit_reference = false;
+    /* Update size_ */
+    -- size_ [ erase_me . dimension_ ]; 
+    /* Update begin_, end_ */
+    if ( erase_me == begin_ [ erase_me . dimension_ ] ) {
+      ++ begin_ [ erase_me . dimension_ ];
+      if ( erase_me . dimension_  > 0 ) end_ [ erase_me . dimension_ - 1 ] = begin_ [ erase_me . dimension_ ];
+    }
+  } /* if */
+  return; 
+} /* Cubical_Complex::erase */
+
+Cubical_Complex::iterator Cubical_Complex::find ( const Cubical_Complex::key_type & key ) const {
+  if ( bitmap_ [ key . data () ] == false ) return end_ [ dimension_ ];
+	return const_iterator ( this, key . data (), key . dimension () );
+} /* Cubical_Complex::find */
+
+Cubical_Complex::iterator Cubical_Complex::begin ( void ) const {
+	return begin_ [ 0 ];
+} /* Cubical_Complex::begin */
+
+Cubical_Complex::iterator Cubical_Complex::end ( void ) const {	
+  return end_ [ dimension_ ];
+} /* Cubical_Complex::end */
+
+Cubical_Complex::size_type Cubical_Complex::size ( void ) const {
+	size_type return_value = 0;
+	for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) 
+		return_value += size_ [ dimension_index ];
+	return return_value;  
+} /* Cubical_Complex::size */
+
+Cubical_Complex::iterator Cubical_Complex::begin ( unsigned int dimension  ) const {
+	return begin_ [ dimension ];
+} /* Cubical_Complex::begin */
+
+Cubical_Complex::iterator Cubical_Complex::end ( unsigned int dimension ) const {	
+  return end_ [ dimension ];
+} /* Cubical_Complex::end */
+
+Cubical_Complex::size_type Cubical_Complex::size ( unsigned int dimension ) const {
+	return size_ [ dimension ]; 
+} /* Cubical_Complex::size */
+
+Cubical_Complex::Chain Cubical_Complex::boundary ( const const_iterator & input ) const {
+  Chain output ( *this );
 	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
 	/* The task is to determine each of its neighbors, their 'sign', and construct the boundary chain.			 */
   
@@ -110,10 +210,10 @@ Cubical_Container::Chain Cubical_Container::boundary ( const const_iterator & in
     address = address ^ work_bit; 
   } /* for */
   return output;  
-} /* Cubical_Container::boundary */
+} /* Cubical_Complex::boundary */
 
-Cubical_Container::Chain Cubical_Container::coboundary ( const iterator & input ) const {
-  Chain output;
+Cubical_Complex::Chain Cubical_Complex::coboundary ( const iterator & input ) const {
+  Chain output ( *this );
 	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
 	/* The task is to determine each of its neighbors, their 'sign', and construct the coboundary chain.			 */
 	
@@ -148,91 +248,43 @@ Cubical_Container::Chain Cubical_Container::coboundary ( const iterator & input 
     address = address ^ work_bit; 
   } /* for */
   return output;  
-} /* Cubical_Container::coboundary */
+} /* Cubical_Complex::coboundary */
 
-/* * * * * * * * * * * * * * * * * * * *
- * Cubical_const_iterator definitions  *
- * * * * * * * * * * * * * * * * * * * */
-
-Cubical_const_iterator::Cubical_const_iterator ( void ) : referral_(NULL), dimension_(0) { 
-} /* Cubical_const_iterator::Cubical_const_iterator */
-
-Cubical_const_iterator::Cubical_const_iterator ( const Cubical_Container * const referral, const unsigned long address, const unsigned int dimension ) : 
-referral_(referral), address_(address), dimension_(dimension) {
-} /* Cubical_const_iterator::Cubical_const_iterator */
-
-Cubical_Container::value_type Cubical_const_iterator::operator * ( void ) const {
-	return Cubical_Container::Cell ( address_, dimension_ ); 
-} /* Cubical_const_iterator::operator * */
-
-void Cubical_const_iterator::next_type ( void ) {
-	const unsigned long maximum = 1 << referral_ -> dimension_ ; 
-  unsigned long piece_number = address_ & ( maximum - 1 );
-	while ( 1 ) {
-		++ piece_number;
-		if ( piece_number == maximum ) {
-			if ( dimension_ == referral_ -> dimension_ ) { 
-        /* There are no more types. Cycle to beginning. */
-        dimension_ = 0; 
-        piece_number = 0;
-        break;
-      } else {
-        ++ dimension_;
-        piece_number = 0;
-      }
-    } /* if */
-		unsigned long temp = piece_number;
-		unsigned int sum = 0;
-		for ( unsigned int bit = 0; bit < referral_ -> dimension_; ++ bit ) {
-			sum += temp % 2;
-			temp = temp >> 1; 
-    } /* for */
-		if ( sum == dimension_ ) break; 
-  } /* while */
-  address_ = piece_number;
-} /* Cubical_const_iterator::next_piece_number */
-
-Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
-	const unsigned long hop_length = 1 << (referral_ -> dimension_);
-  address_ += hop_length; 
-	while ( 1 ) {
-		/* Advance full_cube_number until we run out of cubes. */
-		while ( address_ < referral_ -> bitmap_size_ ) {
-			if ( referral_ -> bitmap_ [ address_ ] ) return *this ; 
-			address_ += hop_length; 
-    } /* while */
-    /* Zero out the cube_number and get next piece */
-		next_type (); 
-		if ( address_ == 0 ) {
-      /* Then we have reached end () */
-      address_ = referral_ -> bitmap_size_;
-      return *this;  
-    } /* if */
-  } /* while */ 
-} /* Cubical_const_iterator::operator ++ */
-
-bool Cubical_const_iterator::operator != ( const Cubical_const_iterator & right_hand_side ) const {
-	if ( address_ != right_hand_side . address_ ) return true;
-	return false; 
-} /* Cubical_const_iterator::operator != */
-
-bool Cubical_const_iterator::operator == ( const Cubical_const_iterator & right_hand_side ) const {
-	if ( address_ != right_hand_side . address_ ) return false;
-	return true; 
-} /* Cubical_const_iterator::operator == */
-
-bool Cubical_const_iterator::operator < ( const Cubical_const_iterator & right_hand_side ) const {
-  if ( dimension_ == right_hand_side . dimension_ ) return address_ < right_hand_side . address_;
-  return dimension_ < right_hand_side . dimension_;
-} /* Cubical_const_iterator::operator < */
-
-unsigned int Cubical_const_iterator::dimension () const {
+unsigned int Cubical_Complex::dimension ( void ) const {
   return dimension_;
-}  /* Cubical_const_iterator::dimension */
+} /* Cubical_Complex::dimension */
 
-/* * * * * * * * * * * * * * * *
- * Cubical_Complex definitions *
- * * * * * * * * * * * * * * * */
+void Cubical_Complex::initialize_for_decomposition ( void ) {
+  unsigned long count = 0;
+  for ( const_iterator iter = begin (); iter != end (); ++ iter ) index_ [ iter ] = count ++; 
+  husband_ . resize ( count );
+  value_ . resize ( count );
+  flags_ . resize ( count );
+} /* Decomplex<>::Decomplex */
+
+Cubical_Complex::const_iterator & Cubical_Complex::husband ( const const_iterator & input ) {
+  return husband_ [ index_ [ input ] ];
+} /* Cubical_Complex::husband */
+
+const Cubical_Complex::const_iterator & Cubical_Complex::husband ( const const_iterator & input ) const {
+  return husband_ [ index_ . find ( input ) -> second ];
+} /* Cubical_Complex::husband */
+
+unsigned int & Cubical_Complex::value ( const const_iterator & input ) {
+  return value_ [ index_ [ input ] ];
+} /* Cubical_Complex::value */
+
+const unsigned int & Cubical_Complex::value ( const const_iterator & input ) const {
+  return value_ [ index_ . find ( input ) -> second ];
+} /* Cubical_Complex::value */
+
+unsigned char & Cubical_Complex::flags ( const const_iterator & input ) {
+  return flags_ [ index_ [ input ] ];  
+} /* Cubical_Complex::flags */
+
+const unsigned char & Cubical_Complex::flags ( const const_iterator & input ) const {
+  return flags_ [ index_ . find ( input ) -> second ];  
+} /* Cubical_Complex::flags */
 
 void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes ) {
 	dimension_ = user_dimension_sizes . size ();
@@ -288,14 +340,14 @@ void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coo
   } /* for */
 	return; 
 } /* Cubical_Complex::Add_Full_Cube */
-	
+
 void Cubical_Complex::Load_From_File ( const char * FileName ) {
 	char text_buffer[512];
 	char *ptr;
 	std::ifstream input_file ( FileName ); 
 	if ( not input_file . good () ) {
 		std::cout << "Cubical_Complex::Load_From_File. Fatal Error. " 
-			<< FileName << " not found.\n";
+    << FileName << " not found.\n";
 		exit ( 1 ); } /* if */
 	int index = 0; 
 	/* Find first line of text with a "(" */
