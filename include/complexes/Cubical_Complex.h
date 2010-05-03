@@ -89,14 +89,18 @@ public:
   Chain boundary ( const const_iterator & input ) const;
   Chain coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
+  /* Index Complex */
+  void index ( void );
+  unsigned long index ( const const_iterator & ) const;
+  const_iterator lookup ( unsigned long index ) const;
   /* Decomposable Complex */
-  void initialize_for_decomposition ( void );
-	const_iterator & husband ( const const_iterator & );
-  const const_iterator & husband ( const const_iterator & ) const;
-	unsigned int & value ( const const_iterator & );
-  const unsigned int & value ( const const_iterator & ) const;
-	unsigned char & flags ( const const_iterator & );
-  const unsigned char & flags ( const const_iterator & ) const;
+  void decompose ( void );
+	const_iterator & husband ( unsigned long index );
+  const const_iterator & husband ( unsigned long index ) const;
+	unsigned int & value ( unsigned long index );
+  const unsigned int & value ( unsigned long index ) const;
+	unsigned char & flags ( unsigned long index );
+  const unsigned char & flags ( unsigned long index ) const;
   /* Cubical Complex */
   /** Load_From_File.
    Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
@@ -110,6 +114,8 @@ public:
    which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1) */
 	void Allocate_Bitmap ( const std::vector<unsigned int> & sizes );
   
+  const std::vector<unsigned int> & dimension_sizes ( void ) const; 
+
 private:  
 	friend class Cubical_const_iterator;
 	unsigned int dimension_; 
@@ -117,10 +123,12 @@ private:
 	std::vector<unsigned long> jump_values_; 
 	std::vector<bool> bitmap_; 
   std::vector<const_iterator> begin_;
-  std::vector<const_iterator> end_;
+  const_iterator end_;
   std::vector<size_type> size_;
+  unsigned long total_size_;
   unsigned long bitmap_size_;
   std::map < const_iterator, unsigned int > index_;
+  std::vector < const_iterator > lookup_;
   std::vector < const_iterator > husband_;
 	std::vector < unsigned int > value_;
 	std::vector < unsigned char > flags_;

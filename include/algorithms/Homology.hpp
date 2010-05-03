@@ -36,9 +36,9 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 	/* For example, 1 1 1 2 2 6 would yield a vector containing three elements: [ (1, 3), (2, 2), (6, 1) ] */
 
 	typedef std::vector < std::pair < typename Geometric_Complex_Template::Ring, int > > smith_form_output_type;	
-	std::vector < smith_form_output_type > smith_form_results ( the_complex . dimension + 1);
+	std::vector < smith_form_output_type > smith_form_results ( the_complex . dimension () + 1);
 
-	for ( unsigned int dimension_index = 0;  dimension_index <= the_complex . dimension; dimension_index ++ ) {
+	for ( unsigned int dimension_index = 0;  dimension_index <= the_complex . dimension (); dimension_index ++ ) {
 		/* Compute the boundary map d_{dimension_index} : C_{dimension_index} -> C_{dimension_index - 1} */
 		Sparse_Matrix < typename Geometric_Complex_Template::Ring > matrix;
 		Sparse_Matrix_Boundary_Map ( matrix, the_complex, dimension_index );
@@ -52,16 +52,16 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 	 */
 	 
 	/* First we need to know the size of the chain groups */
-	std::vector < int > number_of_free_generators_of_chain_complex ( the_complex . dimension + 1);
+	std::vector < int > number_of_free_generators_of_chain_complex ( the_complex . dimension () + 1);
 
-	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension; dimension_index ++ ) 
-		number_of_free_generators_of_chain_complex [ dimension_index ] = the_complex . cells [ dimension_index ] . size ();
+	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension (); dimension_index ++ ) 
+		number_of_free_generators_of_chain_complex [ dimension_index ] = the_complex . size ( dimension_index );
 	
 	/* Next we need to know the rank of the boundary maps. This can be determined from the SNF. */
-	std::vector < int > rank_of_boundary_homomorphism ( the_complex . dimension + 2 );
+	std::vector < int > rank_of_boundary_homomorphism ( the_complex . dimension () + 2 );
 	
-	rank_of_boundary_homomorphism [ the_complex . dimension + 1 ] = 0;
-	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension; dimension_index ++ ) {
+	rank_of_boundary_homomorphism [ the_complex . dimension () + 1 ] = 0;
+	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension (); dimension_index ++ ) {
 		rank_of_boundary_homomorphism [ dimension_index ] = 0;
 		for ( unsigned int index = 0; index < smith_form_results [ dimension_index ] . size (); index ++ )
 			if ( smith_form_results [ dimension_index ] [ index ] . first != 0 ) /* Thus, specialized ring classes should overload != */
@@ -71,9 +71,9 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 	
 	/* Now we are ready to compute the Betti numbers */
 	
-	std::vector < int > Betti_numbers ( the_complex . dimension + 1 );
+	std::vector < int > Betti_numbers ( the_complex . dimension () + 1 );
 
-	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension; dimension_index ++ ) 
+	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension (); dimension_index ++ ) 
 		Betti_numbers [ dimension_index ] = 
 			number_of_free_generators_of_chain_complex [ dimension_index ]
 			- rank_of_boundary_homomorphism [ dimension_index ]
@@ -89,7 +89,7 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 	 
 	 /* minor first_print problem if betti number is zero and there is torsion */
 	 /* if group is trivial nothing is printed, that is also a problem */
-	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension; dimension_index ++ ) {
+	for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension (); dimension_index ++ ) {
 		bool printed_betti = false;
 		std::cout << "H_" << dimension_index << " =";
 		if ( Betti_numbers [ dimension_index ] > 0 ) {
@@ -108,7 +108,8 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 		if ( !printed_betti && first_torsion_subgroup ) std::cout << " 0";
 		std::cout << "\n"; }
 	minimal_number_of_generators_output = minimal_number_of_generators;
-	return; } /* void Homology(...) */
+	return; 
+} /* void Homology(...) */
 	
 /* Compute Homology Groups and also Homology generators */
 /*
@@ -137,23 +138,23 @@ matrix has the same span as the entire matrix itself.)
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators ( const Cell_Complex & complex ) {
-	std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > return_value ( complex . dimension + 1 );
+	std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > return_value ( complex . dimension () + 1 );
 	typedef typename Dense<typename Cell_Complex::Ring>::Matrix Matrix;
 	/* Loop through Chain Groups */
 	Matrix first_R, second_Q, second_Qinv, second_R, second_Rinv;
 	int first_t, second_s, second_t;
 	/* The d_{0} boundary matrix is zero, so its SNF has no non-zero elements on its diagonal. */
 	first_t = 0;
-	for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension; ++ dimension_index ) {
+	for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension (); ++ dimension_index ) {
 		/* Compute the SNF of the new boundary matrix, d_{dimension_index} */
 		std::vector < typename Cell_Complex::Cell > translation_table;
         Matrix boundary_matrix;
 		Dense_Matrix_Boundary_Map ( boundary_matrix, translation_table, complex, dimension_index + 1 );
         
-        if ( dimension_index < complex . dimension )
+        if ( dimension_index < complex . dimension () )
             capd::matrixAlgorithms::smithForm( boundary_matrix, second_Q, second_Qinv, second_R, second_Rinv, second_s, second_t);
         else {
-            second_Qinv = second_Q = Matrix::Identity( complex . cells [ complex . dimension ] . size () );
+            second_Qinv = second_Q = Matrix::Identity( complex . size ( complex . dimension () ) );
             second_s = second_t = 0;
         }
 

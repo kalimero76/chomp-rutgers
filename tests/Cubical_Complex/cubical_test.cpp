@@ -32,11 +32,11 @@ void test_example ( void ) {
   
   inspect ( my_cubical_complex );
   
-  morse::decompose ( my_cubical_complex );
+  my_cubical_complex . decompose ();
 
   inspect ( my_cubical_complex );
   
-  Abstract_Complex < Cubical_Complex::const_iterator > my_abstract_complex 
+  Abstract_Complex < Default_Cell > my_abstract_complex 
     = morse::reduction ( my_cubical_complex );
   
   inspect ( my_abstract_complex );

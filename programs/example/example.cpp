@@ -5,10 +5,15 @@
 
 #define CHOMP_HEADER_ONLY_
 #include "complexes/Cubical_Complex.h"	/* for class Cubical_Complex */
-#include "complexes/Vector_Complex.h"	/* for class Vector_Complex */
-#include "complexes/Morse_Complex.h"    /* for Morse_Complex */
+//#include "complexes/Vector_Complex.h"	/* for class Vector_Complex */
 #include "algorithms/Homology.h"		/* for function Homology(...)*/
 
+
+/* Declarations */
+void generate_random_cubical_complex ( Cubical_Complex & my_cubical_complex, std::vector < unsigned int > & dimension_sizes, float probability );
+void save_cubical_complex ( Cubical_Complex & my_cubical_complex, const char * file_name );
+class compute_results;
+template < class Cell_Complex_Template > compute_results compute_example ( Cell_Complex_Template & my_complex );
 
 template < class T >
 void print_my_vector ( std::vector<T> print_me ) {
@@ -36,34 +41,35 @@ void generate_random_cubical_complex ( Cubical_Complex & my_cubical_complex, std
 	int max_count = (int) ( (float) vector_prod ( actual_sizes ) * probability );
 	for ( int count = 0; count < max_count; ++ count ) {
 		std::vector < unsigned int > cube_coordinates ( dimension_sizes . size () );
-		for ( unsigned int dimension_index = 0; dimension_index < my_cubical_complex . dimension; ++ dimension_index ) 
+		for ( unsigned int dimension_index = 0; dimension_index < my_cubical_complex . dimension (); ++ dimension_index ) 
 			cube_coordinates [ dimension_index ] = 2 + rand() % (dimension_sizes [ dimension_index ] - 4);
-		my_cubical_complex . Add_Full_Cube ( cube_coordinates ); } /* for */ } /* endfunction */
+		my_cubical_complex . Add_Full_Cube ( cube_coordinates ); 
+  } /* for */ 
+} /* generate_random_cubical_complex */
 
 /* assume given a 'full' cubical complex, save it in simple (#, #, ... #) format */
 void save_cubical_complex ( Cubical_Complex & my_cubical_complex, const char * file_name ) {
 	std::ofstream output_file ( file_name ); 
-	const unsigned int dimension = my_cubical_complex . dimension;
-	const Cubical_Container & top_container = my_cubical_complex . cells [ dimension ];
-
+	const unsigned int dimension = my_cubical_complex . dimension ();
 	output_file << "(";
 	for ( unsigned int dimension_index = 0; dimension_index < dimension; dimension_index ++ ) {
-		output_file << top_container . dimension_sizes -> operator [] ( dimension_index ); 
+		output_file << my_cubical_complex . dimension_sizes () [ dimension_index ]; 
 		if ( dimension_index + 1 != dimension ) output_file << ", "; }
 	output_file << ")\n";
-	
-	for ( Cubical_Container::const_iterator full_cube = top_container. begin () ; 
-	full_cube != top_container . end (); ++ full_cube ) {
-		unsigned long name = full_cube -> name >> dimension;
+	for ( Cubical_Complex::const_iterator full_cube = my_cubical_complex . begin ( dimension ) ; 
+	full_cube != my_cubical_complex . end ( dimension ); ++ full_cube ) {
+		unsigned long name = (*full_cube) . data () >> dimension;
 		output_file << "(";
 		for ( unsigned int dimension_index = 0; dimension_index < dimension; dimension_index ++ ) {
-			unsigned long current_dimension_size = top_container . dimension_sizes -> operator [] ( dimension_index );
+			unsigned long current_dimension_size = my_cubical_complex . dimension_sizes () [ dimension_index ];
 			output_file << name % current_dimension_size;
 			if ( dimension_index + 1 != dimension ) output_file << ", ";
-			name = name / current_dimension_size; } /* for */
-		output_file << ")\n"; } /* for */
-	
-	output_file . close (); } /* endfunction */
+			name = name / current_dimension_size; 
+    } /* for */
+		output_file << ")\n"; 
+  } /* for */
+	output_file . close (); 
+} /* save_cubical_complex */
 	
 class compute_results {
 public:
@@ -83,42 +89,37 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	total_time_start = clock ();
 	std::cout << "  Creating Morse Complex from Original Complex ... \n";
 	start_clock = clock ();
-	Morse_Complex<Cell_Complex_Template> my_morse_complex ( my_complex ); 
+  my_complex . decompose ();
+  std::cout << (float) ( clock () - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
+	Morse_Complex my_morse_complex = morse::reduction ( my_complex ); 
 	std::cout << " ... Morse Complex created: ";
 	stop_clock = clock (); 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
 	morse_time = (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC;
-	
 	/* Tell me interesting things about the Morse Complex */
 	std::cout << "  Original Sizes (by increasing dimension): ";
-	for ( unsigned int dim = 0; dim <= my_complex . dimension; dim ++ ) 
-		std::cout << my_complex . cells [ dim ] . size () << " ";  
+	for ( unsigned int dim = 0; dim <= my_complex . dimension (); dim ++ ) 
+		std::cout << my_complex . size ( dim ) << " ";  
 	std::cout << "\n";
-	
 	std::cout << "  Morse Sizes (by increasing dimension): ";
-	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension; dim ++ ) 
-		std::cout << my_morse_complex . cells [ dim ] . size () << " "; 
+	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension (); dim ++ ) 
+		std::cout << my_morse_complex . size ( dim ) << " "; 
 	std::cout << "\n";
-	
-
 	/* Compute the homology */
 	std::vector<int> Betti_Numbers, Minimal_Number_of_Generators;
 	std::cout << "  Computing Homology ... \n";
 	start_clock = clock ();
-	Homology < Morse_Complex < Cell_Complex_Template > > ( Betti_Numbers, Minimal_Number_of_Generators, my_morse_complex );
+	Homology < Morse_Complex > ( Betti_Numbers, Minimal_Number_of_Generators, my_morse_complex );
 	stop_clock = clock ();
 	std::cout << "  Homology computed. "; 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
 	homology_time = (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC;
-	
 	std::cout << "  Betti Numbers: "; print_my_vector ( Betti_Numbers ); 
 	std::cout << "\n";
-
 	total_time_stop = clock ();
 	total_time = (float) ( total_time_stop - total_time_start) / (float) CLOCKS_PER_SEC ;
 	std::cout << "  STATISTICS \n";
 	std::cout << "  ---------- \n";
-
 	std::cout << "  Total time: " << total_time << " seconds.\n";
 	std::cout << "  Cells in original complex: " << my_complex . size () << "\n";
 	std::cout << "  Cells in Morse complex: " << my_morse_complex . size () << "\n";
@@ -129,7 +130,6 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	std::cout << "  Cells per second of Morse time:" << (float) my_complex . size () / morse_time << "\n"; 
 	std::cout << "  Cells per second of Smith time:" << (float) my_morse_complex . size () / homology_time << "\n"; 
 	std::cout << "  ----------\n";
-	
 	compute_results return_value;
 	return_value . original_size =  my_complex . size ();
 	return_value . morse_size =  my_morse_complex . size ();
@@ -137,13 +137,64 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	return_value . total_time =  total_time;
 	return_value . morse_time =  morse_time;
 	return_value . smith_time =  homology_time;
+  return return_value;
+} /* compute_example */
 
-    return return_value;
+compute_results cubical_example (  int dimension, int width, float probability ) {
+	/* Generate Random Cubical Complex */
+	std::cout << "\n---- Random Complex of dimension " << dimension << ", width " << width << " ----\n";
+	std::vector < unsigned int > dimension_sizes (  dimension, width );
+	Cubical_Complex my_cubical_complex; 
+	std::cout << "  Generating Random Cubical Complex... ";
+	generate_random_cubical_complex ( my_cubical_complex, dimension_sizes, probability );
+	std::cout << "  Random Cubical Complex Generated \n";
+  return compute_example ( my_cubical_complex );
+} /* cubical_example */
 
+void run_tests ( const char * filename, int dimension, float probability, int Number, int stepsize ) {
+	std::vector< compute_results > results ( Number );
+	for ( int index = 0; index < Number; ++index ) {
+		results [ index ] = cubical_example ( dimension, 8 + stepsize*index, probability); 
+	} /* for */
+	std::ofstream output_file ( filename );
+	for ( int index = 0; index < Number; ++index ) {
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 1) = " << results [ index ] . original_size << ";\n"; 
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 2) = " << results [ index ] . morse_size << ";\n"; 
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 3) = " << results [ index ] . homology_size << ";\n";
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 4) = " << results [ index ] . total_time << ";\n"; 
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 5) = " << results [ index ] . morse_time << ";\n"; 
+		output_file << " data{" << dimension << "}(" << index + 1 << ", 6) = " << results [ index ] . smith_time << ";\n"; 
+	} /* for */
+	output_file.close();
+} /* run_tests */
+
+
+int main (int argc, char * const argv[]) {
+	
+	/* Run 2D tests */
+	//run_tests( "random_cubical_stats_2d.m", 2, .2, 10, 10);
+	//cubical_example ( 2, 8, .2);
+	/* Run 3D tests */
+	run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
+	
+	/* Run 4D tests */
+	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
+
+	/* Run 5D tests */
+	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
+			
+	/* Manifold Example */
+	//manifold_example ( 8 );
+	
+	//imperfect_product_example ();
+	
+return 0;
 }
 
-void manifold_example (  unsigned int dimension  ) {
+#if 0
 
+void manifold_example (  unsigned int dimension  ) {
+  
 	std::cout << "\n---- Manifold Example: T^d ----\n";
 	/* Generate a Vector_Complex representation of S^1 */
 	std::vector<unsigned int> sizes(2);
@@ -154,10 +205,10 @@ void manifold_example (  unsigned int dimension  ) {
 	my_cubical_complex . Allocate_Bitmap ( sizes );
 	my_cubical_complex . Add_Full_Cube ( coordinates );
 	my_cubical_complex . Remove_Cell ( * my_cubical_complex . cells [ 2 ] . begin () );
-    std::cout << " Creating S^1. \n";
+  std::cout << " Creating S^1. \n";
 	Vector_Complex my_vector_complex ( my_cubical_complex );
-    std::cout << " Created S^1! \n";
-
+  std::cout << " Created S^1! \n";
+  
 	/* Now S^1 is in my_vector_complex. */
 	
 	/* Compute on Tori */
@@ -172,25 +223,8 @@ void manifold_example (  unsigned int dimension  ) {
 		std::cout << "  --- " << dimension_index << "-Torus ---\n";
 		compute_example ( Torus );
 	} /* for */
-
+  
 	return;
-}
-
-
-
-compute_results cubical_example (  int dimension, int width, float probability ) {
-	
-	/* Generate Random Cubical Complex */
-	std::cout << "\n---- Random Complex of dimension " << dimension << ", width " << width << " ----\n";
-	std::vector < unsigned int > dimension_sizes (  dimension, width );
-	Cubical_Complex my_cubical_complex; 
-	std::cout << "  Generating Random Cubical Complex... ";
-	generate_random_cubical_complex ( my_cubical_complex, dimension_sizes, probability );
-	std::cout << "  Random Cubical Complex Generated \n";
-	
-	/* Compute on it, return. */
-    return compute_example ( my_cubical_complex );
-
 }
 
 void imperfect_product_example ( void ) {
@@ -204,8 +238,8 @@ void imperfect_product_example ( void ) {
 	generate_random_cubical_complex ( my_random_complex, dimension_sizes, probability );
 	
 	/* Compute on it. */
-    compute_example ( my_random_complex );
-
+  compute_example ( my_random_complex );
+  
 	/* Generate a Vector_Complex representation of S^1 */
 	std::vector<unsigned int> sizes(2);
 	sizes[0] = 3; sizes[1] = 3;
@@ -224,46 +258,4 @@ void imperfect_product_example ( void ) {
 	return;
 }
 
-void run_tests ( char * filename, int dimension, float probability, int Number, int stepsize ) {
-	
-	std::vector< compute_results > results ( Number );
-	
-	for ( int index = 0; index < Number; ++index ) {
-		results [ index ] = cubical_example ( dimension, 8 + stepsize*index, probability); 
-	} /* for */
-		
-	std::ofstream output_file ( filename );
-	for ( int index = 0; index < Number; ++index ) {
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 1) = " << results [ index ] . original_size << ";\n"; 
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 2) = " << results [ index ] . morse_size << ";\n"; 
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 3) = " << results [ index ] . homology_size << ";\n";
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 4) = " << results [ index ] . total_time << ";\n"; 
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 5) = " << results [ index ] . morse_time << ";\n"; 
-		output_file << " data{" << dimension << "}(" << index + 1 << ", 6) = " << results [ index ] . smith_time << ";\n"; 
-	} /* for */
-	
-	output_file.close();
-}
-
-
-int main (int argc, char * const argv[]) {
-	
-	/* Run 2D tests */
-	//run_tests( "random_cubical_stats_2d.m", 2, .2, 200, 10);
-	
-	/* Run 3D tests */
-	//run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
-	
-	/* Run 4D tests */
-	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
-
-	/* Run 5D tests */
-	run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
-			
-	/* Manifold Example */
-	//manifold_example ( 8 );
-	
-	//imperfect_product_example ();
-	
-return 0;
-}
+#endif

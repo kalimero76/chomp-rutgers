@@ -10,6 +10,7 @@
 #include <fstream>
 
 #include "complexes/Cubical_Complex.h"
+#include "algorithms/Morse_Theory.h"
 
 /* * * * * * * * * * * * * * * * * * * *
  * Cubical_const_iterator definitions  *
@@ -51,7 +52,7 @@ void Cubical_const_iterator::next_type ( void ) {
 		if ( sum == dimension_ ) break; 
   } /* while */
   address_ = piece_number;
-} /* Cubical_const_iterator::next_piece_number */
+} /* Cubical_const_iterator::next_type */
 
 Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
 	const unsigned long hop_length = 1 << (container_ -> dimension_);
@@ -110,12 +111,12 @@ std::pair<Cubical_Complex::iterator, bool> Cubical_Complex::insert ( const value
 		bit_reference = true; 
     /* Update size_ */
 		++ size_ [ insert_me . dimension () ]; 
-    /* Update begin_, end_ */
+    ++ total_size_;
+    /* Update begin_ */
     const_iterator iter = find ( insert_me );
     ++ iter;
     if ( iter == begin_ [ insert_me . dimension () ] ) {
       begin_ [ insert_me . dimension () ] = find ( insert_me );
-      if ( insert_me . dimension ()  > 0 ) end_ [ insert_me . dimension () - 1 ] = begin_ [ insert_me . dimension () ];
     } /* if */
     return std::pair < iterator, bool > ( find ( insert_me ), true );
   } else {
@@ -125,21 +126,27 @@ std::pair<Cubical_Complex::iterator, bool> Cubical_Complex::insert ( const value
 
 void Cubical_Complex::erase ( const iterator & erase_me ) {
 	std::_Bit_reference bit_reference = bitmap_ [ erase_me . address_ ];
+  unsigned int dimension = erase_me . dimension_;
 	if ( bit_reference == true ) {
 		bit_reference = false;
     /* Update size_ */
-    -- size_ [ erase_me . dimension_ ]; 
-    /* Update begin_, end_ */
-    if ( erase_me == begin_ [ erase_me . dimension_ ] ) {
-      ++ begin_ [ erase_me . dimension_ ];
-      if ( erase_me . dimension_  > 0 ) end_ [ erase_me . dimension_ - 1 ] = begin_ [ erase_me . dimension_ ];
-    }
+    -- size_ [ dimension ]; 
+    -- total_size_;
+    /* Update begin_ */
+    if ( erase_me == begin_ [ dimension ] ) {
+      ++ begin_ [ dimension ];
+      while ( dimension > 0 ) {
+        if ( begin_ [ dimension - 1 ] == erase_me ) begin_ [ dimension - 1 ] = begin_ [ dimension ];
+        else break;
+        -- dimension;
+      } /* while */
+    } /* if */
   } /* if */
   return; 
 } /* Cubical_Complex::erase */
 
 Cubical_Complex::iterator Cubical_Complex::find ( const Cubical_Complex::key_type & key ) const {
-  if ( bitmap_ [ key . data () ] == false ) return end_ [ dimension_ ];
+  if ( bitmap_ [ key . data () ] == false ) return end_;
 	return const_iterator ( this, key . data (), key . dimension () );
 } /* Cubical_Complex::find */
 
@@ -148,14 +155,11 @@ Cubical_Complex::iterator Cubical_Complex::begin ( void ) const {
 } /* Cubical_Complex::begin */
 
 Cubical_Complex::iterator Cubical_Complex::end ( void ) const {	
-  return end_ [ dimension_ ];
+  return end_;
 } /* Cubical_Complex::end */
 
 Cubical_Complex::size_type Cubical_Complex::size ( void ) const {
-	size_type return_value = 0;
-	for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) 
-		return_value += size_ [ dimension_index ];
-	return return_value;  
+	return total_size_; 
 } /* Cubical_Complex::size */
 
 Cubical_Complex::iterator Cubical_Complex::begin ( unsigned int dimension  ) const {
@@ -163,20 +167,20 @@ Cubical_Complex::iterator Cubical_Complex::begin ( unsigned int dimension  ) con
 } /* Cubical_Complex::begin */
 
 Cubical_Complex::iterator Cubical_Complex::end ( unsigned int dimension ) const {	
-  return end_ [ dimension ];
+  return begin_ [ dimension + 1 ];
 } /* Cubical_Complex::end */
 
 Cubical_Complex::size_type Cubical_Complex::size ( unsigned int dimension ) const {
 	return size_ [ dimension ]; 
 } /* Cubical_Complex::size */
 
-Cubical_Complex::Chain Cubical_Complex::boundary ( const const_iterator & input ) const {
+Cubical_Complex::Chain Cubical_Complex::boundary ( const const_iterator & lookup ) const {
   Chain output ( *this );
 	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
 	/* The task is to determine each of its neighbors, their 'sign', and construct the boundary chain.			 */
   
-	if ( input . dimension_ == 0 ) return output; /* Boundary of a 0-dimensional object is trivial */
-	const unsigned int boundary_dimension = input . dimension_ - 1;
+	if ( lookup . dimension_ == 0 ) return output; /* Boundary of a 0-dimensional object is trivial */
+	const unsigned int boundary_dimension = lookup . dimension_ - 1;
 	
 	/* Consider the bit-representation of piece_number. For three-dimensional space, it is three bits
 	 *    101, perhaps. This corresponds to a square piece. Its boundaries come in 2 varieties:
@@ -192,7 +196,7 @@ Cubical_Complex::Chain Cubical_Complex::boundary ( const const_iterator & input 
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
 	bool sign = false;
-	long address = input . address_;
+	long address = lookup . address_;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
 		/* Can we demote this bit? If not, "continue". */
 		if ( not ( address & work_bit) ) continue;
@@ -212,13 +216,13 @@ Cubical_Complex::Chain Cubical_Complex::boundary ( const const_iterator & input 
   return output;  
 } /* Cubical_Complex::boundary */
 
-Cubical_Complex::Chain Cubical_Complex::coboundary ( const iterator & input ) const {
+Cubical_Complex::Chain Cubical_Complex::coboundary ( const iterator & lookup ) const {
   Chain output ( *this );
 	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
 	/* The task is to determine each of its neighbors, their 'sign', and construct the coboundary chain.			 */
 	
-	if ( input . dimension_ == dimension_ ) return output;  /* Coboundary of a full-dimensional object is trivial */
-	const unsigned int coboundary_dimension = input . dimension_ + 1;
+	if ( lookup . dimension_ == dimension_ ) return output;  /* Coboundary of a full-dimensional object is trivial */
+	const unsigned int coboundary_dimension = lookup . dimension_ + 1;
 	
 	/* Consider the bit-representation of piece_number. For three-dimensional space, it is three bits
 	 *    001, perhaps. This corresponds to an edge. Its boundaries come in 4 varieties:
@@ -234,7 +238,7 @@ Cubical_Complex::Chain Cubical_Complex::coboundary ( const iterator & input ) co
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
 	bool sign = false;
-	long address = input . address_;
+	long address = lookup . address_;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
 		/* Can we promote this bit? If not, "continue". */
 		if ( address & work_bit ) continue;
@@ -254,36 +258,53 @@ unsigned int Cubical_Complex::dimension ( void ) const {
   return dimension_;
 } /* Cubical_Complex::dimension */
 
-void Cubical_Complex::initialize_for_decomposition ( void ) {
-  unsigned long count = 0;
-  for ( const_iterator iter = begin (); iter != end (); ++ iter ) index_ [ iter ] = count ++; 
-  husband_ . resize ( count );
-  value_ . resize ( count );
-  flags_ . resize ( count );
-} /* Decomplex<>::Decomplex */
+void Cubical_Complex::index ( void ) {
+  lookup_ . resize ( size () );
+  unsigned long indx = 0;
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup, ++ indx ) { 
+    index_ [ lookup ] = indx;
+    lookup_ [ indx ] = lookup;
+  } /* for */
+} /* Cubical_Complex::index */
 
-Cubical_Complex::const_iterator & Cubical_Complex::husband ( const const_iterator & input ) {
-  return husband_ [ index_ [ input ] ];
+unsigned long Cubical_Complex::index ( const const_iterator & lookup ) const {
+  return index_ . find ( lookup ) -> second;
+} /* Cubical_Complex::index */
+
+Cubical_const_iterator Cubical_Complex::lookup ( unsigned long index ) const {
+  return lookup_ [ index ];
+} /* Cubical_Compelx::lookup */
+
+void Cubical_Complex::decompose ( void ) {
+  index (); 
+  husband_ . resize ( size () );
+  value_ . resize ( size () );
+  flags_ . resize ( size () );
+  morse::decompose ( *this );
+} /*  Cubical_Complex::decompose */
+
+Cubical_Complex::const_iterator & Cubical_Complex::husband ( unsigned long index ) {
+  return husband_ [ index ];
 } /* Cubical_Complex::husband */
 
-const Cubical_Complex::const_iterator & Cubical_Complex::husband ( const const_iterator & input ) const {
-  return husband_ [ index_ . find ( input ) -> second ];
+const Cubical_Complex::const_iterator & Cubical_Complex::husband ( unsigned long index ) const {
+  return husband_ [ index ];
 } /* Cubical_Complex::husband */
 
-unsigned int & Cubical_Complex::value ( const const_iterator & input ) {
-  return value_ [ index_ [ input ] ];
+unsigned int & Cubical_Complex::value ( unsigned long index ) {
+  return value_ [ index ];
 } /* Cubical_Complex::value */
 
-const unsigned int & Cubical_Complex::value ( const const_iterator & input ) const {
-  return value_ [ index_ . find ( input ) -> second ];
+const unsigned int & Cubical_Complex::value ( unsigned long index ) const {
+  return value_ [ index ];
 } /* Cubical_Complex::value */
 
-unsigned char & Cubical_Complex::flags ( const const_iterator & input ) {
-  return flags_ [ index_ [ input ] ];  
+unsigned char & Cubical_Complex::flags ( unsigned long index ) {
+  return flags_ [ index ];  
 } /* Cubical_Complex::flags */
 
-const unsigned char & Cubical_Complex::flags ( const const_iterator & input ) const {
-  return flags_ [ index_ . find ( input ) -> second ];  
+const unsigned char & Cubical_Complex::flags ( unsigned long index ) const {
+  return flags_ [ index ];  
 } /* Cubical_Complex::flags */
 
 void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes ) {
@@ -291,6 +312,7 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
 	dimension_sizes_ . resize ( dimension_, 0 );
 	jump_values_ . resize ( dimension_, 0 );
   size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
 	unsigned long number_of_full_cubes = 1;
 	for ( unsigned long index = 0; index < dimension_; ++ index ) { 
 		dimension_sizes_ [ index ] = ( 1 + user_dimension_sizes [ index ] );
@@ -300,9 +322,8 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
 	bitmap_ . clear ();
   bitmap_ . resize ( number_of_full_cubes << dimension_, false );
   bitmap_size_ = bitmap_ . size ();
-  const_iterator end_iter ( this, bitmap_size_, 0 );
-  begin_ . resize ( dimension_ + 1, end_iter );
-  end_ . resize ( dimension_ + 1, end_iter );
+  end_ = const_iterator ( this, bitmap_size_, 0 );
+  begin_ . resize ( dimension_ + 2, end_);
 } /* Cubical_Complex::Allocate_Bitmap */
 
 void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {
@@ -400,6 +421,10 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 	/* We are done reading. Close the file. */
 	input_file . close ();
 } /* Cubical_Complex::Load_From_File */
+
+const std::vector<unsigned int> & Cubical_Complex::dimension_sizes ( void ) const {
+  return dimension_sizes_;
+} /* Cubical_Complex::dimension_sizes */
 
 #ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */

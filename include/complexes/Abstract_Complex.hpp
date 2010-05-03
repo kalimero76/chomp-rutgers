@@ -5,6 +5,8 @@
  *
  */
 
+#include "algorithms/Morse_Theory.h" /* for morse::decompose */
+
 /* * * * * * * * * * * * * * * *
  * Abstract_Chain definitions  *
  * * * * * * * * * * * * * * * */
@@ -115,6 +117,65 @@ unsigned int Abstract_Complex<Cell_Type>::dimension ( void ) const {
 } /* Abstract_Complex<Cell_Type>::dimension */
 
 template < class Cell_Type >
+void Abstract_Complex<Cell_Type>::index ( void ) {
+  lookup_ . resize ( size () );
+  unsigned long indx = 0;
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup, ++ indx ) { 
+    index_ [ lookup ] = indx;
+    lookup_ [ indx ] = lookup;
+  } /* for */
+} /* Abstract_Complex<Cell_Type>::index */
+
+template < class Cell_Type >
+unsigned long Abstract_Complex<Cell_Type>::index ( const const_iterator & lookup ) const {
+  return index_ . find ( lookup ) -> second;
+} /* Abstract_Complex<Cell_Type>::index */
+
+template < class Cell_Type >
+typename Abstract_Complex<Cell_Type>::const_iterator Abstract_Complex<Cell_Type>::lookup ( unsigned long index ) const {
+  return lookup_ [ index ];
+} /* Abstract_Complex<Cell_Type>::lookup */
+
+template < class Cell_Type >
+void Abstract_Complex<Cell_Type>::decompose ( void ) {
+  index (); 
+  husband_ . resize ( size () );
+  value_ . resize ( size () );
+  flags_ . resize ( size () );
+  morse::decompose ( *this );
+} /*  Abstract_Complex<Cell_Type>::decompose */
+
+template < class Cell_Type >
+typename Abstract_Complex<Cell_Type>::const_iterator & Abstract_Complex<Cell_Type>::husband ( const const_iterator & lookup ) {
+  return husband_ [ index_ [ lookup ] ];
+} /* Abstract_Complex<Cell_Type>::husband */
+
+template < class Cell_Type >
+const typename Abstract_Complex<Cell_Type>::const_iterator & Abstract_Complex<Cell_Type>::husband ( const const_iterator & lookup ) const {
+  return husband_ [ index_ . find ( lookup ) -> second ];
+} /* Abstract_Complex<Cell_Type>::husband */
+
+template < class Cell_Type >
+unsigned int & Abstract_Complex<Cell_Type>::value ( const const_iterator & lookup ) {
+  return value_ [ index_ [ lookup ] ];
+} /* Abstract_Complex<Cell_Type>::value */
+
+template < class Cell_Type >
+const unsigned int & Abstract_Complex<Cell_Type>::value ( const const_iterator & lookup ) const {
+  return value_ [ index_ . find ( lookup ) -> second ];
+} /* Abstract_Complex<Cell_Type>::value */
+
+template < class Cell_Type >
+unsigned char & Abstract_Complex<Cell_Type>::flags ( const const_iterator & lookup ) {
+  return flags_ [ index_ [ lookup ] ];  
+} /* Abstract_Complex<Cell_Type>::flags */
+
+template < class Cell_Type >
+const unsigned char & Abstract_Complex<Cell_Type>::flags ( const const_iterator & lookup ) const {
+  return flags_ [ index_ . find ( lookup ) -> second ];  
+} /* Abstract_Complex<Cell_Type>::flags */
+
+template < class Cell_Type >
 Abstract_Complex<Cell_Type>::Abstract_Complex ( void ) {
 } /* Abstract_Complex<Cell_Type>::Abstract_Complex */
 
@@ -143,6 +204,11 @@ template < class Cell_Type >
 Cell_Type Abstract_const_iterator<Cell_Type>::operator * ( void ) const {
 	return * data_; 
 } /* Abstract_const_iterator::operator * */
+
+template < class Cell_Type > 
+const Cell_Type * Abstract_const_iterator<Cell_Type>::operator -> ( void ) const {
+  return data_ . operator -> ();
+} /* Abstract_const_iterator operator -> */
 
 template < class Cell_Type > 
 Abstract_const_iterator<Cell_Type> & Abstract_const_iterator<Cell_Type>::operator ++ ( void ) {

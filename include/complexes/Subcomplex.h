@@ -43,7 +43,7 @@ class Subcomplex {
 public:
 	/* typedefs */	 
 	typedef Subcomplex_Chain<Cell_Complex> Chain;
-  typedef typename Cell_Complex::const_iterator Cell;
+  typedef Default_Cell Cell;
 	typedef typename Cell_Complex::Ring Ring;
 	typedef unsigned long size_type;
 	typedef Cell key_type;
@@ -67,13 +67,16 @@ public:
   /* Subcomplex */
   Subcomplex ( const Cell_Complex & super_complex ); 
   Chain project ( const typename Cell_Complex::Chain & project_me ) const;
+  typename Cell_Complex::const_iterator include ( const const_iterator & include_me ) const;
   typename Cell_Complex::Chain include ( const Chain & include_me ) const;
 protected:
   friend class Subcomplex_const_iterator<Cell_Complex>;
-  std::set < typename Cell_Complex::const_iterator > data_;
+  size_type bitmap_size_;
+  std::vector < bool > bitmap_;
   std::vector<const_iterator> begin_;
-  std::vector<const_iterator> end_;
+  const_iterator end_;
   std::vector<size_type> size_;
+  unsigned long total_size_;
   unsigned int dimension_;
   const Cell_Complex & super_complex_;
 };
@@ -88,8 +91,7 @@ public:
   typedef Subcomplex<Cell_Complex> complex_type;
   Subcomplex_const_iterator ( void );
   Subcomplex_const_iterator ( const complex_type * const container, 
-                              typename std::set < typename Cell_Complex::const_iterator >::
-                                       const_iterator data, 
+                              unsigned long data, 
                               const unsigned int dimension ); 
   Subcomplex_const_iterator & operator ++ ( void );
   bool operator != ( const Subcomplex_const_iterator & right_hand_side ) const;
@@ -101,7 +103,7 @@ public:
 private:
   friend class Subcomplex<Cell_Complex>;
   const complex_type * container_;
-  typename std::set < typename Cell_Complex::const_iterator >::const_iterator data_;
+  unsigned long data_;
   unsigned int dimension_;
 };
 

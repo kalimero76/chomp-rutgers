@@ -69,6 +69,18 @@ public:
   Chain & coboundary ( const iterator & input );
   const Chain & coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
+  /* Index Complex */
+  void index ( void );
+  unsigned long index ( const const_iterator & ) const;
+  const_iterator lookup ( unsigned long index ) const;
+  /* Decomposable Complex */
+  void decompose ( void );
+	const_iterator & husband ( const const_iterator & );
+  const const_iterator & husband ( const const_iterator & ) const;
+	unsigned int & value ( const const_iterator & );
+  const unsigned int & value ( const const_iterator & ) const;
+	unsigned char & flags ( const const_iterator & );
+  const unsigned char & flags ( const const_iterator & ) const;
   /* Abstract Container */
   Abstract_Complex ( void );
   Abstract_Complex ( unsigned int dimension );
@@ -81,6 +93,11 @@ private:
   std::map < Cell, Chain > boundary_;
   std::map < Cell, Chain > coboundary_;
   unsigned int dimension_;
+  std::map < const_iterator, unsigned int > index_;
+  std::vector < const_iterator > lookup_;
+  std::vector < const_iterator > husband_;
+	std::vector < unsigned int > value_;
+	std::vector < unsigned char > flags_;
 };
 
 /* * * * * * * * * * * * * * * * * 
@@ -100,7 +117,8 @@ public:
   bool operator != ( const Abstract_const_iterator & right_hand_side ) const;
   bool operator == ( const Abstract_const_iterator & right_hand_side ) const;
   bool operator < ( const Abstract_const_iterator & right_hand_side ) const;
-  Cell_Type operator * ( void ) const; 
+  Cell_Type operator * ( void ) const;
+  const Cell_Type * operator -> ( void ) const;
   unsigned int dimension () const;
   const complex_type & container () const;
 private:

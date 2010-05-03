@@ -118,21 +118,23 @@ std::ostream & operator << ( std::ostream & output_stream, const Sparse_Matrix<R
 /* operator << */
 
 /* This function produces a "Sparse_Matrix" to represent the boundary map of the appropriate dimension in the complex. */
+/* TODO: this only will work for Default_Cell */
 template < class Cell_Complex >
 void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > & output_matrix, 
                                   const Cell_Complex & complex, const unsigned int dimension ) {
 	/* Clear the output, just in case. */
 	output_matrix . clear ();
     /* Check dimension to see whether or not it is within bounds. */
-	if ( dimension > complex . dimension || dimension < 0 ) return;
+	if ( dimension > complex . dimension () || dimension < 0 ) return;
 	/* Now we loop through all elementary chains of dimension "map_dimension". */
-	for ( typename Cell_Complex::const_iterator group_iterator = complex . cells [ dimension ] . begin (); 
-	group_iterator != complex . cells [ dimension ] . end (); ++ group_iterator ) {
+	for ( typename Cell_Complex::const_iterator group_iterator = complex . begin ( dimension ); 
+	group_iterator != complex . end ( dimension ); ++ group_iterator ) {
+    unsigned long group_index = complex . index ( group_iterator );
 		/* We find the boundary of the current elementary chain. */
-		typename Cell_Complex::Chain boundary_chain; 
-		complex . Boundary_Map ( boundary_chain, group_iterator );
+		typename Cell_Complex::Chain boundary_chain = complex . boundary ( group_iterator );
 		/* We loop through the terms in the boundary we have found. */
 		for ( typename Cell_Complex::Chain::iterator chain_iterator = boundary_chain . begin (); 
 		chain_iterator != boundary_chain . end (); ++ chain_iterator ) 
-			output_matrix . set_entry ( chain_iterator -> first . name, group_iterator -> name, chain_iterator -> second ); } /* for */
+			output_matrix . set_entry ( complex . index ( chain_iterator -> first )  , group_index, chain_iterator -> second ); 
+  } /* for */
 } /* Sparse_Matrix_Boundary_Map */
