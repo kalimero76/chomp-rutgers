@@ -69,6 +69,10 @@ public:
   Chain project ( const typename Cell_Complex::Chain & project_me ) const;
   typename Cell_Complex::const_iterator include ( const const_iterator & include_me ) const;
   typename Cell_Complex::Chain include ( const Chain & include_me ) const;
+  std::pair < unsigned long, Ring > mate ( const unsigned long mate_me ) const;
+  bool bitmap ( unsigned long address ) const;
+  void erase ( unsigned long address );
+
 protected:
   friend class Subcomplex_const_iterator<Cell_Complex>;
   size_type bitmap_size_;
@@ -91,6 +95,8 @@ public:
   typedef Subcomplex<Cell_Complex> complex_type;
   Subcomplex_const_iterator ( void );
   Subcomplex_const_iterator ( const complex_type * const container, 
+                             unsigned long data );
+  Subcomplex_const_iterator ( const complex_type * const container, 
                               unsigned long data, 
                               const unsigned int dimension ); 
   Subcomplex_const_iterator & operator ++ ( void );
@@ -100,6 +106,8 @@ public:
   typename Subcomplex<Cell_Complex>::value_type operator * ( void ) const; 
   unsigned int dimension () const;
   const complex_type & container () const;
+  /* For morse::decompose */
+  unsigned long data () const;
 private:
   friend class Subcomplex<Cell_Complex>;
   const complex_type * container_;

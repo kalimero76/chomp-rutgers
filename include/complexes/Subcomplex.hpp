@@ -161,12 +161,49 @@ typename Cell_Complex::Chain Subcomplex<Cell_Complex>::include ( const Chain & i
   return return_value;
 } /* Subcomplex<>::include */
 
+template < class Cell_Complex > 
+std::pair < unsigned long, typename Cell_Complex::Ring > 
+Subcomplex<Cell_Complex>::mate ( const unsigned long mate_me ) const {
+  typename Cell_Complex::Chain boundary_chain = super_complex_ . boundary 
+    ( super_complex_ . lookup ( mate_me ) );
+  /* Loop through terms until one is found */
+  for ( typename Cell_Complex::Chain::const_iterator term_iterator = boundary_chain . begin ();
+       term_iterator != boundary_chain . end (); ++ term_iterator ) {
+    unsigned long cell_index;
+    if ( bitmap_ [ cell_index = super_complex_ . index ( term_iterator -> first ) ] ) {
+      return std::pair < unsigned long, Ring > ( cell_index, term_iterator -> second );
+    } /* if */
+  } /* for */
+  std::cout << "Subcomplex<>::mate. Fatal error; there were no boundaries.\n";
+  return std::pair < unsigned long, Ring > ();
+} /* Subcomplex<>::mate */
+
+template < class Cell_Complex > 
+bool Subcomplex<Cell_Complex>::bitmap ( unsigned long address ) const {
+  return bitmap_ [ address ];
+} /* Subcomplex<>::bitmap */
+
+template < class Cell_Complex > 
+void Subcomplex<Cell_Complex>::erase ( unsigned long address ) {
+  bitmap_ [ address ] = false;
+} /* Subcomplex<>::bitmap */
+
 /* * * * * * * * * * * * * * * * * * * *
  * Subcomplex_const_iterator definitions  *
  * * * * * * * * * * * * * * * * * * * */
 
 template < class Cell_Complex > 
 Subcomplex_const_iterator<Cell_Complex>::Subcomplex_const_iterator ( void ) : container_(NULL), dimension_(0) { 
+} /* Subcomplex_const_iterator::Subcomplex_const_iterator */
+
+template < class Cell_Complex > 
+Subcomplex_const_iterator<Cell_Complex>::Subcomplex_const_iterator ( const Subcomplex<Cell_Complex> * const container, const unsigned long data ) : 
+container_(container), data_(data) {
+  /* We have to determine the dimension. */
+  dimension_ = 0;
+  while ( dimension_ < container_ -> dimension_ && 
+          data_ >= container_ -> begin_ [ dimension_ + 1 ] . data_ ) 
+    ++ dimension_;
 } /* Subcomplex_const_iterator::Subcomplex_const_iterator */
 
 template < class Cell_Complex > 
@@ -214,3 +251,8 @@ template < class Cell_Complex >
 const Subcomplex<Cell_Complex> & Subcomplex_const_iterator<Cell_Complex>::container () const {
   return container_;
 } /* Subcomplex_const_iterator::container */
+
+template < class Cell_Complex > 
+unsigned long Subcomplex_const_iterator<Cell_Complex>::data () const {
+  return data_;
+} /* Subcomplex_const_iterator::data */

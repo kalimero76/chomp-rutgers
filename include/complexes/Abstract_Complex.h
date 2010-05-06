@@ -71,16 +71,27 @@ public:
   unsigned int dimension ( void ) const;
   /* Index Complex */
   void index ( void );
-  unsigned long index ( const const_iterator & ) const;
-  const_iterator lookup ( unsigned long index ) const;
+  unsigned long index_begin ( unsigned int dimension ) const;
+  unsigned long index_end ( unsigned int dimension ) const;
+  unsigned long index ( const const_iterator & lookup ) const;
+  unsigned long & index ( const const_iterator & lookup );
+  const const_iterator & lookup ( unsigned long index ) const;
+  const_iterator & lookup ( unsigned long index );
+  /* TODO:
+  std::vector < int > count_all_boundaries ( void ) const;
+  void boundary_index_list ( std::vector < unsigned long > & list, unsigned long index ) const;
+  void coboundary_index_list ( std::vector < unsigned long > & list, unsigned long index ) const;
+  Morse_Chain boundary ( const unsigned long input ) const;
+  Morse_Chain coboundary ( const unsigned long input ) const;
+  */
   /* Decomposable Complex */
+  /* TODO:
   void decompose ( void );
-	const_iterator & husband ( const const_iterator & );
-  const const_iterator & husband ( const const_iterator & ) const;
-	unsigned int & value ( const const_iterator & );
-  const unsigned int & value ( const const_iterator & ) const;
-	unsigned char & flags ( const const_iterator & );
-  const unsigned char & flags ( const const_iterator & ) const;
+  char type ( unsigned long index, unsigned int dimension ) const;
+  unsigned long mate ( unsigned long queen_index, unsigned int dimension ) const;
+  unsigned long ace_begin ( unsigned int dimension ) const;
+  unsigned long ace_end ( unsigned int dimension ) const;
+   */ 
   /* Abstract Container */
   Abstract_Complex ( void );
   Abstract_Complex ( unsigned int dimension );
@@ -88,16 +99,15 @@ private:
   friend class Abstract_const_iterator<Cell_Type>;
   std::set < Cell > cells_;
   std::vector < const_iterator > begin_;
-  std::vector < const_iterator > end_;
+  const_iterator end_;
   std::vector < size_type > size_;
+  unsigned long total_size_;
   std::map < Cell, Chain > boundary_;
   std::map < Cell, Chain > coboundary_;
   unsigned int dimension_;
   std::map < const_iterator, unsigned int > index_;
   std::vector < const_iterator > lookup_;
-  std::vector < const_iterator > husband_;
-	std::vector < unsigned int > value_;
-	std::vector < unsigned char > flags_;
+  std::vector<unsigned long> index_begin_;
 };
 
 /* * * * * * * * * * * * * * * * * 

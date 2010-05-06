@@ -8,6 +8,7 @@
 
 #include <iostream>
 #include <fstream>
+#include <algorithm>
 
 #include "complexes/Cubical_Complex.h"
 #include "algorithms/Morse_Theory.h"
@@ -27,33 +28,6 @@ Cubical_Complex::value_type Cubical_const_iterator::operator * ( void ) const {
 	return Cubical_Complex::Cell ( address_, dimension_ ); 
 } /* Cubical_const_iterator::operator * */
 
-void Cubical_const_iterator::next_type ( void ) {
-	const unsigned long maximum = 1 << container_ -> dimension_ ; 
-  unsigned long piece_number = address_ & ( maximum - 1 );
-	while ( 1 ) {
-		++ piece_number;
-		if ( piece_number == maximum ) {
-			if ( dimension_ == container_ -> dimension_ ) { 
-        /* There are no more types. Cycle to beginning. */
-        dimension_ = 0; 
-        piece_number = 0;
-        break;
-      } else {
-        ++ dimension_;
-        piece_number = 0;
-      }
-    } /* if */
-		unsigned long temp = piece_number;
-		unsigned int sum = 0;
-		for ( unsigned int bit = 0; bit < container_ -> dimension_; ++ bit ) {
-			sum += temp % 2;
-			temp = temp >> 1; 
-    } /* for */
-		if ( sum == dimension_ ) break; 
-  } /* while */
-  address_ = piece_number;
-} /* Cubical_const_iterator::next_type */
-
 Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
 	const unsigned long hop_length = 1 << (container_ -> dimension_);
   address_ += hop_length; 
@@ -65,11 +39,7 @@ Cubical_const_iterator & Cubical_const_iterator::operator ++ ( void ) {
     } /* while */
     /* Zero out the cube_number and get next piece */
 		next_type (); 
-		if ( address_ == 0 ) {
-      /* Then we have reached end () */
-      address_ = container_ -> bitmap_size_;
-      return *this;  
-    } /* if */
+		if ( *this == container_ -> end_ ) return *this;  
   } /* while */ 
 } /* Cubical_const_iterator::operator ++ */
 
@@ -95,6 +65,17 @@ unsigned int Cubical_const_iterator::dimension () const {
 const Cubical_Complex & Cubical_const_iterator::container () const {
   return * container_;
 } /* Cubical_const_iterator::container */
+
+void Cubical_const_iterator::next_type ( void ) {
+  unsigned long piece = address_ & container_ -> mask_;
+  unsigned long next_index = container_ -> types_inv_ [ piece ];
+  if ( next_index == container_ -> mask_ ) {
+    *this = container_ -> end_;
+  } else {
+    address_ = container_ -> types_ [ next_index + 1 ];
+    dimension_ = container_ -> type_dims_ [ next_index + 1 ];
+  } /* if-else */
+} /* Cubical_const_iterator::next_type */
 
 std::ostream & operator << ( std::ostream & output_stream, const Cubical_const_iterator & print_me) {
   output_stream << * print_me;
@@ -259,56 +240,238 @@ unsigned int Cubical_Complex::dimension ( void ) const {
 } /* Cubical_Complex::dimension */
 
 void Cubical_Complex::index ( void ) {
-  lookup_ . resize ( size () );
+  std::cout << " size / bitmap_size = " << (float) total_size_ / (float) bitmap_size_ << "\n";
+  index_ . resize ( bitmap_size_ + 1 );
+  lookup_ . resize ( total_size_ + 1 );
+  connection_ . resize ( total_size_, 0 );
   unsigned long indx = 0;
   for ( const_iterator lookup = begin (); lookup != end (); ++ lookup, ++ indx ) { 
-    index_ [ lookup ] = indx;
+    index_ [ lookup . address_ ] = indx;
     lookup_ [ indx ] = lookup;
+  } /* for */
+  index_ [ end_ . address_ ] = total_size_;
+  lookup_ [ total_size_ ] = end_;
+  index_begin_ . resize ( dimension_ + 2, 0 );
+  unsigned long sum = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    sum += size_ [ dimension_index ];
+    index_begin_ [ dimension_index + 1 ] = sum;
   } /* for */
 } /* Cubical_Complex::index */
 
+unsigned long Cubical_Complex::index_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ]; 
+} /* Cubical_Complex::index_begin */ 
+
+unsigned long Cubical_Complex::index_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ];
+} /* Cubical_Complex::index_end */
+
 unsigned long Cubical_Complex::index ( const const_iterator & lookup ) const {
-  return index_ . find ( lookup ) -> second;
+  return index_ [ lookup . address_ ];
 } /* Cubical_Complex::index */
 
-Cubical_const_iterator Cubical_Complex::lookup ( unsigned long index ) const {
+unsigned long & Cubical_Complex::index ( const const_iterator & lookup ) {
+  return index_ [ lookup . address_ ];
+} /* Cubical_Complex::index */
+
+std::vector < Cubical_const_iterator > & Cubical_Complex::lookup ( void ) {
+  return lookup_;
+} /* Cubical_Complex::lookup */
+
+const Cubical_const_iterator & Cubical_Complex::lookup ( unsigned long index ) const {
   return lookup_ [ index ];
-} /* Cubical_Compelx::lookup */
+} /* Cubical_Complex::lookup */
+
+Cubical_const_iterator & Cubical_Complex::lookup ( unsigned long index ) {
+  return lookup_ [ index ];
+} /* Cubical_Complex::lookup */
+
+namespace Cubical_detail {
+  
+  class set_functor {
+  public:
+    set_functor ( const int value ) : value ( value ) {}
+    void operator () ( int & a ) const { a = value; }
+  private:
+    int value;
+  };
+  
+} /* namespace Cubical_detail */
+
+std::vector < int > Cubical_Complex::count_all_boundaries ( void ) const {
+  std::vector < int > number_of_boundaries ( total_size_ );
+  /* TODO: don't assume full complex */
+
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    for_each ( number_of_boundaries . begin () + index ( begin_ [ dimension_index ] ),
+               number_of_boundaries . begin () + index ( begin_ [ dimension_index + 1 ] ), 
+               Cubical_detail::set_functor ( 2 * dimension_index ) );
+  } /* for */
+  return number_of_boundaries;
+} /* Cubical_Complex::count_all_boundaries */
+
+void Cubical_Complex::boundary ( std::vector < unsigned long > & output, const unsigned long index ) const {
+  output . clear ();
+	const_iterator cell_iterator = lookup ( index );
+	if ( cell_iterator . dimension_ == 0 ) return;  /* Boundary of a zero-dimensional object is trivial */
+	long work_bit = 1;
+	long address = cell_iterator . address_;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
+		/* Can we demote this bit? If not, "continue". */
+		if ( not ( address & work_bit) ) continue;
+		address = address ^ work_bit;
+		if ( bitmap_ [ address ] )
+			output . push_back ( index_ [ address ] );
+		long offset_address = address + ( jump_values_ [ dimension_index ] << dimension_ );
+		if ( bitmap_ [ offset_address ] )
+			output . push_back ( index_ [ offset_address ] );
+    address = address ^ work_bit; 
+  } /* for */
+} /* Cubical_Complex::boundary_index_list */
+
+void Cubical_Complex::coboundary ( std::vector < unsigned long > & output, const unsigned long index ) const {
+  output . clear ();
+	const_iterator cell_iterator = lookup ( index );
+	if ( cell_iterator . dimension_ == dimension_ ) return;  /* Coboundary of a full-dimensional object is trivial */
+	long work_bit = 1;
+	long address = cell_iterator . address_;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
+		/* Can we promote this bit? If not, "continue". */
+		if ( address & work_bit ) continue;
+		address = address ^ work_bit;
+		if ( bitmap_ [ address ] )
+			output . push_back ( index_ [ address ] );
+		long offset_address = address - ( jump_values_ [ dimension_index ] << dimension_ );
+		if ( bitmap_ [ offset_address ] )
+			output . push_back ( index_ [ offset_address ] );
+    address = address ^ work_bit; 
+  } /* for */
+} /* Cubical_Complex::coboundary_index_list */
+
+void Cubical_Complex::boundary ( std::vector < std::pair< unsigned long, Default_Ring > > & output, const unsigned long input ) const {
+  output . clear ();
+  const_iterator cell_iterator = lookup ( input );
+	if ( cell_iterator . dimension_ == 0 ) return; /* Boundary of a 0-dimensional object is trivial */
+	long work_bit = 1;
+	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
+	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
+	bool sign = false;
+	long address = cell_iterator . address_;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
+		/* Can we demote this bit? If not, "continue". */
+		if ( not ( address & work_bit) ) continue;
+		sign = not sign;
+		/* Alter address to refer to a boundary in the current full cube */
+		address = address ^ work_bit;
+		/* Insert the piece in the current full cube */
+		if ( bitmap_ [ address ] )
+			output . push_back ( std::pair<unsigned long, Ring> ( index_ [ address ], sign ? positive : negative ) );
+		/* Insert the piece in the appropriate neighboring full cube */
+		long offset_address = address + ( jump_values_ [ dimension_index ] << dimension_ );
+		if ( bitmap_ [ offset_address ] )
+			output . push_back ( std::pair<unsigned long, Ring> ( index_ [ offset_address ], sign ? negative : positive ) );
+		/* Recover original address */
+    address = address ^ work_bit; 
+  } /* for */
+  return;  
+} /* Cubical_Complex::boundary */
+
+void Cubical_Complex::coboundary ( std::vector < std::pair< unsigned long, Ring > > & output, const unsigned long input ) const {
+  output . clear ();
+  const_iterator cell_iterator = lookup ( input );
+	if ( cell_iterator . dimension_ == dimension_ ) return; /* Coboundary of a full dimensional object is trivial */
+	long work_bit = 1;
+	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
+	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
+	bool sign = false;
+	long address = cell_iterator . address_;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
+		/* Can we promote this bit? If not, "continue". */
+		if ( address & work_bit ) continue;
+		sign = not sign;
+		/* Alter address to refer to a boundary in the current full cube */
+		address = address ^ work_bit;
+		/* Insert the piece in the current full cube */
+		if ( bitmap_ [ address ] )
+			output . push_back ( std::pair<unsigned long, Ring> ( index_ [ address ], sign ? positive : negative ) );
+		/* Insert the piece in the appropriate neighboring full cube */
+		long offset_address = address - ( jump_values_ [ dimension_index ] << dimension_ );
+		if ( bitmap_ [ offset_address ] )
+			output . push_back ( std::pair<unsigned long, Ring> ( index_ [ offset_address ], sign ? negative : positive ) );
+		/* Recover original address */
+    address = address ^ work_bit; 
+  } /* for */
+  return; 
+} /* Cubical_Complex::coboundary */
 
 void Cubical_Complex::decompose ( void ) {
   index (); 
-  husband_ . resize ( size () );
-  value_ . resize ( size () );
-  flags_ . resize ( size () );
-  morse::decompose ( *this );
+  king_count_ = morse::decompose ( *this );
 } /*  Cubical_Complex::decompose */
 
-Cubical_Complex::const_iterator & Cubical_Complex::husband ( unsigned long index ) {
-  return husband_ [ index ];
-} /* Cubical_Complex::husband */
+char Cubical_Complex::type ( unsigned long index, unsigned int dimension ) const {
+  if ( index < index_begin_ [ dimension ] + king_count_ [ dimension + 1 ] ) return 0; /* QUEEN */
+  if ( index < index_begin_ [ dimension + 1 ] - king_count_ [ dimension ] ) return 1; /* ACE */
+  return 2; /* KING */
+} /* Cubical_Complex::type */
 
-const Cubical_Complex::const_iterator & Cubical_Complex::husband ( unsigned long index ) const {
-  return husband_ [ index ];
-} /* Cubical_Complex::husband */
+unsigned long Cubical_Complex::mate ( unsigned long queen_index, unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + index_begin_ [ dimension + 2 ] - queen_index - 1;
+} /* Cubical_Complex::mate */
 
-unsigned int & Cubical_Complex::value ( unsigned long index ) {
-  return value_ [ index ];
-} /* Cubical_Complex::value */
+const Cubical_Complex::Ring & Cubical_Complex::connection ( unsigned long queen_index ) const {
+  return connection_ [ queen_index ];
+} /* Cubical_Complex::connection */
 
-const unsigned int & Cubical_Complex::value ( unsigned long index ) const {
-  return value_ [ index ];
-} /* Cubical_Complex::value */
+Cubical_Complex::Ring & Cubical_Complex::connection ( unsigned long queen_index ) {
+  return connection_ [ queen_index ];
+} /* Cubical_Complex::connection */
 
-unsigned char & Cubical_Complex::flags ( unsigned long index ) {
-  return flags_ [ index ];  
-} /* Cubical_Complex::flags */
+unsigned long Cubical_Complex::ace_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + king_count_ [ dimension + 1 ];
+} /* Cubical_Complex::ace_begin */
 
-const unsigned char & Cubical_Complex::flags ( unsigned long index ) const {
-  return flags_ [ index ];  
-} /* Cubical_Complex::flags */
+unsigned long Cubical_Complex::ace_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ] - king_count_ [ dimension ];
+} /* Cubical_Complex::ace_end */
+
+namespace Cubical_detail {
+  
+  void initialize_types ( unsigned int dimension_, std::vector < unsigned long > & types_, std::vector < unsigned long > & types_inv_, std::vector < unsigned int > & type_dims_ ) {
+    const unsigned long maximum = 1 << dimension_;
+    types_ . clear ();
+    types_inv_ . clear ();
+    type_dims_ . clear ();
+    types_ . resize ( maximum );
+    types_inv_ . resize ( maximum );
+    type_dims_ . resize ( maximum );
+
+    unsigned long piece = 0;
+    unsigned int dim = 0;
+    for ( unsigned int type_index = 0; type_index < maximum; ++ type_index ) {
+      while ( 1 ) {
+        if ( piece == maximum ) {
+          ++ dim;
+          piece = 0;
+        } /* if */
+        unsigned int sum = 0;
+        for ( unsigned int bit = 1; bit < maximum; bit <<= 1 ) if ( piece & bit ) ++ sum;
+        if ( sum == dim ) break; /* Got it! */
+        ++ piece;
+      } /* while */
+      types_ [ type_index ] = piece;
+      types_inv_ [ piece ] = type_index;
+      type_dims_ [ type_index ] = dim;
+      ++ piece;
+    } /* for */
+  } /* Cubical_detail::initialize_types */
+  
+} /* namespace Cubical_detail */
 
 void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes ) {
 	dimension_ = user_dimension_sizes . size ();
+  mask_ = ( 1 << dimension_ ) - 1;
 	dimension_sizes_ . resize ( dimension_, 0 );
 	jump_values_ . resize ( dimension_, 0 );
   size_ . resize ( dimension_ + 1, 0 );
@@ -324,6 +487,8 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
   bitmap_size_ = bitmap_ . size ();
   end_ = const_iterator ( this, bitmap_size_, 0 );
   begin_ . resize ( dimension_ + 2, end_);
+  Cubical_detail::initialize_types ( dimension_, types_, types_inv_, type_dims_ );
+
 } /* Cubical_Complex::Allocate_Bitmap */
 
 void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {

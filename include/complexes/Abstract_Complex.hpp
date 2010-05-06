@@ -32,12 +32,12 @@ std::pair<typename Abstract_Complex<Cell_Type>::iterator, bool> Abstract_Complex
   if ( return_value . second ) { /* It really was inserted, wasn't already there. */
     /* Increment size */
     ++ size_ [ dimension ];
-    /* Keep begin and end updated */
+    ++ total_size_;
+    /* Update begin_ */
     iterator next = return_value . first; 
     ++ next; 
     if ( next == begin_ [ dimension ] ) {
       begin_ [ dimension ] = return_value . first;
-      if ( dimension > 0 ) end_ [ dimension - 1 ] = return_value . first;
     } /* if */
   } /* if */
   return return_value;
@@ -65,15 +65,12 @@ typename Abstract_Complex<Cell_Type>::iterator Abstract_Complex<Cell_Type>::begi
 
 template < class Cell_Type > 
 typename Abstract_Complex<Cell_Type>::iterator Abstract_Complex<Cell_Type>::end ( void ) const {
-  return end_ [ dimension_ ];
+  return end_;
 } /* Abstract_Complex<Cell_Type>::end */
 
 template < class Cell_Type > 
 typename Abstract_Complex<Cell_Type>::size_type Abstract_Complex<Cell_Type>::size ( void ) const {
-	size_type return_value = 0;
-	for ( unsigned int dimension_index = 0; dimension_index <= dimension (); ++ dimension_index ) 
-		return_value += size_ [ dimension_index ];
-	return return_value; 
+	return total_size_; 
 } /* Abstract_Complex<Cell_Type>::size */
 
 template < class Cell_Type >
@@ -83,7 +80,7 @@ typename Abstract_Complex<Cell_Type>::iterator Abstract_Complex<Cell_Type>::begi
 
 template < class Cell_Type >
 typename Abstract_Complex<Cell_Type>::iterator Abstract_Complex<Cell_Type>::end ( unsigned int dimension ) const {
-  return end_ [ dimension ];
+  return begin_ [ dimension + 1 ];
 } /* Abstract_Complex<Cell_Type>::end */
 
 template < class Cell_Type >
@@ -118,13 +115,31 @@ unsigned int Abstract_Complex<Cell_Type>::dimension ( void ) const {
 
 template < class Cell_Type >
 void Abstract_Complex<Cell_Type>::index ( void ) {
-  lookup_ . resize ( size () );
+  lookup_ . resize ( size () + 1 );
   unsigned long indx = 0;
   for ( const_iterator lookup = begin (); lookup != end (); ++ lookup, ++ indx ) { 
     index_ [ lookup ] = indx;
     lookup_ [ indx ] = lookup;
   } /* for */
+  index_ [ end_ ] = total_size_;
+  lookup_ [ total_size_ ] = end_;
+  index_begin_ . resize ( dimension_ + 2, 0 );
+  unsigned long sum = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    sum += size_ [ dimension_index ];
+    index_begin_ [ dimension_index + 1 ] = sum;
+  } /* for */
 } /* Abstract_Complex<Cell_Type>::index */
+
+template < class Cell_Type >
+unsigned long Abstract_Complex<Cell_Type>::index_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ]; 
+} /* Abstract_Complex<Cell_Type>::index_begin */ 
+
+template < class Cell_Type >
+unsigned long Abstract_Complex<Cell_Type>::index_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ];
+} /* Abstract_Complex<Cell_Type>::index_end */
 
 template < class Cell_Type >
 unsigned long Abstract_Complex<Cell_Type>::index ( const const_iterator & lookup ) const {
@@ -132,48 +147,19 @@ unsigned long Abstract_Complex<Cell_Type>::index ( const const_iterator & lookup
 } /* Abstract_Complex<Cell_Type>::index */
 
 template < class Cell_Type >
-typename Abstract_Complex<Cell_Type>::const_iterator Abstract_Complex<Cell_Type>::lookup ( unsigned long index ) const {
+unsigned long & Abstract_Complex<Cell_Type>::index ( const const_iterator & lookup ) {
+  return index_ [ lookup ];
+} /* Abstract_Complex<Cell_Type>::index */
+
+template < class Cell_Type >
+const Abstract_const_iterator<Cell_Type> & Abstract_Complex<Cell_Type>::lookup ( unsigned long index ) const {
   return lookup_ [ index ];
 } /* Abstract_Complex<Cell_Type>::lookup */
 
 template < class Cell_Type >
-void Abstract_Complex<Cell_Type>::decompose ( void ) {
-  index (); 
-  husband_ . resize ( size () );
-  value_ . resize ( size () );
-  flags_ . resize ( size () );
-  morse::decompose ( *this );
-} /*  Abstract_Complex<Cell_Type>::decompose */
-
-template < class Cell_Type >
-typename Abstract_Complex<Cell_Type>::const_iterator & Abstract_Complex<Cell_Type>::husband ( const const_iterator & lookup ) {
-  return husband_ [ index_ [ lookup ] ];
-} /* Abstract_Complex<Cell_Type>::husband */
-
-template < class Cell_Type >
-const typename Abstract_Complex<Cell_Type>::const_iterator & Abstract_Complex<Cell_Type>::husband ( const const_iterator & lookup ) const {
-  return husband_ [ index_ . find ( lookup ) -> second ];
-} /* Abstract_Complex<Cell_Type>::husband */
-
-template < class Cell_Type >
-unsigned int & Abstract_Complex<Cell_Type>::value ( const const_iterator & lookup ) {
-  return value_ [ index_ [ lookup ] ];
-} /* Abstract_Complex<Cell_Type>::value */
-
-template < class Cell_Type >
-const unsigned int & Abstract_Complex<Cell_Type>::value ( const const_iterator & lookup ) const {
-  return value_ [ index_ . find ( lookup ) -> second ];
-} /* Abstract_Complex<Cell_Type>::value */
-
-template < class Cell_Type >
-unsigned char & Abstract_Complex<Cell_Type>::flags ( const const_iterator & lookup ) {
-  return flags_ [ index_ [ lookup ] ];  
-} /* Abstract_Complex<Cell_Type>::flags */
-
-template < class Cell_Type >
-const unsigned char & Abstract_Complex<Cell_Type>::flags ( const const_iterator & lookup ) const {
-  return flags_ [ index_ . find ( lookup ) -> second ];  
-} /* Abstract_Complex<Cell_Type>::flags */
+Abstract_const_iterator<Cell_Type> & Abstract_Complex<Cell_Type>::lookup ( unsigned long index ) {
+  return lookup_ [ index ];
+} /* Abstract_Complex<Cell_Type>::lookup */
 
 template < class Cell_Type >
 Abstract_Complex<Cell_Type>::Abstract_Complex ( void ) {
@@ -181,10 +167,10 @@ Abstract_Complex<Cell_Type>::Abstract_Complex ( void ) {
 
 template < class Cell_Type >
 Abstract_Complex<Cell_Type>::Abstract_Complex ( unsigned int dimension ) : dimension_(dimension) {
-  const_iterator end_value ( this, cells_ . end (), dimension_ );
-  begin_ . resize ( dimension_ + 1, end_value );
-  end_ . resize ( dimension_ + 1, end_value );
+  end_ = const_iterator ( this, cells_ . end (), dimension_ );
+  begin_ . resize ( dimension_ + 2, end_ );
   size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
 } /* Abstract_Complex<Cell_Type>::Abstract_Complex */
 
 /* * * * * * * * * * * * * * * * * * * *

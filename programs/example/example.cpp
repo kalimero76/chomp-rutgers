@@ -175,13 +175,13 @@ int main (int argc, char * const argv[]) {
 	//run_tests( "random_cubical_stats_2d.m", 2, .2, 10, 10);
 	//cubical_example ( 2, 8, .2);
 	/* Run 3D tests */
-	run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
+	//run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
 	
 	/* Run 4D tests */
 	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
 
 	/* Run 5D tests */
-	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
+	run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
 			
 	/* Manifold Example */
 	//manifold_example ( 8 );

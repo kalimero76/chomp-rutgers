@@ -10,12 +10,19 @@
 #ifndef CHOMP_MORSE_THEORY_H
 #define CHOMP_MORSE_THEORY_H
 
+/* * * * * * * * * * * *
+ * typedef Morse_Chain *
+ * * * * * * * * * * * */
+typedef std::map < unsigned long, Default_Ring, std::greater < unsigned long > > Morse_Chain;
+
 
 namespace morse {
-  /* Give an AKQ decomposition to the input complex. */
-  template < class Cell_Complex > void 
+  /* Give an AKQ decomposition to the input complex. 
+     Return type is the king count on each dimension. */
+  template < class Cell_Complex > std::vector < unsigned long > 
   decompose ( Cell_Complex & cell_complex );
-  
+
+#if 0
   /* Canonicalizes chains. alpha = id + boundary o gamma */
   template < class Cell_Complex > typename Cell_Complex::Chain 
   alpha ( const typename Cell_Complex::Chain & input );
@@ -31,11 +38,11 @@ namespace morse {
   /* Projects chains. That is, removes all terms that are not aces. */
   template < class Cell_Complex > typename Cell_Complex::Chain 
   project ( const typename Cell_Complex::Chain & input );
-
+#endif
   /* An optimized composition of project and alpha */
-  template < class Cell_Complex > typename Cell_Complex::Chain 
-  project_alpha ( const typename Cell_Complex::Chain & input );
-}
+  template < class Cell_Complex > Morse_Chain 
+  morse_boundary ( Morse_Chain input, const Cell_Complex & complex);
+} /* namespace morse */
 
 #include "complexes/Abstract_Complex.h"
 typedef Abstract_Complex< Default_Cell > Morse_Complex;

@@ -12,6 +12,13 @@
 #include <iostream>
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
 #include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
+#include "algorithms/Morse_Theory.h"
+#include <ext/hash_map>
+namespace std {
+  using namespace __gnu_cxx;
+}
+
+#include <vector>
 
 /********************************************************************************
  *                             CUBICAL COMPLEXES                                *
@@ -91,16 +98,27 @@ public:
   unsigned int dimension ( void ) const;
   /* Index Complex */
   void index ( void );
-  unsigned long index ( const const_iterator & ) const;
-  const_iterator lookup ( unsigned long index ) const;
+  unsigned long index_begin ( unsigned int dimension ) const;
+  unsigned long index_end ( unsigned int dimension ) const;
+  unsigned long index ( const const_iterator & lookup ) const;
+  unsigned long & index ( const const_iterator & lookup );
+  std::vector < const_iterator > & lookup ( void );
+  const const_iterator & lookup ( unsigned long index ) const;
+  const_iterator & lookup ( unsigned long index );
+  std::vector < int > count_all_boundaries ( void ) const;
+  void boundary ( std::vector < unsigned long > & output, const unsigned long index ) const;
+  void coboundary ( std::vector < unsigned long > & output, const unsigned long index ) const;
+  void boundary ( std::vector < std::pair <unsigned long, Ring > > & output, const unsigned long input ) const;
+  void coboundary ( std::vector < std::pair <unsigned long, Ring > > & output, const unsigned long input ) const;
   /* Decomposable Complex */
   void decompose ( void );
-	const_iterator & husband ( unsigned long index );
-  const const_iterator & husband ( unsigned long index ) const;
-	unsigned int & value ( unsigned long index );
-  const unsigned int & value ( unsigned long index ) const;
-	unsigned char & flags ( unsigned long index );
-  const unsigned char & flags ( unsigned long index ) const;
+  char type ( unsigned long index, unsigned int dimension ) const;
+  unsigned long mate ( unsigned long queen_index, unsigned int dimension ) const;
+  const Ring & connection ( unsigned long queen_index ) const;
+  Ring & connection ( unsigned long queen_index );  
+  unsigned long ace_begin ( unsigned int dimension ) const;
+  unsigned long ace_end ( unsigned int dimension ) const;
+  
   /* Cubical Complex */
   /** Load_From_File.
    Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
@@ -121,17 +139,22 @@ private:
 	unsigned int dimension_; 
 	std::vector<unsigned int> dimension_sizes_; 
 	std::vector<unsigned long> jump_values_; 
+  std::vector<unsigned long> types_;
+  std::vector<unsigned long> types_inv_;
+  std::vector<unsigned int> type_dims_;
+  unsigned long mask_;
 	std::vector<bool> bitmap_; 
   std::vector<const_iterator> begin_;
   const_iterator end_;
   std::vector<size_type> size_;
   unsigned long total_size_;
   unsigned long bitmap_size_;
-  std::map < const_iterator, unsigned int > index_;
+  std::vector < unsigned long > index_;
   std::vector < const_iterator > lookup_;
-  std::vector < const_iterator > husband_;
-	std::vector < unsigned int > value_;
-	std::vector < unsigned char > flags_;
+  std::vector<Ring> connection_;
+  std::vector<unsigned long> king_count_;
+  std::vector<unsigned long> index_begin_;
+
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_
