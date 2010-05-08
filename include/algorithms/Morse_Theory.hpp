@@ -7,80 +7,88 @@
  *
  */
 
+#include <vector>
+#include <list>
 #include <algorithm>  /* for_each */
 #include <functional> /* greater<> */
+#include <ctime>
 
 #include "algorithms/basic.h"
 #include "algorithms/Morse_Theory.h"
 #include "complexes/Subcomplex.h"
 
-Morse_Chain & operator += ( Morse_Chain & output, const Morse_Chain::value_type & value ) {
-  std::pair < Morse_Chain::iterator, bool > insert_return = output . insert ( value );
+template < class size_type >
+Morse_Chain<size_type> & operator += ( Morse_Chain<size_type> & output, 
+                                       const typename Morse_Chain<size_type>::value_type & value ) {
+  std::pair < typename Morse_Chain<size_type>::iterator, bool > insert_return = output . insert ( value );
   if ( insert_return . second == false ) 
     if ( ( insert_return . first -> second += value . second ) == 0 ) 
       output . erase ( insert_return . first );
   return output;
 } /* operator += */
 
-std::ostream & operator << ( std::ostream & output, const Morse_Chain & print_me ) {
-  for (  Morse_Chain::const_iterator term_iterator = print_me . begin (); term_iterator != print_me . end (); ++ term_iterator ) {
+template < class size_type >
+std::ostream & operator << ( std::ostream & output, const Morse_Chain<size_type> & print_me ) {
+  for ( typename Morse_Chain<size_type>::const_iterator term_iterator = print_me . begin (); term_iterator != print_me . end (); ++ term_iterator ) {
     output << term_iterator -> second << " *[" << term_iterator -> first << "] + ";
   } /* for */
   return output;
 } /* operator << */
 
 namespace morse_detail {
+  template < class size_type >
   class Decompose_Functor { /* used by morse::decompose */
   public:
-    Decompose_Functor ( unsigned long * king_queue, 
-                        unsigned long & king_end,
+    Decompose_Functor ( size_type * king_queue, 
+                        size_type & king_end,
                         std::vector < int > & number_of_boundaries ) 
                       : king_queue ( king_queue ), 
                         king_end ( king_end ),
                         number_of_boundaries ( number_of_boundaries ) {}
-    void operator () ( const unsigned long & coboundary_index ) {
+    void operator () ( const size_type & coboundary_index ) {
       if ( -- number_of_boundaries [ coboundary_index ] == 1 )
         king_queue [ king_end ++ ] =  coboundary_index;
     } /* operator () */
     
   private:
-    unsigned long * king_queue;
-    unsigned long & king_end;
+    size_type * king_queue;
+    size_type & king_end;
     std::vector < int > & number_of_boundaries;
   };
 } /* namespace morse_detail */
 
 namespace morse {
   
-  template < class Cell_Complex > std::vector < unsigned long >
+  template < class Cell_Complex > std::vector < typename Cell_Complex::size_type >
   decompose ( Cell_Complex & cell_complex ) {
     using namespace morse_detail;
-    unsigned long complex_size = cell_complex . size ();
+    typedef typename Cell_Complex::size_type size_type;
+    size_type complex_size = cell_complex . size ();
     /* data structures */
-    //std::deque< unsigned long > king_queue;
-    unsigned long * king_queue  = new unsigned long [ complex_size ];
-    std::vector < unsigned long > data ( complex_size, 0 );
-    std::vector < unsigned long > husband ( complex_size );
+    //std::deque< size_type > king_queue;
+    size_type * king_queue  = new size_type [ complex_size ];
+    std::vector < size_type > data ( complex_size, 0 );
+    std::vector < size_type > husband ( complex_size );
     std::vector < typename Cell_Complex::Ring > connection ( complex_size, 0 );
 
-    unsigned long king_begin = 0;
-    unsigned long king_end = 0;
-    typedef std::vector < std::pair < unsigned long, typename Cell_Complex::Ring > > Index_Chain;
-    typedef std::vector < unsigned long > Index_List;
+    size_type king_begin = 0;
+    size_type king_end = 0;
+    typedef std::vector < std::pair < size_type, typename Cell_Complex::Ring > > Index_Chain;
+    typedef std::vector < size_type > Index_List;
     Index_Chain boundary;
     Index_List coboundary;
     /* Initialize a vector for storing the number of boundaries of cells */
     std::vector < int > number_of_boundaries = cell_complex . count_all_boundaries ();
     /* Initialize a functor for processing coboundaries of excised cells */
-    Decompose_Functor process_coboundary ( king_queue, king_end, number_of_boundaries );
+    Decompose_Functor < size_type > process_coboundary ( king_queue, king_end, number_of_boundaries );
     /* Perform initial sweep, recording number of boundaries and queueing free-coface collapses */    
-    //for ( unsigned long cell_index = 0; cell_index < complex_size; ++ cell_index ) {
-    //  if ( number_of_boundaries [ cell_index ] == 1 ) king_queue . push_back ( cell_index );
-    //} /* for */
+    for ( size_type cell_index = 0; cell_index < complex_size; ++ cell_index ) {
+      if ( number_of_boundaries [ cell_index ] == 1 ) king_queue [ king_end ++ ] = cell_index;
+    } /* for */
     /* Loop while complex is non-empty. */
-    unsigned long ace_index = 0;
-    unsigned long cells_remaining = complex_size;
-    std::vector < unsigned long > king_count ( cell_complex . dimension () + 2, 0 );
+    size_type ace_index = 0;
+    size_type cells_remaining = complex_size;
+    std::vector < size_type > king_count ( cell_complex . dimension () + 2, 0 );
 
     /* * * * * * * 
      * MAIN LOOP *
@@ -91,21 +99,22 @@ namespace morse {
       /* * * * * * * * * * * * 
        * KING-QUEEN ROUTINE  *
        * * * * * * * * * * * */
-      
-      while ( cells_remaining && king_begin < king_end ) {     
+      //std::cout << "KING QUEEN ROUTINE \n";      
+      while ( cells_remaining && king_begin < king_end ) {
         /* Pick a King. */
         while ( king_begin < king_end ) {
           if ( number_of_boundaries [ king_queue [ king_begin ] ] == 1 ) break; 
           ++ king_begin;
         } /* while */
         if ( king_begin == king_end ) break;
-        const unsigned long & king_index = king_queue [ king_begin ];
-        unsigned long queen_index;
+        const size_type & king_index = king_queue [ king_begin ];
+        size_type queen_index;
         typename Cell_Complex::Ring coefficient;
         /* Get the queen_index */ 
         cell_complex . boundary ( boundary, king_index );
         for ( typename Index_Chain::const_iterator index_iterator = boundary . begin ();
               index_iterator != boundary . end (); ++ index_iterator ) {
+          //std::cout << king_index << " " << boundary . size () << " " << index_iterator -> first << "\n";
           if ( number_of_boundaries [ index_iterator -> first ] == 0 ) {
             queen_index = index_iterator -> first;
             coefficient = index_iterator -> second;
@@ -113,7 +122,11 @@ namespace morse {
             break;
           }
         } /* for */
-        if ( coefficient != 1 && coefficient != -1 ) continue;
+        if ( coefficient != 1 && coefficient != -1 ) {
+          ++ king_begin;
+          continue;
+        } /* if */
+        //std::cout << "KQ pair: " << king_index << " " << queen_index << "\n";
         /* Assign Decomposition Information */
         connection [ queen_index ] = coefficient;
         unsigned int dimension = cell_complex . lookup ( king_index ) . dimension (); /*TODO optimize */
@@ -133,11 +146,12 @@ namespace morse {
       /* * * * * * * * 
        * ACE ROUTINE *
        * * * * * * * */
-      
+      //std::cout << "ACE ROUTINE \n";      
       while ( cells_remaining && king_begin == king_end ) {
         /* Pick an Ace. */
         while ( number_of_boundaries [ ace_index ] != 0 ) ++ ace_index;
         /* Assign Decomposition Information */
+        //std::cout << "A: " << ace_index << "\n";
         data [ ace_index ] = 1;     
         /* Remove the Ace from copy_complex. */
         number_of_boundaries [ ace_index ] = -1;
@@ -152,14 +166,15 @@ namespace morse {
     /* * * * * * * * * * * * 
      * MORSE INDEX ROUTINE *
      * * * * * * * * * * * */
+    //std::cout << "MORSE INDEX ROUTINE \n";      
     std::vector < typename Cell_Complex::const_iterator > new_lookup ( complex_size + 1 );
     for ( unsigned int dimension_index = 0; dimension_index <= cell_complex . dimension (); ++ dimension_index ) {
-      const unsigned long start_index = cell_complex . index_begin ( dimension_index );
-      const unsigned long stop_index = cell_complex . index_end ( dimension_index );
-      unsigned long ace_index = stop_index - king_count [ dimension_index ] - 1;
-      const unsigned long king_offset = cell_complex . index_end ( dimension_index + 1 ) + 1;
-      const unsigned long queen_offset = start_index - 2;
-      for ( unsigned long cell_index = start_index; cell_index < stop_index; ++ cell_index ) {
+      const size_type start_index = cell_complex . index_begin ( dimension_index );
+      const size_type stop_index = cell_complex . index_end ( dimension_index );
+      size_type ace_index = stop_index - king_count [ dimension_index ] - 1;
+      const size_type king_offset = cell_complex . index_end ( dimension_index + 1 ) + 1;
+      const size_type queen_offset = start_index - 2;
+      for ( size_type cell_index = start_index; cell_index < stop_index; ++ cell_index ) {
         switch ( data [ cell_index ] ) {
           case 0: /* King */ break;
           case 1: /* Ace */
@@ -167,8 +182,8 @@ namespace morse {
             -- ace_index;
             break;
           default: /* Queen */
-            unsigned long queen_index = queen_offset + data [ cell_index ];
-            unsigned long king_index = king_offset - data [ cell_index ];
+            size_type queen_index = queen_offset + data [ cell_index ];
+            size_type king_index = king_offset - data [ cell_index ];
             cell_complex . index ( new_lookup [ queen_index ] = cell_complex . lookup ( cell_index ) ) = queen_index;
             cell_complex . index ( new_lookup [ king_index ] = cell_complex . lookup ( husband [ cell_index ] ) ) = king_index;
             cell_complex . connection ( queen_index ) = connection [ cell_index ];
@@ -208,7 +223,7 @@ namespace morse {
       typename Morse_Chain < Cell_Complex >::iterator term = work_chain . begin ();
       /* Unless the term is a queen, there is nothing to be done. */
       typename Cell_Complex::const_iterator cell_iterator = term -> first;
-      unsigned long cell_index = container . index ( cell_iterator );
+      size_type cell_index = container . index ( cell_iterator );
       if ( not Is_a_Queen ( container . flags ( cell_index ) ) ) {
         work_chain . erase ( term );
         continue;
@@ -246,16 +261,17 @@ namespace morse {
  
 #endif
   
-  template < class Cell_Complex > Morse_Chain
-  morse_boundary ( unsigned long ace_index, const Cell_Complex & complex ) {
-    Morse_Chain answer_chain;
-    Morse_Chain work_chain;
+  template < class Cell_Complex > Morse_Chain<typename Cell_Complex::size_type>
+  morse_boundary ( typename Cell_Complex::size_type ace_index, const Cell_Complex & complex ) {
+    typedef typename Cell_Complex::size_type size_type;
+    Morse_Chain<size_type> answer_chain;
+    Morse_Chain<size_type> work_chain;
     /* Get the dimension of the resulting chain */
     unsigned int dimension = complex . lookup ( ace_index ) . dimension ();
     if ( dimension == 0 ) return answer_chain;
     -- dimension;
     /* Initial processing of Ace boundaries */ 
-    typedef std::vector < std::pair < unsigned long, typename Cell_Complex::Ring > > Index_Chain;
+    typedef std::vector < std::pair < size_type, typename Cell_Complex::Ring > > Index_Chain;
     Index_Chain boundaries;
     complex . boundary ( boundaries, ace_index );
     for ( typename Index_Chain::const_iterator term_iterator = boundaries . begin ();
@@ -274,9 +290,9 @@ namespace morse {
     } /* for */
     /* Main loop */
     while ( not work_chain . empty () ) {
-      const Morse_Chain::iterator queen_term = work_chain . begin ();
-      const unsigned long & queen_index = queen_term -> first;
-      const unsigned long king_index = complex . mate ( queen_index, dimension );
+      const typename Morse_Chain<size_type>::iterator queen_term = work_chain . begin ();
+      const size_type & queen_index = queen_term -> first;
+      const size_type king_index = complex . mate ( queen_index, dimension );
       complex . boundary ( boundaries, king_index );
       /* Determine the factor */
       const typename Cell_Complex::Ring factor = 
@@ -301,46 +317,111 @@ namespace morse {
     return answer_chain;
   } /* morse::morse_boundary */
   
-  template < class Cell_Complex > Morse_Complex 
-  reduction ( const Cell_Complex & complex ) {
+  template < class Cell_Complex > void
+  reduction ( Morse_Complex & reduced_complex, const Cell_Complex & complex ) {
+    typedef typename Cell_Complex::size_type size_type;
     /* Construct reduced complex */
-    Morse_Complex reduced_complex ( complex . dimension () );
+    reduced_complex . constructor ( complex . dimension () );
     /* Loop through the original complex and insert all of the Aces into "reduced". */
     for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension (); ++ dimension_index ) {
       /* Loop through and insert all the dimension_index Aces */
-      unsigned long start = complex . ace_begin ( dimension_index );
-      unsigned long stop = complex . ace_end ( dimension_index );
-      for ( unsigned long ace_index = start; ace_index < stop; ++ ace_index )
+      size_type start = complex . ace_begin ( dimension_index );
+      size_type stop = complex . ace_end ( dimension_index );
+      for ( size_type ace_index = start; ace_index < stop; ++ ace_index )
         reduced_complex . insert ( Default_Cell ( ace_index, dimension_index ) );
     } /* for */
-    /* Introduce the boundary and coboundary information into the reduced complex. */
+    /* Introduce the boundary information into the reduced complex. */
     for ( typename Morse_Complex::const_iterator cell_iterator = reduced_complex . begin ();
          cell_iterator != reduced_complex . end (); ++ cell_iterator ) {
-      /* morse_boundary = project o alpha o boundary o include */ { 
-        Morse_Chain upstairs_boundary = morse_boundary < Cell_Complex > ( cell_iterator -> data (), complex );
-        Morse_Complex::Chain & downstairs_boundary = reduced_complex . boundary ( cell_iterator );
-        for ( Morse_Chain::const_iterator term_iterator = upstairs_boundary . begin (); 
-             term_iterator != upstairs_boundary . end (); ++ term_iterator ) {
-          downstairs_boundary [ reduced_complex . 
-                               find ( Default_Cell ( term_iterator -> first, 
+      Morse_Chain<size_type> upstairs_boundary = morse_boundary < Cell_Complex > ( cell_iterator -> data (), complex );
+      Morse_Complex::Chain & downstairs_boundary = reduced_complex . boundary ( cell_iterator );
+      for ( typename Morse_Chain<size_type>::const_iterator term_iterator = upstairs_boundary . begin (); 
+            term_iterator != upstairs_boundary . end (); ++ term_iterator ) {
+        downstairs_boundary [ reduced_complex . 
+                              find ( Default_Cell ( term_iterator -> first, 
                                                     cell_iterator -> dimension () - 1 ) ) ] 
           = term_iterator -> second;
-        } /* for */
-      } /* scope */
-      /* morse_coboundary = project o alpha o coboundary o include */ { 
-      /*  Morse_Chain upstairs_coboundary = morse_coboundary < Cell_Complex > ( cell_iterator -> data (), complex );
-        Morse_Complex::Chain & downstairs_coboundary = reduced_complex . coboundary ( cell_iterator );
-        for ( Morse_Chain::const_iterator term_iterator = upstairs_coboundary . begin (); 
-             term_iterator != upstairs_coboundary . end (); ++ term_iterator ) {
-          downstairs_coboundary [ reduced_complex . 
-                                 find ( Default_Cell ( term_iterator -> first, 
-                                                      cell_iterator -> dimension () + 1 ) ) ] 
-          = term_iterator -> second;
-        } /* for */       
-      } /* scope */
+      } /* for */
     } /* for */
-    reduced_complex . index ();
-    return reduced_complex;
+    reduced_complex . generate_coboundary_information (); /* TODO. consider this */
+    /* Should I index? */
   } /* morse::reduction */
+  
+  template < class Cell_Complex > std::list<Morse_Complex> 
+  reduction_tower ( Cell_Complex & complex ) {
+    typedef typename Cell_Complex::size_type size_type;
+    clock_t start, stop;
+    size_type size = complex . size ();
+    std::cout << " Size = " << size << "\n";
+    std::list<Morse_Complex> tower;
+    std::cout << "Decomposing given complex... ";
+    start = clock ();
+    complex . decompose ();
+    stop = clock ();
+    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    std::cout << "Reducing given complex... ";
+    start = clock ();
+    tower . push_back ( Morse_Complex () );
+    morse::reduction ( tower . back (), complex );
+    stop = clock ();
+    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    while ( tower . back () . size () < size ) {
+      size = tower . back () . size ();
+      std::cout << " Size = " << size << "\n";
+      Morse_Complex & last_complex = tower . back ();
+      std::cout << "Decomposing... ";
+      start = clock ();
+      last_complex . decompose ();
+      stop = clock ();
+      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      std::cout << "Reducing... ";
+      start = clock ();
+      tower . push_back ( Morse_Complex () );
+      morse::reduction ( tower . back (), last_complex );
+      stop = clock ();
+      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    }; /* while */
+    tower . back () . index ();
+    return tower;
+  };
+  
+  template < class Cell_Complex > Morse_Complex & //TERRIBLE
+  deep_reduction ( Cell_Complex & complex ) {
+    typedef typename Cell_Complex::size_type size_type;
+    clock_t start, stop;
+    size_type size = complex . size ();
+    std::cout << " Size = " << size << "\n";
+    std::cout << "Decomposing given complex... ";
+    start = clock ();
+    complex . decompose ();
+    stop = clock ();
+    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    std::cout << "Reducing given complex... ";
+    start = clock ();
+    Morse_Complex * reduced = new Morse_Complex;
+    morse::reduction ( *reduced, complex );
+    stop = clock ();
+    complex . clear ();
+    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    while ( reduced -> size () < size ) {
+      size = reduced -> size ();
+      std::cout << " Size = " << size << "\n";
+      std::cout << "Decomposing... ";
+      start = clock ();
+      reduced -> decompose ();
+      stop = clock ();
+      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      std::cout << "Reducing... ";
+      start = clock ();
+      Morse_Complex * next = new Morse_Complex;
+      morse::reduction ( *next, *reduced );
+      stop = clock ();
+      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      delete reduced;
+      reduced = next;
+    }; /* while */
+    reduced -> index ();
+    return *reduced;
+  };
   
 } /* namespace morse */

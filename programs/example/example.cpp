@@ -81,26 +81,34 @@ public:
 	float smith_time;
 };
 
+int do_preprocess;
+
 template < class Cell_Complex_Template >
 compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	clock_t start_clock, stop_clock, total_time_start, total_time_stop;
 	float total_time, morse_time, homology_time;
-	/* Create Morse Complex */
-	total_time_start = clock ();
-	std::cout << "  Creating Morse Complex from Original Complex ... \n";
-	start_clock = clock ();
-  my_complex . decompose ();
-  std::cout << (float) ( clock () - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
-	Morse_Complex my_morse_complex = morse::reduction ( my_complex ); 
-	std::cout << " ... Morse Complex created: ";
-	stop_clock = clock (); 
-	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
-	morse_time = (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC;
-	/* Tell me interesting things about the Morse Complex */
-	std::cout << "  Original Sizes (by increasing dimension): ";
+  std::cout << " Size = " << my_complex . size () << "\n";
+  std::cout << " Preprocessing complex... ";
+  total_time_start = start_clock = clock ();
+  if ( do_preprocess ) my_complex . preprocess ();
+  stop_clock = clock ();
+  std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
+  std::cout << " Size = " << my_complex . size () << "\n";
+  std::cout << "  Original Sizes (by increasing dimension): ";
 	for ( unsigned int dim = 0; dim <= my_complex . dimension (); dim ++ ) 
 		std::cout << my_complex . size ( dim ) << " ";  
 	std::cout << "\n";
+	/* Create Morse Complex */
+	std::cout << "  Using morse theory to reduce ... \n";
+  unsigned long size;
+	start_clock = clock ();
+  Morse_Complex my_morse_complex = morse::deep_reduction ( my_complex ); 
+	std::cout << " ... morse reduction completed. \n";
+	stop_clock = clock (); 
+	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " so far elapsed \n";
+	morse_time = (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC;
+	/* Tell me interesting things about the Morse Complex */
+	
 	std::cout << "  Morse Sizes (by increasing dimension): ";
 	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension (); dim ++ ) 
 		std::cout << my_morse_complex . size ( dim ) << " "; 
@@ -140,14 +148,29 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
   return return_value;
 } /* compute_example */
 
-compute_results cubical_example (  int dimension, int width, float probability ) {
+compute_results cubical_example (  int dimension, int width, float probability, bool save_it = false ) {
 	/* Generate Random Cubical Complex */
 	std::cout << "\n---- Random Complex of dimension " << dimension << ", width " << width << " ----\n";
 	std::vector < unsigned int > dimension_sizes (  dimension, width );
 	Cubical_Complex my_cubical_complex; 
-	std::cout << "  Generating Random Cubical Complex... ";
+	std::cout << "  Generating Random Cubical Complex... \n";
 	generate_random_cubical_complex ( my_cubical_complex, dimension_sizes, probability );
 	std::cout << "  Random Cubical Complex Generated \n";
+  if ( save_it ) save_cubical_complex ( my_cubical_complex, "complex.cub" );
+  /*
+  clock_t start, stop;
+  start = clock ();
+  my_cubical_complex . index ();
+  stop = clock ();
+  std::cout << " Indexing time = " << (float ) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  start = clock ();
+  std::vector < std::pair < unsigned long, long > > chain;
+  for ( unsigned long index = 0; index < my_cubical_complex . size (); ++ index ) {
+    my_cubical_complex . boundary ( chain, index );
+  };
+  stop = clock ();
+  std::cout << " Sweeping time = " << (float ) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+   */
   return compute_example ( my_cubical_complex );
 } /* cubical_example */
 
@@ -170,10 +193,18 @@ void run_tests ( const char * filename, int dimension, float probability, int Nu
 
 
 int main (int argc, char * const argv[]) {
-	
+
+  if ( argc < 3 ) {
+    std::cout << "give arguments: dimension, width\n";
+    return 0;
+  }
+  
+  do_preprocess = atoi(argv[3]);
+  
+  cubical_example ( atoi(argv[1]), atoi(argv[2]), .2, true );
+
 	/* Run 2D tests */
 	//run_tests( "random_cubical_stats_2d.m", 2, .2, 10, 10);
-	//cubical_example ( 2, 8, .2);
 	/* Run 3D tests */
 	//run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
 	
@@ -181,7 +212,7 @@ int main (int argc, char * const argv[]) {
 	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
 
 	/* Run 5D tests */
-	run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
+	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
 			
 	/* Manifold Example */
 	//manifold_example ( 8 );

@@ -74,10 +74,10 @@ typedef Chain_Archetype < std::map < Cubical_const_iterator, Default_Ring > > Cu
 class Cubical_Complex {
 public:
 	/* typedefs */	 
+  typedef unsigned int size_type; // for > 4E9 cubes, use unsigned long
 	typedef Cubical_Chain Chain;
 	typedef Cubical_Cell Cell;
 	typedef Default_Ring Ring;
-	typedef unsigned long size_type;
 	typedef Cell key_type;
 	typedef Cell value_type;
   typedef Cubical_const_iterator const_iterator;
@@ -85,6 +85,7 @@ public:
   /* Basic Container */
   std::pair<iterator, bool> insert ( const value_type & insert_me );
   void erase ( const iterator & erase_me );
+  void clear ( void );
   iterator find ( const key_type & find_me ) const;
   iterator begin ( void ) const;
   iterator end ( void ) const;
@@ -98,27 +99,26 @@ public:
   unsigned int dimension ( void ) const;
   /* Index Complex */
   void index ( void );
-  unsigned long index_begin ( unsigned int dimension ) const;
-  unsigned long index_end ( unsigned int dimension ) const;
-  unsigned long index ( const const_iterator & lookup ) const;
-  unsigned long & index ( const const_iterator & lookup );
+  size_type index_begin ( unsigned int dimension ) const;
+  size_type index_end ( unsigned int dimension ) const;
+  size_type index ( const const_iterator & lookup ) const;
+  size_type & index ( const const_iterator & lookup );
   std::vector < const_iterator > & lookup ( void );
-  const const_iterator & lookup ( unsigned long index ) const;
-  const_iterator & lookup ( unsigned long index );
+  const const_iterator & lookup ( size_type index ) const;
+  const_iterator & lookup ( size_type index );
   std::vector < int > count_all_boundaries ( void ) const;
-  void boundary ( std::vector < unsigned long > & output, const unsigned long index ) const;
-  void coboundary ( std::vector < unsigned long > & output, const unsigned long index ) const;
-  void boundary ( std::vector < std::pair <unsigned long, Ring > > & output, const unsigned long input ) const;
-  void coboundary ( std::vector < std::pair <unsigned long, Ring > > & output, const unsigned long input ) const;
+  void boundary ( std::vector < size_type > & output, const size_type index ) const;
+  void coboundary ( std::vector < size_type > & output, const size_type index ) const;
+  void boundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  void coboundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
   /* Decomposable Complex */
   void decompose ( void );
-  char type ( unsigned long index, unsigned int dimension ) const;
-  unsigned long mate ( unsigned long queen_index, unsigned int dimension ) const;
-  const Ring & connection ( unsigned long queen_index ) const;
-  Ring & connection ( unsigned long queen_index );  
-  unsigned long ace_begin ( unsigned int dimension ) const;
-  unsigned long ace_end ( unsigned int dimension ) const;
-  
+  char type ( size_type index, unsigned int dimension ) const;
+  size_type mate ( size_type queen_index, unsigned int dimension ) const;
+  const Ring & connection ( size_type queen_index ) const;
+  Ring & connection ( size_type queen_index );  
+  size_type ace_begin ( unsigned int dimension ) const;
+  size_type ace_end ( unsigned int dimension ) const;
   /* Cubical Complex */
   /** Load_From_File.
    Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
@@ -134,27 +134,38 @@ public:
   
   const std::vector<unsigned int> & dimension_sizes ( void ) const; 
 
+  void preprocess ( void );
+  void coreductions ( void );
+  void reductions ( void );
+
 private:  
 	friend class Cubical_const_iterator;
-	unsigned int dimension_; 
+  /* Cell Complex */
+  size_type total_size_;
+  std::vector<const_iterator> begin_;
+  const_iterator end_;
+  std::vector<size_type> size_;
+  unsigned int dimension_; 
+  /* Index Complex */
+  std::vector < size_type > index_;
+  std::vector < const_iterator > lookup_;
+  std::vector<size_type> index_begin_;
+  /* Decomposable Complex */
+  std::vector<Ring> connection_;
+  std::vector< int > boundary_count_;
+  std::vector<size_type> king_count_;
+  /* Cubical Complex */
+  unsigned long bitmap_size_;
 	std::vector<unsigned int> dimension_sizes_; 
 	std::vector<unsigned long> jump_values_; 
   std::vector<unsigned long> types_;
   std::vector<unsigned long> types_inv_;
   std::vector<unsigned int> type_dims_;
   unsigned long mask_;
-	std::vector<bool> bitmap_; 
-  std::vector<const_iterator> begin_;
-  const_iterator end_;
-  std::vector<size_type> size_;
-  unsigned long total_size_;
-  unsigned long bitmap_size_;
-  std::vector < unsigned long > index_;
-  std::vector < const_iterator > lookup_;
-  std::vector<Ring> connection_;
-  std::vector<unsigned long> king_count_;
-  std::vector<unsigned long> index_begin_;
-
+	std::vector<bool> bitmap_;
+  bool closed_complex_;
+  void native_boundary ( std::vector < unsigned long > & output, unsigned long address ) const;
+  void native_coboundary ( std::vector < unsigned long > & output, unsigned long address ) const;
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_

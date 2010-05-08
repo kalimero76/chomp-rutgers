@@ -10,16 +10,19 @@
 #ifndef CHOMP_MORSE_THEORY_H
 #define CHOMP_MORSE_THEORY_H
 
+#include <vector>
+#include <list>
+
 /* * * * * * * * * * * *
  * typedef Morse_Chain *
  * * * * * * * * * * * */
-typedef std::map < unsigned long, Default_Ring, std::greater < unsigned long > > Morse_Chain;
-
+template < class size_type >
+class Morse_Chain : public std::map < size_type, Default_Ring, std::greater < size_type > > {};
 
 namespace morse {
   /* Give an AKQ decomposition to the input complex. 
      Return type is the king count on each dimension. */
-  template < class Cell_Complex > std::vector < unsigned long > 
+  template < class Cell_Complex > std::vector < typename Cell_Complex::size_type > 
   decompose ( Cell_Complex & cell_complex );
 
 #if 0
@@ -40,8 +43,9 @@ namespace morse {
   project ( const typename Cell_Complex::Chain & input );
 #endif
   /* An optimized composition of project and alpha */
-  template < class Cell_Complex > Morse_Chain 
-  morse_boundary ( Morse_Chain input, const Cell_Complex & complex);
+  template < class Cell_Complex > Morse_Chain<typename Cell_Complex::size_type>
+  morse_boundary ( Morse_Chain<typename Cell_Complex::size_type> input, 
+                   const Cell_Complex & complex );
 } /* namespace morse */
 
 #include "complexes/Abstract_Complex.h"
@@ -52,6 +56,14 @@ namespace morse {
   template < class Cell_Complex > Morse_Complex 
   reduction ( const Cell_Complex & complex );
 
+  template < class Cell_Complex > std::list<Morse_Complex> 
+  reduction_tower ( Cell_Complex & complex );
+  
+  /* Destroy original complex to save memory, and only remember the most
+     reduced complex found. */
+  template < class Cell_Complex > Morse_Complex &
+  deep_reduction ( Cell_Complex & complex );
+  
 } /* namespace morse */
 
 #ifndef CHOMP_LIBRARY_ONLY_

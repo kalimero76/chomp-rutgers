@@ -43,11 +43,11 @@ public:
 template < class Cell_Type = Default_Cell >
 class Abstract_Complex {
 public:
+  typedef unsigned int size_type;
 	/* typedefs */	 
   typedef Cell_Type Cell;
 	typedef Abstract_Chain<Cell> Chain;
 	typedef typename Chain::Ring Ring;
-  typedef size_t size_type;
   typedef Cell value_type;
   typedef Cell key_type;
   typedef Abstract_const_iterator<Cell_Type> const_iterator;
@@ -71,43 +71,49 @@ public:
   unsigned int dimension ( void ) const;
   /* Index Complex */
   void index ( void );
-  unsigned long index_begin ( unsigned int dimension ) const;
-  unsigned long index_end ( unsigned int dimension ) const;
-  unsigned long index ( const const_iterator & lookup ) const;
-  unsigned long & index ( const const_iterator & lookup );
-  const const_iterator & lookup ( unsigned long index ) const;
-  const_iterator & lookup ( unsigned long index );
-  /* TODO:
+  size_type index_begin ( unsigned int dimension ) const;
+  size_type index_end ( unsigned int dimension ) const;
+  size_type index ( const const_iterator & lookup ) const;
+  size_type & index ( const const_iterator & lookup );
+  std::vector < const_iterator > & lookup ( void );
+  const const_iterator & lookup ( size_type index ) const;
+  const_iterator & lookup ( size_type index );
   std::vector < int > count_all_boundaries ( void ) const;
-  void boundary_index_list ( std::vector < unsigned long > & list, unsigned long index ) const;
-  void coboundary_index_list ( std::vector < unsigned long > & list, unsigned long index ) const;
-  Morse_Chain boundary ( const unsigned long input ) const;
-  Morse_Chain coboundary ( const unsigned long input ) const;
-  */
+  void boundary ( std::vector < size_type > & output, const size_type index ) const;
+  void coboundary ( std::vector < size_type > & output, const size_type index ) const;
+  void boundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  void coboundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
   /* Decomposable Complex */
-  /* TODO:
   void decompose ( void );
-  char type ( unsigned long index, unsigned int dimension ) const;
-  unsigned long mate ( unsigned long queen_index, unsigned int dimension ) const;
-  unsigned long ace_begin ( unsigned int dimension ) const;
-  unsigned long ace_end ( unsigned int dimension ) const;
-   */ 
+  char type ( size_type index, unsigned int dimension ) const;
+  size_type mate ( size_type queen_index, unsigned int dimension ) const;
+  const Ring & connection ( size_type queen_index ) const;
+  Ring & connection ( size_type queen_index );  
+  size_type ace_begin ( unsigned int dimension ) const;
+  size_type ace_end ( unsigned int dimension ) const;
   /* Abstract Container */
+  void generate_coboundary_information ( void );
   Abstract_Complex ( void );
   Abstract_Complex ( unsigned int dimension );
+  void constructor ( unsigned int dimension );
+  size_type mass ( void );
+  void swap ( Abstract_Complex & b );
+
 private:
   friend class Abstract_const_iterator<Cell_Type>;
   std::set < Cell > cells_;
   std::vector < const_iterator > begin_;
   const_iterator end_;
   std::vector < size_type > size_;
-  unsigned long total_size_;
+  size_type total_size_;
   std::map < Cell, Chain > boundary_;
   std::map < Cell, Chain > coboundary_;
   unsigned int dimension_;
-  std::map < const_iterator, unsigned int > index_;
+  std::map < const_iterator, size_type > index_;
   std::vector < const_iterator > lookup_;
-  std::vector<unsigned long> index_begin_;
+  std::vector< size_type > index_begin_;
+  std::vector<Ring> connection_;
+  std::vector< size_type> king_count_;
 };
 
 /* * * * * * * * * * * * * * * * * 

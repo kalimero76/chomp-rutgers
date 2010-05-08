@@ -10,12 +10,13 @@
 #ifndef CHOMP_BASIC_H
 #define CHOMP_BASIC_H
 
-/* still toying with this 
 template < class Chain >
 Chain boundary ( const Chain & input );
 
 template < class Chain >
 Chain coboundary ( const Chain & input );
+
+/* still toying with this 
 
 template < class Chain >
 Chain operator + ( const Chain & left_hand_side, const Chain & right_hand_side );
