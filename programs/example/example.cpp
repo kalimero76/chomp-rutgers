@@ -87,7 +87,8 @@ template < class Cell_Complex_Template >
 compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	clock_t start_clock, stop_clock, total_time_start, total_time_stop;
 	float total_time, morse_time, homology_time;
-  std::cout << " Size = " << my_complex . size () << "\n";
+  unsigned long original_size;
+  std::cout << " Size = " << (original_size = my_complex . size ()) << "\n";
   std::cout << " Preprocessing complex... ";
   total_time_start = start_clock = clock ();
   if ( do_preprocess ) my_complex . preprocess ();
@@ -102,7 +103,8 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	std::cout << "  Using morse theory to reduce ... \n";
   unsigned long size;
 	start_clock = clock ();
-  Morse_Complex my_morse_complex = morse::deep_reduction ( my_complex ); 
+  Morse_Complex * my_morse_complex_ptr = morse::deep_reduction ( my_complex );
+  Morse_Complex & my_morse_complex = * my_morse_complex_ptr;
 	std::cout << " ... morse reduction completed. \n";
 	stop_clock = clock (); 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " so far elapsed \n";
@@ -129,22 +131,23 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	std::cout << "  STATISTICS \n";
 	std::cout << "  ---------- \n";
 	std::cout << "  Total time: " << total_time << " seconds.\n";
-	std::cout << "  Cells in original complex: " << my_complex . size () << "\n";
+	std::cout << "  Cells in original complex: " << original_size << "\n";
 	std::cout << "  Cells in Morse complex: " << my_morse_complex . size () << "\n";
 	std::cout << "  Homology size: " << (float)vector_sum(Minimal_Number_of_Generators) << "\n";
-	std::cout << "  Compression factor = " << 100.0 - 100.0 * (float) my_morse_complex . size () / (float) my_complex . size () << "\%\n";
+	std::cout << "  Compression factor = " << 100.0 - 100.0 * (float) my_morse_complex . size () / original_size << "\%\n";
 	std::cout << "  Morse / Homology = " << (float)my_morse_complex . size () / (float)vector_sum(Minimal_Number_of_Generators) << "\n";
-	std::cout << "  Cells per second:" << (float) my_complex . size () / total_time << "\n"; 
-	std::cout << "  Cells per second of Morse time:" << (float) my_complex . size () / morse_time << "\n"; 
-	std::cout << "  Cells per second of Smith time:" << (float) my_morse_complex . size () / homology_time << "\n"; 
+	std::cout << "  Cells per second:" << (float) original_size / total_time << "\n"; 
+	std::cout << "  Cells per second of Morse time:" << (float) original_size / morse_time << "\n"; 
+	std::cout << "  Cells per second of Smith time:" << (float) original_size / homology_time << "\n"; 
 	std::cout << "  ----------\n";
 	compute_results return_value;
-	return_value . original_size =  my_complex . size ();
+	return_value . original_size =  original_size;
 	return_value . morse_size =  my_morse_complex . size ();
 	return_value . homology_size = vector_sum(Minimal_Number_of_Generators) ;
 	return_value . total_time =  total_time;
 	return_value . morse_time =  morse_time;
 	return_value . smith_time =  homology_time;
+  delete my_morse_complex_ptr;
   return return_value;
 } /* compute_example */
 
@@ -194,6 +197,7 @@ void run_tests ( const char * filename, int dimension, float probability, int Nu
 
 int main (int argc, char * const argv[]) {
 
+  if ( argc > 1 ) { 
   if ( argc < 3 ) {
     std::cout << "give arguments: dimension, width\n";
     return 0;
@@ -202,18 +206,20 @@ int main (int argc, char * const argv[]) {
   do_preprocess = atoi(argv[3]);
   
   cubical_example ( atoi(argv[1]), atoi(argv[2]), .2, true );
-
+  } else {
+    
+  do_preprocess = true;
 	/* Run 2D tests */
-	//run_tests( "random_cubical_stats_2d.m", 2, .2, 10, 10);
+	run_tests( "random_cubical_stats_2d.m", 2, .2, 40, 100);
 	/* Run 3D tests */
-	//run_tests( "random_cubical_stats_3d.m", 3, .2, 100, 2);
+	run_tests( "random_cubical_stats_3d.m", 3, .2, 25, 10);
 	
 	/* Run 4D tests */
-	//run_tests( "random_cubical_stats_4d.m", 4, .1, 30, 1);
+	run_tests( "random_cubical_stats_4d.m", 4, .1, 21, 2);
 
 	/* Run 5D tests */
-	//run_tests( "random_cubical_stats_5d.m", 5, .1, 9, 1);
-			
+	run_tests( "random_cubical_stats_5d.m", 5, .1, 13, 1);
+  }
 	/* Manifold Example */
 	//manifold_example ( 8 );
 	
