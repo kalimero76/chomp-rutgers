@@ -281,6 +281,7 @@ void Cubical_Complex::index ( void ) {
   size_type indx = 0;
   unsigned int dimension = 0;
   size_ [ 0 ] = 0;
+  total_size_ = 0;
   begin_ [ 0 ] = const_iterator ( this, 0, 0 );
   if ( not bitmap_ [ 0 ] ) {
     ++ begin_ [ 0 ];
@@ -292,6 +293,7 @@ void Cubical_Complex::index ( void ) {
       begin_ [ dimension ] = lookup;
     }
     ++ size_ [ dimension ];
+    ++ total_size_;
     index_ [ lookup . address_ ] = indx;
     lookup_ [ indx ] = lookup;
   } /* for */
@@ -547,7 +549,32 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
   //std::cout << "Allocate_Bitmap finished\n";
 } /* Cubical_Complex::Allocate_Bitmap */
 
-void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {
+void Cubical_Complex::finalize ( void ) {
+  /* Gives correct values to total_size_, begin_, and size_ */
+  unsigned int dimension = 0;
+  size_ [ 0 ] = 0;
+  total_size_ = 0;
+  begin_ [ 0 ] = const_iterator ( this, 0, 0 );
+  if ( not bitmap_ [ 0 ] ) {
+    ++ begin_ [ 0 ];
+  } /* if */
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup ) { 
+    while ( dimension < lookup . dimension () ) {
+      ++ dimension;
+      size_ [ dimension ] = 0;
+      begin_ [ dimension ] = lookup;
+    }
+    ++ size_ [ dimension ];
+    ++ total_size_;
+  } /* for */
+  while ( dimension < dimension_ ) {
+    ++ dimension;
+    size_ [ dimension ] = 0;
+    begin_ [ dimension ] = end_;
+  } /* while */
+} /* Cubical_Complex::finalize */
+
+void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates, bool update ) {
 	std::vector<unsigned int> neighbor_coordinates( dimension_, 0);
 	/* Calculate the number of the read cube */
 	long full_cube_number = 0;
@@ -577,7 +604,11 @@ void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coo
           if ( piece_index & ( 1 << bit_index ) ) ++ cell_dimension; 
         } /* for */
         /* insert the cell */
-				insert ( Cell ( ( ( full_cube_number + offset ) << dimension_ ) + piece_index , cell_dimension ) ); 
+        if ( update ) {
+          insert ( Cell ( ( ( full_cube_number + offset ) << dimension_ ) + piece_index , cell_dimension ) ); 
+        } else {
+          bitmap_ [ ( ( full_cube_number + offset ) << dimension_ ) + piece_index ] = true;
+        }
       } /* if */
   } /* for */
   //std::cout << " . \n";
@@ -622,7 +653,6 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 	Allocate_Bitmap ( user_dimension_sizes );
 	/* Now scan through every line of text and read in full cubes */
 	std::vector<unsigned int> cube_coordinates( dimension_, 0);
-	std::vector<unsigned int> neighbor_coordinates( dimension_, 0);
 	while ( not input_file . eof () ) {
 		input_file . getline ( text_buffer, 512, '\n' );
 		index = 0; 
@@ -630,7 +660,7 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 		if ( text_buffer [ index ] == 0 ) continue;
 		++ index; 
 		/* Read the coordinates of the cube from the line */
-		for ( unsigned int dimension_index = 0; dimension_index < dimension_; dimension_index ++ ) {
+		for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
 			ptr = text_buffer + index;
 			while ( text_buffer[index] != ',' && text_buffer[index] != ')') index++;
 			text_buffer[index] = 0; 
@@ -638,8 +668,9 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
       cube_coordinates[dimension_index] = atoi(ptr) + 1 ; 
     } /* for */
 		/* Now Add the Cube to the complex. */
-		Add_Full_Cube ( cube_coordinates ); 
+		Add_Full_Cube ( cube_coordinates, false ); 
 	} /* while */
+  finalize ();
 	/* We are done reading. Close the file. */
 	input_file . close ();
 } /* Cubical_Complex::Load_From_File */

@@ -124,9 +124,13 @@ public:
    Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
 	void Load_From_File ( const char * FileName );
   
-  /** Add_Full_Cube. */
-  void Add_Full_Cube ( const std::vector<unsigned int> & coordinates );
+  /** Add_Full_Cube.
+     Adds the full cube (3^d cells) of coordinates. if update == true, begin_ and size_ updated. */
+  void Add_Full_Cube ( const std::vector<unsigned int> & coordinates, bool update = true );
   
+  /** finalize. sets correct values to size_, total_size_, and begin_ from bitmap_ data */
+  void finalize ( void );
+
   /** Allocate_Bitmap.
    Initializes bitmap so that the complex may contain a full cubical complex
    which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1) */
