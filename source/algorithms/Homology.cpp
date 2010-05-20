@@ -10,6 +10,7 @@
 
 #include "algorithms/Homology.h"
 
+#if 0
 #ifndef CHOMP_HEADER_ONLY_
 /* Explicit Template Instantiations */
 
@@ -22,4 +23,5 @@ template void Homology < Abstract_Complex <> > ( const Abstract_Complex <> & );
 #include "complexes/Morse_Complex.h"
 template void Homology < Morse_Complex < Cubical_Complex > > ( const Morse_Complex < Cubical_Complex > & );
 template void Homology < Morse_Complex < Abstract_Complex <> > > ( const Morse_Complex < Abstract_Complex <> > & );
+#endif
 #endif

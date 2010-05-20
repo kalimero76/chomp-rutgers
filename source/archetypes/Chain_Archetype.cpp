@@ -61,6 +61,7 @@ std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & 
 	return output_stream; 
 } /* operator << */
 	
+#if 0
 #ifndef CHOMP_HEADER_ONLY_
 /* Template Instantiation */
 template class Chain_Archetype <  std::map < Default_Cell, Default_Ring > >;
@@ -78,4 +79,5 @@ template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Comple
 template class Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex <> > >, Morse_Complex<Abstract_Complex <> >::Cell_Complex::Ring > >;
 template std::ostream & operator << < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex <> > >, Morse_Complex<Abstract_Complex <> >::Cell_Complex::Ring > > 
 	( std::ostream & , const Chain_Archetype < std::map < Morse_Value_Cell < Morse_Complex <Abstract_Complex <> > >, Morse_Complex<Abstract_Complex <> >::Cell_Complex::Ring > > & ) ;
+#endif
 #endif

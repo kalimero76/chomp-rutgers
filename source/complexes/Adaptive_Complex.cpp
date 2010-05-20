@@ -3,31 +3,27 @@
  *
  *
  *  Created by Miro Kramar 2010/01/10.
- *  Copyright 2009 __MyCompanyName__. All rights reserved.
+ *  Copyright 2009. All rights reserved.
  *
  */
 
 #include "complexes/Adaptive_Complex.h"
-
-/*
- * Adaptive tree implementaion
- */
-
+#include "algorithms/Morse_Theory.h"
 
 /*/////////////////////////////////////////////////////////////////////////////
  * Adaptive tree :: Relative_Positions Implementation ////////////////////////////////
  */////////////////////////////////////////////////////////////////////////////
 
-Adaptive_Container::Adaptive_Tree::Relative_Positions::Relative_Positions(){
+Adaptive_Tree::Relative_Positions::Relative_Positions(){
 	Set_To_Same();
 }
-void Adaptive_Container::Adaptive_Tree::Relative_Positions::Set_To_Same(){
+void Adaptive_Tree::Relative_Positions::Set_To_Same(){
 	back_min_forward_min = 0;
 	back_min_forward_max = -1;
 	back_max_forward_min = 1;
 	back_max_forward_max = 0;
 }
-void Adaptive_Container::Adaptive_Tree::Relative_Positions::Set_To_Opposite( bool back_above_forward ){
+void Adaptive_Tree::Relative_Positions::Set_To_Opposite( bool back_above_forward ){
 	if( back_above_forward ){
 		back_min_forward_min = -1;
 		back_min_forward_max = -1;
@@ -44,16 +40,16 @@ void Adaptive_Container::Adaptive_Tree::Relative_Positions::Set_To_Opposite( boo
  * Adaptive tree :: NodeVisitor Implementation ////////////////////////////////
  */////////////////////////////////////////////////////////////////////////////
 
-void Adaptive_Container::Adaptive_Tree::Node_Visitor::Set_To(Node * node)
+void Adaptive_Tree::Node_Visitor::Set_To(Node * node)
 {
 	current_node = node;
 }
 
-Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Node_Visitor::Current_Node()
+Adaptive_Tree::Node * Adaptive_Tree::Node_Visitor::Current_Node()
 {
 	return current_node;
 }
-Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Node_Visitor::Parent()
+Adaptive_Tree::Node * Adaptive_Tree::Node_Visitor::Parent()
 {
 	if( current_node -> parent == NULL)
 		return NULL;
@@ -61,7 +57,7 @@ Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Nod
 	return current_node;
 }
 
-Adaptive_Container::Adaptive_Tree::Node *  Adaptive_Container::Adaptive_Tree::Node_Visitor::Left_Child()
+Adaptive_Tree::Node *  Adaptive_Tree::Node_Visitor::Left_Child()
 {
 	if( current_node -> left_child == NULL)
 		return NULL;
@@ -69,7 +65,7 @@ Adaptive_Container::Adaptive_Tree::Node *  Adaptive_Container::Adaptive_Tree::No
 	return current_node;
 }
 
-Adaptive_Container::Adaptive_Tree::Node *  Adaptive_Container::Adaptive_Tree::Node_Visitor::Right_Child()
+Adaptive_Tree::Node *  Adaptive_Tree::Node_Visitor::Right_Child()
 {
 	if( current_node -> right_child == NULL)
 		return NULL;
@@ -77,7 +73,7 @@ Adaptive_Container::Adaptive_Tree::Node *  Adaptive_Container::Adaptive_Tree::No
 	return current_node;
 }
 
-bool  Adaptive_Container::Adaptive_Tree::Node_Visitor::Is_Leaf(){
+bool  Adaptive_Tree::Node_Visitor::Is_Leaf(){
 	if ( current_node->splitting_dimension == 0 )
 		return true;
 	return false;
@@ -87,75 +83,46 @@ bool  Adaptive_Container::Adaptive_Tree::Node_Visitor::Is_Leaf(){
  * Leaf_LookUp Implplementation ///////////////////////////////////
  *//////////////////////////////////////////////////////////////////
 
-void Adaptive_Container::Adaptive_Tree::Leaf_LookUp::Initialize(Adaptive_Container::Adaptive_Tree::Node_Visitor * node_visitor){
+void Adaptive_Tree::Leaf_Lookup_Initialize(Adaptive_Tree::Node_Visitor * node_visitor){
 	Node * test_node;
 	bool end = false;
 	//clear the look up table
-	leaves_lookup_table.clear();
+	leaf_lookup.clear();
 	//in order travers throught all nodes an add them to leaves_lookup_table
 	while( node_visitor->Left_Child() != NULL);
 	do{
 		if( node_visitor->Is_Leaf( ) ){
-			node_visitor->Current_Node()->leaf_number = leaves_lookup_table.size();
-			leaves_lookup_table.push_back( node_visitor->Current_Node() );
+			node_visitor->Current_Node()->leaf_number = leaf_lookup.size();
+			leaf_lookup.push_back( node_visitor->Current_Node() );
 		}
 		if( node_visitor->Right_Child() != NULL)
 			while( node_visitor->Left_Child() != NULL);
 		else{
 			test_node = node_visitor->Current_Node();
-			//The conditions must be evaluated from left to right. Is that true? //yes -SRH
 			while( test_node->parent != NULL && test_node == test_node->parent->right_child )
 				test_node = node_visitor->Parent();
 			if( node_visitor->Parent() == NULL )
 				end = true;
 		}
-	}while( !end );
+	} while( !end );
 }
 
-unsigned int Adaptive_Container::Adaptive_Tree::Leaf_LookUp::Size(){
-	return leaves_lookup_table.size();
-}
 
-Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Leaf_LookUp::First_Leaf(){
-	if( leaves_lookup_table.size() == 0)
-		return NULL;
-	current_leaf = 0;
-	return leaves_lookup_table[current_leaf];
-}
-
-Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Leaf_LookUp::Next_Leaf(){
-	++current_leaf;
-	if( current_leaf >= leaves_lookup_table.size() )
-			return NULL;
-	return leaves_lookup_table[current_leaf];
-}
-Adaptive_Container::Adaptive_Tree::Node * Adaptive_Container::Adaptive_Tree::Leaf_LookUp::Leaf( unsigned int index){
-	if( index < leaves_lookup_table.size() )
-		return leaves_lookup_table[ index ];
-	return NULL;
-}
 /*//////////////////////////////////////////////////////////////////
  * Tree implementaion //////////////////////////////////////////////
  *//////////////////////////////////////////////////////////////////
 
 /* Constructor */
-Adaptive_Container::Adaptive_Tree::Adaptive_Tree(){
+Adaptive_Tree::Adaptive_Tree( Adaptive_Complex * complex )  : complex_(complex) {
 	tree_root . parent = NULL;
 	tree_root . left_child = NULL;
 	tree_root . right_child = NULL;
+  tree_dimension = complex_ -> dimension_;
 	tree_root . splitting_dimension = 0;
+  finalized = false;
 }
 
-Adaptive_Container::Adaptive_Tree::Adaptive_Tree(unsigned int dimension){
-	tree_root . parent = NULL;
-	tree_root . left_child = NULL;
-	tree_root . right_child = NULL;
-	tree_root . splitting_dimension = 0;
-	tree_dimension = dimension;
-	dimension_sizes.resize( dimension + 1, 0);
-}
-
-Adaptive_Container::Adaptive_Tree::~Adaptive_Tree(){
+Adaptive_Tree::~Adaptive_Tree(){
 
 	Node * test_node;
 	bool end = false;
@@ -182,9 +149,9 @@ Adaptive_Container::Adaptive_Tree::~Adaptive_Tree(){
 	}while( !end );
 }
 
-void Adaptive_Container::Adaptive_Tree::Split_Leaf( Adaptive_Container::Adaptive_Tree::Node * leaf_to_split){
-	std::vector< Adaptive_Container::Adaptive_Tree::Node * > nodes_to_add;
-	Adaptive_Container::Adaptive_Tree::Node * node;
+void Adaptive_Tree::Split_Leaf( Adaptive_Tree::Node * leaf_to_split){
+	std::vector< Adaptive_Tree::Node * > nodes_to_add;
+	Adaptive_Tree::Node * node;
 
 	++leaf_to_split->splitting_dimension;
 	nodes_to_add .push_back( leaf_to_split );
@@ -209,7 +176,7 @@ void Adaptive_Container::Adaptive_Tree::Split_Leaf( Adaptive_Container::Adaptive
 	}
 }
 
-bool Adaptive_Container::Adaptive_Tree::Add_Full_Cube( std::vector < std::vector <bool> > splitting){
+bool Adaptive_Tree::Add_Full_Cube( std::vector < std::vector <bool> > splitting){
 	//check if the dimesnins of the splitting are correct
 	if ( splitting .size() == 0)
 		return false;
@@ -235,7 +202,7 @@ bool Adaptive_Container::Adaptive_Tree::Add_Full_Cube( std::vector < std::vector
 	return true;
 }
 
-void Adaptive_Container::Adaptive_Tree::Descend_To_Neighbours(Descend_Info * descend_info, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours){
+void Adaptive_Tree::Descend_To_Neighbours(Descend_Info * descend_info, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours){
 	std::vector<Descend_Info> descend_info_stack;
 	Descend_Info current_descend;
 
@@ -295,7 +262,7 @@ void Adaptive_Container::Adaptive_Tree::Descend_To_Neighbours(Descend_Info * des
 	}
 }
 /* finds all smaller neighbouring cubes and bigger neighbouring cubes which are filled in (the heighest dimensional face is present)*/
-void Adaptive_Container::Adaptive_Tree::Find_Neighbours( Node * leaf, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours){
+void Adaptive_Tree::Find_Neighbours( Node * leaf, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours){
 	//find all neighboring cubes
 
 	//first tree_dimension of bits are for the nodes which are suppose to be visieted form right
@@ -346,7 +313,7 @@ void Adaptive_Container::Adaptive_Tree::Find_Neighbours( Node * leaf, std::vecto
 	}
 }
 
-void Adaptive_Container::Adaptive_Tree::Fill_With_Cells_Of_Full_Cube(std::vector< std::map < int, bool > > * full_cube_cells){
+void Adaptive_Tree::Fill_With_Cells_Of_Full_Cube(std::vector< std::map < int, bool > > * full_cube_cells){
 	unsigned int cell_codimension;
 	unsigned int cell_dimension;
 	unsigned int cell_ID;
@@ -382,9 +349,9 @@ void Adaptive_Container::Adaptive_Tree::Fill_With_Cells_Of_Full_Cube(std::vector
 			(*full_cube_cells)[ cell_dimension ].insert ( std::pair< int , bool >(cell_ID, true) );
 		}
 	}
-}
+} /* Adaptive_Tree::Fill_With_Cells_Of_Full_Cube */
 
-bool Adaptive_Container::Adaptive_Tree::Cell_Is_Subset_Of_Union (int cell, std::vector< int > * cell_union ){
+bool Adaptive_Tree::Cell_Is_Subset_Of_Union (int cell, std::vector< int > * cell_union ){
 
 	int cell_reduced_dimensions;
 	int cell_reduced_to;
@@ -409,7 +376,7 @@ bool Adaptive_Container::Adaptive_Tree::Cell_Is_Subset_Of_Union (int cell, std::
 	return false;
 }
 
-void Adaptive_Container::Adaptive_Tree::Add_Cell_To_Union (int cell, std::vector< int > * cell_union ){
+void Adaptive_Tree::Add_Cell_To_Union (int cell, std::vector< int > * cell_union ){
 
 	int cell_reduced_dimensions;
 	int cell_reduced_to;
@@ -441,7 +408,7 @@ void Adaptive_Container::Adaptive_Tree::Add_Cell_To_Union (int cell, std::vector
 	}
 	cell_union->push_back( cell );
 }
-void Adaptive_Container::Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< std::map < int, bool > > * full_cube_cells){
+void Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< std::map < int, bool > > * full_cube_cells){
 	std::vector<Descend_Info> bigger_neighbours;
 	std::vector<Descend_Info> smaller_neighbours;
 	std::vector< int > bigger_neighbours_intersection;
@@ -483,20 +450,24 @@ void Adaptive_Container::Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< 
 
 	//go thru all the possible cells in the cube
 	leaf->elementary_cells.resize( tree_dimension + 1 );
-	for( dimension_index = 0; dimension_index < tree_dimension; ++dimension_index )
+	for( dimension_index = 0; dimension_index < tree_dimension; ++dimension_index ) {
 		for( std::map<int, bool>::iterator cell_iterator = (*full_cube_cells)[dimension_index].begin(); cell_iterator != (*full_cube_cells)[dimension_index].end(); ++cell_iterator){
 			//If cell is not in smaller neighbours
 			if( !Cell_Is_Subset_Of_Union( cell_iterator -> first, &smaller_neighbours_intersection ) ){
 				//if cube has a full dimensional cell or cell is in bigger neigbhour
 				if( leaf->elementary_cells[ tree_dimension ].size() > 0 || Cell_Is_Subset_Of_Union( cell_iterator -> first, &bigger_neighbours_intersection ) ){
 					leaf->elementary_cells[ dimension_index ].insert ( std::pair< int , bool >( cell_iterator -> first, true) );
-					++dimension_sizes[ dimension_index ];
+					++ complex_ -> size_[ dimension_index ];
+          ++ complex_ -> total_size_;
 				}
 			}
 		}
+  }
 
-	if( leaf->elementary_cells[ tree_dimension ].size() > 0 )
-		++dimension_sizes[ tree_dimension ];
+	if( leaf->elementary_cells[ tree_dimension ].size() > 0 ) {
+    ++ complex_ -> size_[ tree_dimension ];
+    ++ complex_ -> total_size_;  
+  } /* if */
 
 	//if nothing was added clear the vector of elementary_cells
 	bool vector_is_empty = true;
@@ -507,242 +478,228 @@ void Adaptive_Container::Adaptive_Tree::Finalize_Cube(Node * leaf, std::vector< 
 		leaf->elementary_cells.clear();
 }
 
-void Adaptive_Container::Adaptive_Tree::Finalize(){
+void Adaptive_Tree::Finalize(){
+  if ( finalized ) return;
 	std::vector< std::map < int, bool > > full_cube_cells;
 
 	std::cout << "Initializing tree \n";
 	node_visitor.Set_To( &tree_root );
-	leaf_lookup.Initialize( &node_visitor);
+	Leaf_Lookup_Initialize( &node_visitor);
 
 	std::cout << "Tree initialized \n";
-	std::cout << "Number of cubes = " << leaf_lookup.Size() <<  "\n";
+	std::cout << "Number of cubes = " << leaf_lookup.size() <<  "\n";
 
 	Fill_With_Cells_Of_Full_Cube( &full_cube_cells );
 	//Go thru all the leaves and add lower dimensional cells
-	for( Node * leaf = leaf_lookup.First_Leaf(); leaf != NULL; leaf = leaf_lookup.Next_Leaf() ){
+	for( unsigned long leaf_index = 0; leaf_index <= leaf_lookup . size (); ++ leaf_index){
 		//std::cout << "Initaizing cube cubes = " << leaf->leaf_number << " out of " << leaf_lookup.Size() << " \n";
-		Finalize_Cube( leaf, &full_cube_cells);
+		Finalize_Cube( leaf_lookup [ leaf_index ], &full_cube_cells);
 	}
 	std::cout << "Cubes Intialized \n";
+  finalized = true;
 	return;
 }
 
 /*/////////////////////////////////////////////////////////////////
- * Adaptive_Coatinar::const_iterator implementation ///////////////
+ * Adaptive_const_iterator implementation ///////////////
  */////////////////////////////////////////////////////////////////
 
 
-Adaptive_Container::const_iterator::const_iterator( void ) : referral(NULL) { }
+Adaptive_const_iterator::Adaptive_const_iterator( void ) : referral(NULL) { }
 
-Adaptive_Container::const_iterator::const_iterator( const   Adaptive_Container * const referral ) : referral(referral) { }
+Adaptive_const_iterator::Adaptive_const_iterator( const   Adaptive_Complex * const referral ) : referral(referral) { }
 
-const Adaptive_Container::value_type & Adaptive_Container::const_iterator::operator * ( void ) const {
-	dereference_value . name = piece_iterator -> first + (full_cube_number << (referral -> space_dimension << 1 ) );
-	dereference_value . dimension = referral -> chain_dimension;
-	return dereference_value; } /* endfunction */
+const Adaptive_Complex::value_type & Adaptive_const_iterator::operator * ( void ) const {
+	dereference_value . data () = piece_iterator -> first + (full_cube_number << (referral -> dimension_ << 1 ) );
+	dereference_value . dimension () = dimension_;
+	return dereference_value; 
+} /* Adaptive_const_iterator::operator * */
 
-const Adaptive_Container::value_type * Adaptive_Container::const_iterator::operator -> ( void ) const {
+const Adaptive_Complex::value_type * Adaptive_const_iterator::operator -> ( void ) const {
 	return &**this;
 } /* address of overloaded * of builtin * of this */
 
-Adaptive_Container::const_iterator & Adaptive_Container::const_iterator::operator ++ ( void ) {
+Adaptive_const_iterator & Adaptive_const_iterator::operator ++ ( void ) {
 
-	if( piece_iterator !=referral->adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ referral->chain_dimension ].end() )
-	    if ( ++piece_iterator !=referral->adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ referral->chain_dimension ].end() ) {
+	if( piece_iterator !=referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ dimension_ ].end() )
+	    if ( ++piece_iterator !=referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ dimension_ ].end() ) {
 			return *this;
 	}
-	while( 1 ){
-		++full_cube_number;
-		if( full_cube_number == referral->adaptive_tree->leaf_lookup.leaves_lookup_table.size() ){
-			return *this;
+	while ( 1 ) {
+		++ full_cube_number;
+		if ( full_cube_number == referral->adaptive_tree->leaf_lookup.size() ) {
+      if ( dimension_ < referral -> dimension_ ) {
+        ++ dimension_;
+        full_cube_number = 0;
+        //std::cout << "increasing dimension!\n";
+      } else {
+        /* Reached end_ */
+        return *this = referral -> end_;
+      } /* if-else */
 		}
-		else if ( ( referral->adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells.size() > referral->chain_dimension )  &&
-				( referral->adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ referral->chain_dimension ].size() > 0) ){
-			piece_iterator = referral->adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ referral->chain_dimension ].begin();
+    //std::cout << "full cube number = " << full_cube_number << "\n";
+    //std::cout << "cells.size = " << referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells.size() << "\n";
+    //std::cout << "dimension = " << dimension_ << "\n";
+    //std::cout << "referral= " << & referral -> adaptive_tree -> leaf_lookup [ full_cube_number ] -> elementary_cells << "\n";
+
+		if ( ( referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells.size() > 0 )  &&
+				( referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ dimension_ ].size() > 0) ){
+			piece_iterator = referral->adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ dimension_ ].begin();
 			return *this;
 		}
 	}
 } /* endfunction */
 
-bool Adaptive_Container::const_iterator::operator != ( const const_iterator & right_hand_side ) const {
+bool Adaptive_const_iterator::operator != ( const const_iterator & right_hand_side ) const {
 	if( full_cube_number != right_hand_side.full_cube_number ) return true;
 	//in the case we are at the end
-	if( full_cube_number == referral->adaptive_tree->leaf_lookup.leaves_lookup_table.size() ) return false;
+	//if( full_cube_number == referral->adaptive_tree->leaf_lookup.size() ) return false;
 	if( piece_iterator != right_hand_side.piece_iterator ) return true;
 	return false;
 }
 
-bool Adaptive_Container::const_iterator::operator == ( const const_iterator & right_hand_side ) const {
+bool Adaptive_const_iterator::operator == ( const const_iterator & right_hand_side ) const {
 	if( full_cube_number != right_hand_side.full_cube_number ) return false;
 	//in the case we are at the end
-	if( full_cube_number == referral->adaptive_tree->leaf_lookup.leaves_lookup_table.size() ) return true;
+	//if( full_cube_number == referral->adaptive_tree->leaf_lookup.size() ) return true;
 	if( piece_iterator != right_hand_side.piece_iterator ) return false;
 	return true;}
 
-Adaptive_Container::size_type Adaptive_Container::size ( void ) const{
-	if ( adaptive_tree->dimension_sizes.size() <= chain_dimension ) return 0;
-	return adaptive_tree->dimension_sizes[ chain_dimension ];}
+bool Adaptive_const_iterator::operator < ( const Adaptive_const_iterator & right_hand_side ) const {
+  if ( dimension_ == right_hand_side . dimension_ ) {
+    if ( full_cube_number == right_hand_side . full_cube_number )
+      return * reinterpret_cast < const unsigned long * > ( & piece_iterator ) < 
+      * reinterpret_cast < const unsigned long * > ( & right_hand_side . piece_iterator );    
+    return full_cube_number < right_hand_side . full_cube_number;
+  }
+  return dimension_ < right_hand_side . dimension_;
+} /* Adaptive_const_iterator::operator < */
 
-Adaptive_Container::const_iterator Adaptive_Container::begin ( void ) const {
-	const_iterator return_value ( this );
-	unsigned long temp_full_cube_number = 0;
+unsigned int Adaptive_const_iterator::dimension () const {
+  return dimension_;
+} /* Adaptive_const_iterator::dimension */
 
-	while( 1 ){
-		if( temp_full_cube_number == adaptive_tree->leaf_lookup.leaves_lookup_table.size() )
-			return end();
-		else if ( ( adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells.size() > chain_dimension )  &&
-				( adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].size() > 0) ){
-			return_value.full_cube_number = temp_full_cube_number;
-			return_value.piece_iterator = adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].begin();
-			//To prevent the warning
-			//return_value.dereference_value.name = adaptive_tree->leaf_lookup.Leaf( temp_full_cube_number )->elementary_cells[ chain_dimension ].begin() -> first + (return_value.full_cube_number << (chain_dimension << 1 ) );
-			//return_value.dereference_value.dimension = chain_dimension;
-			return return_value;
-		}
-		++temp_full_cube_number;
-	}
-}
+const Adaptive_Complex & Adaptive_const_iterator::container () const {
+  return * referral;
+} /* Adaptive_const_iterator::container */
 
-Adaptive_Container::const_iterator Adaptive_Container::end ( void ) const {
-	const_iterator return_value ( this );
-	return_value.full_cube_number = adaptive_tree->leaf_lookup.leaves_lookup_table.size();
-	return return_value;
-}
 
-Adaptive_Container::const_iterator Adaptive_Container::find ( const Adaptive_Container::key_type & key ) const {
-	const_iterator return_value ( this );
-	int cell_ID;
-	return_value.full_cube_number = key.name >> ( 2 * space_dimension );
-	cell_ID = key.name ^ ( return_value.full_cube_number  << ( 2 * space_dimension ) );
-	return_value.piece_iterator = adaptive_tree->leaf_lookup.Leaf( return_value.full_cube_number )->elementary_cells[ chain_dimension ].find(cell_ID);
-	return return_value;
-	//TODO if cell is not present it should return end;
-}
 /*///////////////////////////////////////////////////////////////////////////////////////
  * Adaptive_Conatiner Implementaion /////////////////////////////////////////////////////
  *///////////////////////////////////////////////////////////////////////////////////////
-bool Adaptive_Container::Add_Full_Cube( std::vector < std::vector <bool> > splitting){
-	return adaptive_tree->Add_Full_Cube( splitting );
-}
-void Adaptive_Container::Finalize(){
-	adaptive_tree->Finalize();
-}
+
+
 /*/////////////////////////////////////////////////////////////////
 * Adaptive_complex implementation /////////////////////////////////
 *//////////////////////////////////////////////////////////////////
 
-/* Constructor */
-Adaptive_Complex::Adaptive_Complex ( void ) {
+/* Basic Container */
 
-} /* endfunction */
+void Adaptive_Complex::erase ( const Adaptive_const_iterator & input) {
+	unsigned int full_cube_number;
+	unsigned int cell_ID;
+  Adaptive_Cell cell = *input;
+	full_cube_number = cell . data () >> ( 2 * dimension_ );
+	cell_ID = cell . data () ^ ( full_cube_number << (2 * dimension_ ) );
+  
+	unsigned int size = adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ cell . dimension() ].size();
+	adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ cell . dimension() ].erase(cell_ID);
+	if( size > adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ cell . dimension() ].size() ) {
+		-- size_ [ cell . dimension () ];
+    -- total_size_;
+  } /* if */
+  
+  /* TODO: fix begin_ */
+  
+} /* Adaptive_Complex::erase */
 
-Adaptive_Complex::Adaptive_Complex ( unsigned int complex_dimension )  {
-	dimension = complex_dimension;
-	Adaptive_Container::Adaptive_Tree * tree = new Adaptive_Container::Adaptive_Tree(complex_dimension);
-
-	cells .resize(dimension + 1);
-	for(unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		cells [ dimension_index ] .adaptive_tree = tree;
-		cells [ dimension_index ] .space_dimension = complex_dimension;
-		cells [ dimension_index ] .chain_dimension = dimension_index;
-	}
-} /* endfunction */
-
-/* Copy Constructor */
-Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
-	dimension = copy_me.dimension;
-	Adaptive_Container::Adaptive_Tree * tree = new Adaptive_Container::Adaptive_Tree(dimension);
-
-	cells .resize(dimension + 1);
-	for(unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-		cells [ dimension_index ] .adaptive_tree = tree;
-		cells [ dimension_index ] .space_dimension = dimension;
-		cells [ dimension_index ] .chain_dimension = dimension_index;
-	}
-
-	tree->dimension_sizes = copy_me.cells[0].adaptive_tree->dimension_sizes;
-	tree->leaf_lookup.leaves_lookup_table.resize( copy_me.cells[0].adaptive_tree->leaf_lookup.leaves_lookup_table.size() );
-
-	/*reconstruct the tree*/
-	typedef Adaptive_Container::Adaptive_Tree::Node Node;
-	Node * current_node_in_old_tree;
-	Node * current_node_in_new_tree;
-
-	std::vector< Node * > old_tree_nodes_stack;
-	std::vector< Node * > new_tree_nodes_stack;
-
-	new_tree_nodes_stack.push_back( &tree->tree_root );
-	old_tree_nodes_stack.push_back( &copy_me.cells[0].adaptive_tree->tree_root );
-	while( new_tree_nodes_stack.size() > 0 ){
-		current_node_in_old_tree = old_tree_nodes_stack.back();
-		old_tree_nodes_stack.pop_back();
-		current_node_in_new_tree = new_tree_nodes_stack.back();
-		new_tree_nodes_stack.pop_back();
-
-		current_node_in_new_tree->splitting_dimension = current_node_in_old_tree->splitting_dimension;
-		if( current_node_in_new_tree->splitting_dimension == 0){/* it's a leaf */
-			current_node_in_new_tree->leaf_number = current_node_in_old_tree->leaf_number;
-			current_node_in_new_tree->left_child = NULL;
-			current_node_in_new_tree->right_child = NULL;
-			tree->leaf_lookup.leaves_lookup_table[ current_node_in_new_tree->leaf_number ] = current_node_in_new_tree;
-			if( current_node_in_old_tree->elementary_cells.size() != 0 ){
-				current_node_in_new_tree->elementary_cells = current_node_in_old_tree->elementary_cells;
-			}
-		}
-		else{
-			Node * new_node_1 = new Adaptive_Container::Adaptive_Tree::Node;
-			Node * new_node_2 = new Adaptive_Container::Adaptive_Tree::Node;
-			new_node_1->parent = current_node_in_new_tree;
-			current_node_in_new_tree->left_child = new_node_1;
-			new_tree_nodes_stack.push_back( new_node_1 );
-			old_tree_nodes_stack.push_back( current_node_in_old_tree->left_child );
-			new_node_2->parent = current_node_in_new_tree;
-			current_node_in_new_tree->right_child = new_node_2;
-			new_tree_nodes_stack.push_back( new_node_2 );
-			old_tree_nodes_stack.push_back( current_node_in_old_tree->right_child );
-		}
-	}
+Adaptive_const_iterator Adaptive_Complex::find ( const Adaptive_Complex::key_type & key ) const {
+	const_iterator return_value ( this );
+	int cell_ID;
+	return_value.full_cube_number = key.data () >> ( 2 * dimension_ );
+	cell_ID = key.data () ^ ( return_value.full_cube_number  << ( 2 * dimension_ ) );
+	return_value.piece_iterator = adaptive_tree->leaf_lookup [ return_value.full_cube_number ] ->elementary_cells[ key . dimension () ].find(cell_ID);
+  return_value.dimension_ = key . dimension ();
+	return return_value;
+	//TODO if cell is not present it should return end;
 }
-/* Destructor */
-Adaptive_Complex::~Adaptive_Complex ( void ) {
-	if ( cells.size() > 0 && cells[0].adaptive_tree != NULL )
-		delete  cells[0].adaptive_tree;
-} /* endfunction */
 
-Adaptive_Complex::Chain & Adaptive_Complex::Boundary_Map ( Adaptive_Complex::Chain & output, const Adaptive_Complex::Container::const_iterator & input) const
-{
+void Adaptive_Complex::clear ( void ) {
+  delete adaptive_tree;
+  begin_ . clear ();
+  begin_ . reserve ( 0 );
+  index_ . clear ();
+  lookup_ . clear ();
+  lookup_ . reserve ( 0 );
+  index_begin_ . clear ();
+  index_begin_ . reserve ( 0 );
+  connection_ . clear ();
+  connection_ . reserve ( 0 );
+  boundary_count_ . clear ();
+  boundary_count_ . reserve ( 0 );
+  king_count_ . clear ();
+  king_count_ . reserve ( 0 );
+}
+
+Adaptive_Complex::iterator Adaptive_Complex::begin ( void ) const {
+	return begin_ [ 0 ];
+} /* Adaptive_Complex::begin */
+
+Adaptive_Complex::iterator Adaptive_Complex::end ( void ) const {	
+  return end_;
+} /* Adaptive_Complex::end */
+
+Adaptive_Complex::size_type Adaptive_Complex::size ( void ) const {
+	return total_size_; 
+} /* Adaptive_Complex::size */
+
+/* Cell Complex */
+
+Adaptive_Complex::iterator Adaptive_Complex::begin ( unsigned int dimension  ) const {
+	return begin_ [ dimension ];
+} /* Adaptive_Complex::begin */
+
+Adaptive_Complex::iterator Adaptive_Complex::end ( unsigned int dimension ) const {	
+  return begin_ [ dimension + 1 ];
+} /* Adaptive_Complex::end */
+
+Adaptive_Complex::size_type Adaptive_Complex::size ( unsigned int dimension ) const {
+	return size_ [ dimension ]; 
+} /* Adaptive_Complex::size */
+
+Adaptive_Complex::Chain Adaptive_Complex::boundary ( const Adaptive_const_iterator & input ) const {
+  Adaptive_Complex::Chain output;
 	int coincidence_index;
 	Cell cell;
 	Cell lower_dimensional_cell;
 	std::vector<Cell> lower_dimensional_cell_pieces;
-	std::pair< Cell, long > lower_dimensional_pair;
+	std::pair< const_iterator, Ring > lower_dimensional_pair;
 
 	cell = *input;
 
-	lower_dimensional_cell.dimension = cell.dimension -1;
-	lower_dimensional_pair.first.dimension = cell.dimension -1;
+	lower_dimensional_cell . dimension () = cell . dimension () -1;
 
 	output.clear();
 
 	coincidence_index = 1;
 	/*Go thru all cells which are one dimesion lower than input*/
-	for( unsigned int dimension_index = 0; dimension_index < dimension; ++dimension_index ){
-		 if( ( cell.name >> ( dimension + dimension_index ) ) % 2 == 0  ){/*if the dimension is not reduced*/
+	for( unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
+		 if( ( cell.data () >> ( dimension_ + dimension_index ) ) % 2 == 0  ){/*if the dimension is not reduced*/
 			 /*find the pieces for the left cell*/
-			 lower_dimensional_cell.name = cell.name + (1 << ( dimension + dimension_index) );
+			 lower_dimensional_cell.data () = cell.data () + (1 << ( dimension_ + dimension_index) );
 			 /*Process the chain*/
 			 Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
 			 for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
-				lower_dimensional_pair.first.name = cell_iterator->name;
+        lower_dimensional_pair.first = find ( *cell_iterator );
 				lower_dimensional_pair.second = -coincidence_index;
 				output.insert( lower_dimensional_pair );
 			 }
 			 /*find the pieces for the right cell*/
-			 lower_dimensional_cell.name +=  (1 <<  dimension_index );
+			 lower_dimensional_cell.data () +=  (1 <<  dimension_index );
 			 /*Process the chain*/
 			Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
 			for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
-				lower_dimensional_pair.first.name = cell_iterator->name;
+				lower_dimensional_pair.first = find ( *cell_iterator );
 				lower_dimensional_pair.second = coincidence_index;
 				output.insert( lower_dimensional_pair );
 			 }
@@ -751,11 +708,10 @@ Adaptive_Complex::Chain & Adaptive_Complex::Boundary_Map ( Adaptive_Complex::Cha
 	}
 
 	return output;
-}
+} /* Adaptive_Complex::boundary */
 
-Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::Chain & output, const Adaptive_Complex::Container::const_iterator & input) const
-{
-	unsigned int space_dimension;
+Adaptive_Complex::Chain Adaptive_Complex::coboundary ( const Adaptive_const_iterator & input) const {
+  Adaptive_Complex::Chain output;
 	unsigned int full_cube_number;
 	unsigned int cell_ID;
 	unsigned int neighbour_full_cube_number;
@@ -763,35 +719,30 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 	Cell cell;
 	Cell higher_dimensional_cell;
 	std::vector<Cell> higher_dimensional_cell_pieces;
-	std::pair< Cell, long > higher_dimensional_pair;
-	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info >  possible_owners;
+	std::pair< const_iterator, Ring > higher_dimensional_pair;
+	std::vector< Adaptive_Tree::Descend_Info >  possible_owners;
 
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input -> dimension ].adaptive_tree;
-
-	space_dimension = cells[ 0 ].space_dimension;
-	cell.name = input -> name;
-	cell.dimension = input -> dimension;
-	full_cube_number = input -> name >> ( 2 * space_dimension );
+	cell = *input;
+	full_cube_number = cell . data () >> ( 2 * dimension_ );
 
 	output.clear();
-	if( cell.dimension >= space_dimension )
+	if( cell.dimension () >= dimension_ )
 		return output;
 
-	higher_dimensional_cell.dimension = cell.dimension + 1;
-	higher_dimensional_pair.first.dimension = cell.dimension + 1;
+	higher_dimensional_cell . dimension () = cell . dimension () + 1;
 
 	/* go thru all 1 dimension higher dimensional cells in the cube*/
-	for(unsigned int dimension_index = 0; dimension_index < space_dimension; ++dimension_index ){
-		cell_ID = cell.name - ( full_cube_number << ( 2 * space_dimension ) );
-		if( ( cell_ID >> ( space_dimension + dimension_index ) ) % 2 == 1 ){/*if the dimension is  reduced*/
-			cell_ID -=  ( 1 << ( space_dimension + dimension_index) );
+	for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
+		cell_ID = cell.data () - ( full_cube_number << ( 2 * dimension_ ) );
+		if( ( cell_ID >> ( dimension_ + dimension_index ) ) % 2 == 1 ){/*if the dimension is  reduced*/
+			cell_ID -=  ( 1 << ( dimension_ + dimension_index) );
 			if( ( cell_ID >> ( dimension_index ) ) % 2 == 1 )/*if the dimension is  reduced to the right side*/
 				cell_ID -=  (1 <<  dimension_index );
 			/* if face is present in the cube add it to coboundary*/
-			if( (adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells.size() >  higher_dimensional_cell.dimension ) &&
-				(adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ higher_dimensional_cell.dimension ].find( cell_ID) != adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ higher_dimensional_cell.dimension ].end() )){
-				higher_dimensional_cell.name = (full_cube_number << ( 2 * space_dimension ) ) + cell_ID;
-				higher_dimensional_pair.first = higher_dimensional_cell;
+			if( (adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells.size() >  higher_dimensional_cell . dimension () ) &&
+				(adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].find( cell_ID) != adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].end() )){
+				higher_dimensional_cell.data () = (full_cube_number << ( 2 * dimension_ ) ) + cell_ID;
+				higher_dimensional_pair.first = find ( higher_dimensional_cell );
 				higher_dimensional_pair.second = 1;
 				output.insert( higher_dimensional_pair );
 			}
@@ -801,11 +752,11 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 	/*Find all posiblle neighbours and look if they have a piece of coboundary*/
 	Find_Possible_Owners( possible_owners, cell, true );
 	/*go thru all neighbours*/
-	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info >::iterator cube_iterator;
+	std::vector< Adaptive_Tree::Descend_Info >::iterator cube_iterator;
 	for( cube_iterator = possible_owners.begin(); cube_iterator != possible_owners.end(); ++cube_iterator ){
 		//if the original cube is smaller go down the ascent path and update the descend info
 		while( cube_iterator->ascending_path.size() > 0 && ( cube_iterator->forward_is_smaller ) ){
-			unsigned int splitting_dimension = space_dimension - 1 - ( cube_iterator->ascending_path.size()  - 1 )  %  space_dimension;
+			unsigned int splitting_dimension = dimension_ - 1 - ( cube_iterator->ascending_path.size()  - 1 )  %  dimension_;
 			if( cube_iterator->relative_position_table[ splitting_dimension ].back_max_forward_min == 0)
 				if( cube_iterator->ascending_path.back() == 0)
 					cube_iterator->forward_is_smaller = false;
@@ -821,11 +772,11 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 			cube_iterator->ascending_path.pop_back();
 		}
 		/* look at all possible coboundry pieces in the cube*/
-		cell_ID = cell.name - ( full_cube_number << ( 2 * space_dimension ) );
-		for(unsigned int expand_dimension = 0; expand_dimension < space_dimension; ++expand_dimension ){
+		cell_ID = cell.data () - ( full_cube_number << ( 2 * dimension_ ) );
+		for(unsigned int expand_dimension = 0; expand_dimension < dimension_; ++expand_dimension ){
 			bool cell_present_in_neighbour = true;
 			neighbour_cell_ID = 0;
-			if( ( cell_ID >> ( space_dimension + expand_dimension ) ) % 2 == 1 ){/*if the dimension is  reduced then expand it if it is possible to expand*/
+			if( ( cell_ID >> ( dimension_ + expand_dimension ) ) % 2 == 1 ){/*if the dimension is  reduced then expand it if it is possible to expand*/
 				if( cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_min == 1 &&  cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_max != 0 )
 					if( ( cell_ID >>  expand_dimension ) % 2 == 0 )
 						cell_present_in_neighbour = false;
@@ -833,8 +784,8 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 					if( ( cell_ID >>  expand_dimension ) % 2 == 1 )
 						cell_present_in_neighbour = false;
 				if( cell_present_in_neighbour )
-					for(unsigned int dimension_index = 0; dimension_index < space_dimension; ++dimension_index ){
-						if( ( ( cell_ID >> ( space_dimension + dimension_index ) ) % 2 == 1 ) && (expand_dimension != dimension_index ) ){/*if the dimension is  reduced and was not expanded*/
+					for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
+						if( ( ( cell_ID >> ( dimension_ + dimension_index ) ) % 2 == 1 ) && (expand_dimension != dimension_index ) ){/*if the dimension is  reduced and was not expanded*/
 							//if the face is not at the boundary of the neighbouring cube
 							if( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_min == 1 &&  cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max != 0 )
 								if( ( cell_ID >>  dimension_index ) % 2 == 0 )
@@ -843,7 +794,7 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 								if( ( cell_ID >>  dimension_index ) % 2 == 1 )
 									cell_present_in_neighbour = false;
 							if( cell_present_in_neighbour ){
-								neighbour_cell_ID += 1 << ( dimension_index + space_dimension );
+								neighbour_cell_ID += 1 << ( dimension_index + dimension_ );
 								if( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max == 0	)/*cubes are on the opposite sides ie the face is on the right hand side*/
 									neighbour_cell_ID += 1 << ( dimension_index );
 								else if ( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 &&
@@ -855,10 +806,10 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 					/*Add the  the cell if it is present*/
 					if( cell_present_in_neighbour ){
 						neighbour_full_cube_number = cube_iterator->current_node->leaf_number;
-						if( (adaptive_tree->leaf_lookup.Leaf( neighbour_full_cube_number )->elementary_cells.size() >  higher_dimensional_cell.dimension ) &&
-							(adaptive_tree->leaf_lookup.Leaf( neighbour_full_cube_number )->elementary_cells[ higher_dimensional_cell.dimension ].find( neighbour_cell_ID) != adaptive_tree->leaf_lookup.Leaf( neighbour_full_cube_number )->elementary_cells[ higher_dimensional_cell.dimension ].end() )){
-							higher_dimensional_cell.name = (neighbour_full_cube_number << ( 2 * space_dimension ) ) + neighbour_cell_ID;
-							higher_dimensional_pair.first = higher_dimensional_cell;
+						if( (adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells.size() >  higher_dimensional_cell . dimension () ) &&
+							(adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].find( neighbour_cell_ID) != adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].end() )){
+							higher_dimensional_cell.data () = (neighbour_full_cube_number << ( 2 * dimension_ ) ) + neighbour_cell_ID;
+							higher_dimensional_pair.first = find ( higher_dimensional_cell );
 							higher_dimensional_pair.second = 1;
 							output.insert( higher_dimensional_pair );
 						}
@@ -867,32 +818,260 @@ Adaptive_Complex::Chain & Adaptive_Complex::Coboundary_Map ( Adaptive_Complex::C
 		}
 	}
 	return output;
+} /* Adaptive_Complex::coboundary */
+
+unsigned int Adaptive_Complex::dimension ( void ) const {
+  return dimension_;
+} /* Adaptive_Complex::dimension */
+
+/* Index Complex */
+
+void Adaptive_Complex::index ( void ) {
+  lookup_ . resize ( total_size_ + 1 );
+  connection_ . resize ( total_size_, 0 );
+  size_type indx = 0;
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup, ++ indx ) { 
+    index_ [ lookup ] = indx;
+    lookup_ [ indx ] = lookup;
+  } /* for */
+  index_ [ end_ ] = total_size_;
+  lookup_ [ total_size_ ] = end_;
+  index_begin_ . resize ( dimension_ + 2, 0 );
+  size_type sum = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    sum += size_ [ dimension_index ];
+    index_begin_ [ dimension_index + 1 ] = sum;
+  } /* for */
+} /* Adaptive_Complex::index */
+
+Adaptive_Complex::size_type Adaptive_Complex::index_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ]; 
+} /* Adaptive_Complex::index_begin */ 
+
+Adaptive_Complex::size_type Adaptive_Complex::index_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ];
+} /* Adaptive_Complex::index_end */
+
+Adaptive_Complex::size_type Adaptive_Complex::index ( const const_iterator & lookup ) const {
+  return index_ . find ( lookup ) -> second;
+} /* Adaptive_Complex::index */
+
+Adaptive_Complex::size_type & Adaptive_Complex::index ( const const_iterator & lookup ) {
+  return index_ [ lookup ];
+} /* Adaptive_Complex::index */
+
+std::vector < Adaptive_const_iterator > & Adaptive_Complex::lookup ( void ) {
+  return lookup_;
+} /* Adaptive_Complex::lookup */
+
+const Adaptive_const_iterator & Adaptive_Complex::lookup ( size_type index ) const {
+  return lookup_ [ index ];
+} /* Adaptive_Complex::lookup */
+
+Adaptive_const_iterator & Adaptive_Complex::lookup ( size_type index ) {
+  return lookup_ [ index ];
+} /* Adaptive_Complex::lookup */
+
+/* Decomposable Complex */
+
+std::vector < int > Adaptive_Complex::count_all_boundaries ( void ) const {
+  std::vector < int > number_of_boundaries ( total_size_ );
+  for ( unsigned long cell_index = 0; cell_index < total_size_; ++ cell_index ) {
+    number_of_boundaries [ cell_index ] = boundary ( lookup_ [ cell_index ] ) . size ();
+  } /* for */
+  return number_of_boundaries;
+} /* Adaptive_Complex::count_all_boundaries */
+
+class push_functor {
+public:
+  push_functor ( const Adaptive_Complex & complex, std::vector < Adaptive_Complex::size_type > & output ) : complex(complex), output(output) {}
+  void operator () ( std::pair < const Adaptive_const_iterator, Adaptive_Complex::Ring > & term ) {
+    output . push_back ( complex . index ( term . first ) );
+  }
+  const Adaptive_Complex & complex;
+  std::vector < Adaptive_Complex::size_type > & output;
+};
+
+void Adaptive_Complex::boundary ( std::vector < size_type > & output, const size_type cell_index ) const {
+  output . clear ();
+	Chain boundary_chain =  boundary ( lookup_ [ cell_index ] );
+  for_each ( boundary_chain . begin (), boundary_chain . end (), push_functor ( *this, output ) );
+} /* Adaptive_Complex::boundary */
+
+void Adaptive_Complex::coboundary ( std::vector < size_type > & output, const size_type cell_index ) const {
+  output . clear ();
+  Chain coboundary_chain =  coboundary ( lookup_ [ cell_index ] );
+  for_each ( coboundary_chain . begin (), coboundary_chain . end (), push_functor ( *this, output ) );
+} /* Adaptive_Complex::coboundary */
+
+class push_functor_with_ring {
+public:
+  push_functor_with_ring ( const Adaptive_Complex & complex, std::vector < std::pair< Adaptive_Complex::size_type, Default_Ring > > & output ) : complex(complex), output(output) {}
+  void operator () ( std::pair < const Adaptive_const_iterator, Adaptive_Complex::Ring > & term ) {
+    output . push_back ( std::pair< Adaptive_Complex::size_type, Default_Ring > ( complex . index ( term . first ), term . second ) );
+  }
+  const Adaptive_Complex & complex;
+  std::vector < std::pair< Adaptive_Complex::size_type, Default_Ring > > & output;
+};
+
+void Adaptive_Complex::boundary ( std::vector < std::pair< size_type, Default_Ring > > & output, const size_type cell_index ) const {
+  output . clear ();
+  Chain boundary_chain =  boundary ( lookup_ [ cell_index ] );
+  for_each ( boundary_chain . begin (), boundary_chain . end (), push_functor_with_ring ( *this, output ) );
+} /* Adaptive_Complex::boundary */
+
+void Adaptive_Complex::coboundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type cell_index ) const {
+  output . clear ();
+  Chain coboundary_chain =  coboundary ( lookup_ [ cell_index ] );
+  for_each ( coboundary_chain . begin (), coboundary_chain . end (), push_functor_with_ring ( *this, output ) );
+} /* Adaptive_Complex::coboundary */
+
+void Adaptive_Complex::decompose ( void ) {
+  index (); 
+  king_count_ = morse::decompose ( *this );
+} /*  Adaptive_Complex::decompose */
+
+char Adaptive_Complex::type ( size_type index, unsigned int dimension ) const {
+  if ( index < index_begin_ [ dimension ] + king_count_ [ dimension + 1 ] ) return 0; /* QUEEN */
+  if ( index < index_begin_ [ dimension + 1 ] - king_count_ [ dimension ] ) return 1; /* ACE */
+  return 2; /* KING */
+} /* Adaptive_Complex::type */
+
+Adaptive_Complex::size_type Adaptive_Complex::mate ( size_type queen_index, unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + index_begin_ [ dimension + 2 ] - queen_index - 1;
+} /* Adaptive_Complex::mate */
+
+const Adaptive_Complex::Ring & Adaptive_Complex::connection ( size_type queen_index ) const {
+  return connection_ [ queen_index ];
+} /* Adaptive_Complex::connection */
+
+Adaptive_Complex::Ring & Adaptive_Complex::connection ( size_type queen_index ) {
+  return connection_ [ queen_index ];
+} /* Adaptive_Complex::connection */
+
+Adaptive_Complex::size_type Adaptive_Complex::ace_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + king_count_ [ dimension + 1 ];
+} /* Adaptive_Complex::ace_begin */
+
+Adaptive_Complex::size_type Adaptive_Complex::ace_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ] - king_count_ [ dimension ];
+} /* Adaptive_Complex::ace_end */
+
+/* Adaptive_Complex */
+
+bool Adaptive_Complex::Add_Full_Cube( std::vector < std::vector <bool> > splitting){
+	return adaptive_tree->Add_Full_Cube( splitting );
+}
+void Adaptive_Complex::Finalize(){
+	adaptive_tree->Finalize();
+  /* Gives correct values to begin_*/
+  /* Set end_ */
+  end_ . full_cube_number = adaptive_tree->leaf_lookup . size ();
+  /* Find begin [ 0 ] */ /* TODO: this fails if there are no vertices */
+  begin_ [ 0 ] = end_;
+  for ( unsigned long temp_full_cube_number = 0; temp_full_cube_number < adaptive_tree -> leaf_lookup . size (); ++ temp_full_cube_number ) {
+    if ( ( adaptive_tree->leaf_lookup [ temp_full_cube_number ]->elementary_cells.size() > 0 )  &&
+        ( adaptive_tree->leaf_lookup [ temp_full_cube_number ]->elementary_cells[ 0 ].size() > 0) ){
+      begin_ [ 0 ] . full_cube_number = temp_full_cube_number;
+      begin_ [ 0 ] . piece_iterator = adaptive_tree->leaf_lookup [ temp_full_cube_number ]->elementary_cells[ 0 ].begin();
+      begin_ [ 0 ] . dimension_ = 0;
+      begin_ [ 0 ] . referral = this;
+    } /* if */
+  } /* for */
+  /* Iterate through the complex to fill in begin_ */
+  unsigned int dimension = 0;
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup ) { 
+    //std::cout << "lookup = " << * lookup << "\n";
+    while ( dimension < lookup . dimension () ) {
+      ++ dimension;
+      begin_ [ dimension ] = lookup;
+    }
+  } /* for */
+  while ( dimension < dimension_ ) {
+    ++ dimension;
+    begin_ [ dimension ] = end_;
+  } /* while */
+  begin_ [ dimension_ + 1 ] = end_;
 }
 
-void Adaptive_Complex::Remove_Cell ( const Adaptive_Complex::Cell & input) {
-	unsigned int full_cube_number;
-	unsigned int cell_ID;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
+/* Constructor */
+Adaptive_Complex::Adaptive_Complex ( void ) {
+  
+} /* endfunction */
 
-	full_cube_number = input.name >> ( 2 * dimension );
-	cell_ID = input.name ^ ( full_cube_number << (2 * dimension ) );
+Adaptive_Complex::Adaptive_Complex ( unsigned int complex_dimension ) : dimension_(complex_dimension)  {
+	adaptive_tree = new Adaptive_Tree ( this );
+  size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
+  begin_ . resize ( dimension_ + 2 );
+} /* Adaptive_Complex::Adaptive_Complex */
 
-	unsigned int size = adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ input.dimension ].size();
-	adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ input.dimension ].erase(cell_ID);
-	if( size > adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ input.dimension ].size() )
-		-- adaptive_tree -> dimension_sizes [ input.dimension];
+/* Copy Constructor */
+Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
+	dimension_ = copy_me.dimension_;
+	adaptive_tree = new Adaptive_Tree ( this );
+  
+  total_size_ = copy_me . total_size_;
+  size_ = copy_me . size_;
+  
+	adaptive_tree->leaf_lookup.resize( copy_me.adaptive_tree->leaf_lookup.size() );
+  
+	/*reconstruct the tree*/
+	typedef Adaptive_Tree::Node Node;
+	Node * current_node_in_old_tree;
+	Node * current_node_in_new_tree;
+  
+	std::vector< Node * > old_tree_nodes_stack;
+	std::vector< Node * > new_tree_nodes_stack;
+  
+	new_tree_nodes_stack.push_back( &adaptive_tree->tree_root );
+	old_tree_nodes_stack.push_back( &copy_me.adaptive_tree->tree_root );
+	while( new_tree_nodes_stack.size() > 0 ){
+		current_node_in_old_tree = old_tree_nodes_stack.back();
+		old_tree_nodes_stack.pop_back();
+		current_node_in_new_tree = new_tree_nodes_stack.back();
+		new_tree_nodes_stack.pop_back();
+    
+		current_node_in_new_tree->splitting_dimension = current_node_in_old_tree->splitting_dimension;
+		if( current_node_in_new_tree->splitting_dimension == 0){/* it's a leaf */
+			current_node_in_new_tree->leaf_number = current_node_in_old_tree->leaf_number;
+			current_node_in_new_tree->left_child = NULL;
+			current_node_in_new_tree->right_child = NULL;
+			adaptive_tree->leaf_lookup[ current_node_in_new_tree->leaf_number ] = current_node_in_new_tree;
+			if( current_node_in_old_tree->elementary_cells.size() != 0 ){
+				current_node_in_new_tree->elementary_cells = current_node_in_old_tree->elementary_cells;
+			}
+		}
+		else{
+			Node * new_node_1 = new Adaptive_Tree::Node;
+			Node * new_node_2 = new Adaptive_Tree::Node;
+			new_node_1->parent = current_node_in_new_tree;
+			current_node_in_new_tree->left_child = new_node_1;
+			new_tree_nodes_stack.push_back( new_node_1 );
+			old_tree_nodes_stack.push_back( current_node_in_old_tree->left_child );
+			new_node_2->parent = current_node_in_new_tree;
+			current_node_in_new_tree->right_child = new_node_2;
+			new_tree_nodes_stack.push_back( new_node_2 );
+			old_tree_nodes_stack.push_back( current_node_in_old_tree->right_child );
+		}
+	}
+  adaptive_tree -> finalized = copy_me . adaptive_tree -> finalized;
+  Finalize ();
 }
+/* Destructor */
+Adaptive_Complex::~Adaptive_Complex ( void ) {
+  delete adaptive_tree;
+} /* endfunction */
 
 std::vector< double > & Adaptive_Complex::Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates){
 	unsigned int full_cube_number;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 
-	Adaptive_Container::Adaptive_Tree::Node * new_node = NULL;
-	Adaptive_Container::Adaptive_Tree::Node * old_node = NULL;
+	Adaptive_Tree::Node * new_node = NULL;
+	Adaptive_Tree::Node * old_node = NULL;
 	std::vector<int> acsending_path;
 
-	full_cube_number = input.name >> ( 2 * dimension );
-	new_node = adaptive_tree->leaf_lookup.Leaf( full_cube_number );
+	full_cube_number = input.data () >> ( 2 * dimension_ );
+	new_node = adaptive_tree->leaf_lookup [ full_cube_number ];
 	while(  new_node->parent != NULL ){
 		//climbing up
 		old_node = new_node;
@@ -906,7 +1085,7 @@ std::vector< double > & Adaptive_Complex::Coordinates_Of_Cell ( const Cell & inp
 	}
 
 	coordinates.clear();
-	coordinates.resize( dimension );
+	coordinates.resize( dimension_ );
 	unsigned int split_count = 1;
 	unsigned int splitting_dimension = 0;
 	while( acsending_path.size() > 0 ){
@@ -914,22 +1093,12 @@ std::vector< double > & Adaptive_Complex::Coordinates_Of_Cell ( const Cell & inp
 			coordinates[ splitting_dimension ] += (double)1 / (double) ( 1 << split_count );
 
 		++splitting_dimension;
-		splitting_dimension = splitting_dimension % dimension;
+		splitting_dimension = splitting_dimension % dimension_;
 		if( splitting_dimension == 0 )
 			++split_count;
 		acsending_path.pop_back();
 	}
 	return coordinates;
-}
-bool Adaptive_Complex::Add_Full_Cube( std::vector < std::vector <bool> > splitting) {
-	if ( cells.size() == 0 )
-		return false;
-	return cells[0].Add_Full_Cube( splitting );
-}
-
-void Adaptive_Complex::Finalize(){
-	if ( cells.size() != 0 )
-		cells[0].Finalize( );
 }
 
 std::vector<Adaptive_Complex::Cell> & Adaptive_Complex::Find_Elementary_Cell( std::vector<Adaptive_Complex::Cell> & output, const Adaptive_Complex::Cell & input) const {
@@ -938,16 +1107,15 @@ std::vector<Adaptive_Complex::Cell> & Adaptive_Complex::Find_Elementary_Cell( st
 	unsigned int cell_ID;
 	unsigned int neighbour_cube_number;
 	unsigned int neighbour_cell_ID;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
-	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > possible_owners;
+	std::vector< Adaptive_Tree::Descend_Info > possible_owners;
 
 	output.clear();
 
-	full_cube_number = input.name >> ( 2 * dimension );
-	cell_ID = input.name - ( full_cube_number << (2 * dimension ) );
+	full_cube_number = input.data () >> ( 2 * dimension_ );
+	cell_ID = input.data () - ( full_cube_number << (2 * dimension_ ) );
 
 	//if cell is present in the cube with ID full_cube_number
-	std::map < int, bool > elementary_cells = adaptive_tree->leaf_lookup.Leaf( full_cube_number )->elementary_cells[ input.dimension ];
+	std::map < int, bool > elementary_cells = adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ input.dimension() ];
 	if( elementary_cells.find( cell_ID) != elementary_cells.end() ){
 		output.push_back( input );
 		return output;
@@ -955,13 +1123,13 @@ std::vector<Adaptive_Complex::Cell> & Adaptive_Complex::Find_Elementary_Cell( st
 
 	Find_Possible_Owners( possible_owners, input, false);
 	/* Go thru all possible owners and add the cells */
-	std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info >::iterator it;
+	std::vector< Adaptive_Tree::Descend_Info >::iterator it;
 	for( it = possible_owners.begin(); it != possible_owners.end(); ++it){
 		neighbour_cube_number = it->current_node->leaf_number;
 		neighbour_cell_ID = 0;
-		for(unsigned int dimension_index = 0; dimension_index < dimension; ++dimension_index){
-			if( ( ( cell_ID >> ( dimension_index + dimension ) ) % 2 ) == 1 ){/*if it is a reduced dimension*/
-				neighbour_cell_ID +=1 << ( dimension_index + dimension );
+		for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index){
+			if( ( ( cell_ID >> ( dimension_index + dimension_ ) ) % 2 ) == 1 ){/*if it is a reduced dimension*/
+				neighbour_cell_ID +=1 << ( dimension_index + dimension_ );
 				if( ( ( cell_ID >>  dimension_index   ) % 2 ) == 1 ){/*if cell is on the right side*/
 					if( it->relative_position_table[ dimension_index ].back_max_forward_min != 0 ) /* cubes are not on the opposite sides (same side)*/
 						neighbour_cell_ID += ( 1 << dimension_index );
@@ -970,42 +1138,37 @@ std::vector<Adaptive_Complex::Cell> & Adaptive_Complex::Find_Elementary_Cell( st
 					if( it->relative_position_table[ dimension_index ].back_min_forward_max == 0 ) /* cubes are on the opposite sides */
 						neighbour_cell_ID +=1 << dimension_index;
 			}
-			if( it->current_node->elementary_cells.size() > input.dimension )
-				if( it->current_node->elementary_cells[ input.dimension ].find( neighbour_cell_ID ) != it->current_node->elementary_cells[ input.dimension ].end() ){
-					Cell insert_chain;
-					insert_chain.dimension = input.dimension;
-					insert_chain.name = ( neighbour_cube_number << ( 2 * dimension ) ) + neighbour_cell_ID;
-					output.push_back( insert_chain );
-				}
-		}
+			if( it->current_node->elementary_cells.size() > input.dimension() )
+				if( it->current_node->elementary_cells[ input.dimension() ].find( neighbour_cell_ID ) != it->current_node->elementary_cells[ input.dimension() ].end() )
+					output.push_back( Cell ( ( neighbour_cube_number << ( 2 * dimension_ ) ) + neighbour_cell_ID, input.dimension() ) );
+		} /* for */
 	}
 	return output;
-}
+} /* Adaptive_Complex::Find_Elementary_Cell */
 
-std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, const Adaptive_Complex::Cell & input, bool to_all_neighbours ) const {
+std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, const Adaptive_Complex::Cell & input, bool to_all_neighbours ) const {
 	unsigned int full_cube_number;
 	unsigned int cell_ID;
-	/* Bit 1 at space_dimension + splitting_dimension - 1 means that a node with the splitting_dimension is supposed to be viseted from left
+	/* Bit 1 at dimension_ + splitting_dimension - 1 means that a node with the splitting_dimension is supposed to be viseted from left
 	 * Bit 1 at splitting_dimension - 1 means that a node with the splitting_dimension is supposed to be viseted from right
 	 */
 	int nodes_to_be_visited = 0;
 	int nodes_visited = 0;
-	Adaptive_Container::Adaptive_Tree * adaptive_tree = cells[ input.dimension ].adaptive_tree;
 
-	Adaptive_Container::Adaptive_Tree::Node * new_node = NULL;
-	Adaptive_Container::Adaptive_Tree::Node * old_node = NULL;
+	Adaptive_Tree::Node * new_node = NULL;
+	Adaptive_Tree::Node * old_node = NULL;
 	std::vector<int> acsending_path;
-	Adaptive_Container::Adaptive_Tree::Descend_Info descend_info;
+	Adaptive_Tree::Descend_Info descend_info;
 
-	full_cube_number = input.name >> ( 2 * dimension );
-	cell_ID = input.name - ( full_cube_number << (2 * dimension ) );
-	new_node = adaptive_tree->leaf_lookup.Leaf( full_cube_number );
+	full_cube_number = input.data () >> ( 2 * dimension_ );
+	cell_ID = input.data () - ( full_cube_number << (2 * dimension_ ) );
+	new_node = adaptive_tree->leaf_lookup [ full_cube_number ];
 
 	//prepare nodes_to_be_visited
-	for(unsigned int dimension_index = 0; dimension_index < dimension; ++dimension_index){
-		if( ( cell_ID >> ( dimension_index + dimension ) ) % 2 != 0 )/* reduced dimension */
+	for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index){
+		if( ( cell_ID >> ( dimension_index + dimension_ ) ) % 2 != 0 )/* reduced dimension */
 			if( ( cell_ID >> dimension_index ) % 2 != 0 ) /* reduced to the right : suppose to be visited from left*/
-				nodes_to_be_visited += ( 1 << ( dimension_index +  dimension ) );
+				nodes_to_be_visited += ( 1 << ( dimension_index +  dimension_ ) );
 			else /* reduced to the left : suppose to be visited from the right */
 				nodes_to_be_visited += ( 1 << dimension_index  );
 	}
@@ -1017,16 +1180,16 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 			if( new_node->left_child == old_node)
 			{
 				//if we never arived from left before and its a splitting dimension visited from the left child
-				if( (  ( nodes_visited >> ( dimension + new_node->splitting_dimension - 1 ) ) % 2 == 0 ) &&
-						( ( nodes_to_be_visited >> ( dimension + new_node->splitting_dimension - 1 ) ) % 2 != 0 ) ){
+				if( (  ( nodes_visited >> ( dimension_ + new_node->splitting_dimension - 1 ) ) % 2 == 0 ) &&
+						( ( nodes_to_be_visited >> ( dimension_ + new_node->splitting_dimension - 1 ) ) % 2 != 0 ) ){
 					// update visited_nodes and start descending
-					nodes_visited += ( 1 << ( dimension + new_node->splitting_dimension - 1 ) );
+					nodes_visited += ( 1 << ( dimension_ + new_node->splitting_dimension - 1 ) );
 					descend_info.current_node = new_node->right_child;
 					descend_info.back_before_forward = true;
 					descend_info.forward_is_smaller = false;
 					descend_info.ascending_path = acsending_path;
 					descend_info.relative_position_table.clear();
-					descend_info.relative_position_table.resize(dimension);
+					descend_info.relative_position_table.resize(dimension_);
 					descend_info.relative_position_table[ new_node->splitting_dimension - 1 ].Set_To_Opposite( true );
 					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_visited,  to_all_neighbours );
 				}
@@ -1044,7 +1207,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 					descend_info.forward_is_smaller = false;
 					descend_info.ascending_path = acsending_path;
 					descend_info.relative_position_table.clear();
-					descend_info.relative_position_table.resize(dimension);
+					descend_info.relative_position_table.resize(dimension_);
 					descend_info.relative_position_table[ new_node->splitting_dimension - 1 ].Set_To_Opposite( false );
 					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_visited, to_all_neighbours  );
 				}
@@ -1056,10 +1219,9 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 }
 
 
-std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possible_Owners( std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Container::Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours ) const{
-	std::vector<Adaptive_Container::Adaptive_Tree::Descend_Info> descend_info_stack;
-	Adaptive_Container::Adaptive_Tree::Descend_Info current_descend;
-	unsigned int space_dimension = dimension;
+std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours ) const{
+	std::vector<Adaptive_Tree::Descend_Info> descend_info_stack;
+	Adaptive_Tree::Descend_Info current_descend;
 
 	descend_info_stack.push_back(descend_info);
 	while( descend_info_stack.size() > 0 ){
@@ -1079,18 +1241,18 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 				//current_descend.ascending_path is not empty so if the cubes are not on the opposite sides then they have a common side in this dimension
 				else{
 					//if the node is a spliiting node (node with reduced dimension visited from the right child )
-					if( ( current_descend.ascending_path.back() == 0 && (splitting_nodes >> (space_dimension + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ) ||
+					if( ( current_descend.ascending_path.back() == 0 && (splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ) ||
 					  ( current_descend.ascending_path.back() == 1 && (splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 )	)
 					{
 						bool last_split = true;
 						//check if there is another split in the same dimension and the same direction as the one for the current_node
-						if ( current_descend.ascending_path.size() > space_dimension )
-							for( unsigned int split =  space_dimension - current_descend.current_node->splitting_dimension;    split < ( current_descend.ascending_path.size() - space_dimension + 1); split +=  space_dimension )
+						if ( current_descend.ascending_path.size() > dimension_ )
+							for( unsigned int split =  dimension_ - current_descend.current_node->splitting_dimension;    split < ( current_descend.ascending_path.size() - dimension_ + 1); split +=  dimension_ )
 								if( current_descend.ascending_path[ split ] == current_descend.ascending_path[ current_descend.ascending_path.size() - 1 ] )
 									last_split = false;
 						//for the last splitting we have to check also the opposite path
 						if( last_split ){
-							Adaptive_Container::Adaptive_Tree::Descend_Info copy_current_descend;
+							Adaptive_Tree::Descend_Info copy_current_descend;
 							copy_current_descend.current_node = current_descend.current_node;
 							copy_current_descend.relative_position_table = current_descend.relative_position_table;
 							copy_current_descend.back_before_forward = current_descend.back_before_forward;
@@ -1119,7 +1281,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 			}
 			else{/* Ascending path is empty */
 				current_descend.forward_is_smaller = true;
-				if( ( splitting_nodes >> (space_dimension + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1  ||
+				if( ( splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1  ||
 				    (splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 	){/*if the node is a spliiting node*/
 
 					if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_min == 0 )/*Forward cube on the right side*/
@@ -1127,7 +1289,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 					else if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_max == 0 )/*Forward cube on the left side*/
 						current_descend.current_node = current_descend.current_node->right_child;
 					else{/* cubes are touching in an interval*/
-						if( ( splitting_nodes >> (space_dimension + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ){/*cell is on the right*/
+						if( ( splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ){/*cell is on the right*/
 							current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_min = -1;
 							current_descend.current_node = current_descend.current_node->right_child;
 						}
@@ -1139,7 +1301,7 @@ std::vector< Adaptive_Container::Adaptive_Tree::Descend_Info > & Adaptive_Comple
 				}
 				else{/* node is not a splitting node*/
 					/*Add the right cube to the stack*/
-					Adaptive_Container::Adaptive_Tree::Descend_Info copy_current_descend;
+					Adaptive_Tree::Descend_Info copy_current_descend;
 					copy_current_descend.current_node = current_descend.current_node->right_child;;
 					copy_current_descend.relative_position_table = current_descend.relative_position_table;
 					copy_current_descend.back_before_forward = current_descend.back_before_forward;
