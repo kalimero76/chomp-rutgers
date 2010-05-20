@@ -624,6 +624,8 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
     << FileName << " not found.\n";
 		exit ( 1 ); } /* if */
 	int index = 0; 
+
+
 	/* Find first line of text with a "(" */
 	while ( not input_file . eof () ) {
 		input_file . getline ( text_buffer, 512, '\n' );
@@ -640,19 +642,30 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 		if( text_buffer [ index ] == ',' ) dimension_ = dimension_ + 1;
 		index ++ ; 
   } /* while */
+  
+  std::vector<int> min_entry (dimension_, 0);
+  std::vector<int> max_entry (dimension_, 0);
 	std::vector<unsigned int> user_dimension_sizes (dimension_, 0);
-	/* Obtain sizes from the first line of text */
-	index = 0; while ( text_buffer[index] != '(') index++; index ++; 
+	
+  
+  /* Obtain sizes from the first line of text */ 
+  // .cubx
+	/* 
+  index = 0; while ( text_buffer[index] != '(') index++; index ++; 
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; dimension_index ++ ) {
 		ptr = text_buffer + index;
 		while ( text_buffer[index] != ',' && text_buffer[index] != ')') index++;
 		text_buffer[index] = 0; index++;
 		user_dimension_sizes[dimension_index] = atoi(ptr) + 3; 
-  } /* for */
-	/* Allocate */
-	Allocate_Bitmap ( user_dimension_sizes );
-	/* Now scan through every line of text and read in full cubes */
-	std::vector<unsigned int> cube_coordinates( dimension_, 0);
+  } 
+  */ /* for */
+  
+  /* Return to beginning of file */
+  input_file . clear ();
+  input_file . seekg ( 0, std::ios::beg );
+  
+  /* Now scan through every line of text and read in full cubes */ {
+	std::vector<int> cube_coordinates( dimension_, 0);
 	while ( not input_file . eof () ) {
 		input_file . getline ( text_buffer, 512, '\n' );
 		index = 0; 
@@ -665,7 +678,45 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 			while ( text_buffer[index] != ',' && text_buffer[index] != ')') index++;
 			text_buffer[index] = 0; 
       index++;
-      cube_coordinates[dimension_index] = atoi(ptr) + 1 ; 
+      cube_coordinates[dimension_index] = atoi(ptr); 
+    } /* for */
+		/* Update min_entry and max_entry */
+		for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+      if ( cube_coordinates [ dimension_index ] < min_entry [ dimension_index ] )
+        min_entry [ dimension_index ] = cube_coordinates [ dimension_index ];
+      if ( cube_coordinates [ dimension_index ] > max_entry [ dimension_index ] )
+        max_entry [ dimension_index ] = cube_coordinates [ dimension_index ];     
+    } /* for */
+	} /* while */
+  } /* scope */
+  
+  for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+    user_dimension_sizes [ dimension_index ] = max_entry [ dimension_index ] - min_entry [ dimension_index ] + 3;
+  } /* for */
+  
+	/* Allocate */
+	Allocate_Bitmap ( user_dimension_sizes );
+	
+  /* Return to beginning of file */
+  input_file . clear ();
+  input_file . seekg ( 0, std::ios::beg );
+
+  /* Now scan through every line of text and read in full cubes */
+  std::vector<unsigned int> cube_coordinates( dimension_, 0);
+	while ( not input_file . eof () ) {
+		input_file . getline ( text_buffer, 512, '\n' );
+		index = 0; 
+		while ( text_buffer[index] != '(' && text_buffer[index] != 0 ) index++; 
+		if ( text_buffer [ index ] == 0 ) continue;
+		++ index; 
+		/* Read the coordinates of the cube from the line */
+		for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+			ptr = text_buffer + index;
+			while ( text_buffer[index] != ',' && text_buffer[index] != ')') index++;
+			text_buffer[index] = 0; 
+      index++;
+      cube_coordinates[dimension_index] = atoi(ptr) + 1 - min_entry[dimension_index]; 
+
     } /* for */
 		/* Now Add the Cube to the complex. */
 		Add_Full_Cube ( cube_coordinates, false ); 

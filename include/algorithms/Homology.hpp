@@ -94,20 +94,29 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 		std::cout << "H_" << dimension_index << " =";
 		if ( Betti_numbers [ dimension_index ] > 0 ) {
 			std::cout << " Z^" << Betti_numbers [ dimension_index ];
-			printed_betti = true; }
+			printed_betti = true; 
+    } /* if */
 		bool first_torsion_subgroup = true;
-		for ( unsigned int index = 0; index < smith_form_results [ dimension_index ] . size (); index ++ )
-			if ( smith_form_results [ dimension_index ] [ index ] . first > 1 ) {
-				for ( int multiplicity = 0; multiplicity < smith_form_results [ dimension_index ] [ index ] . second; multiplicity ++ ) {
-					if ( first_torsion_subgroup ) {
-						first_torsion_subgroup = false;
-						if ( printed_betti ) std::cout << " + "; 
-						std::cout << "Z_" << smith_form_results [ dimension_index ] [ index ] . first;}
-					else std::cout << " + Z_" << smith_form_results [ dimension_index ] [ index ] . first; } /* for */
-				minimal_number_of_generators [ dimension_index ] += smith_form_results [ dimension_index ] [ index ] . second; } /* if */
-		if ( !printed_betti && first_torsion_subgroup ) std::cout << " 0";
-		std::cout << "\n"; }
-	minimal_number_of_generators_output = minimal_number_of_generators;
+    if ( dimension_index < the_complex . dimension () ) {
+      for ( unsigned int index = 0; index < smith_form_results [ dimension_index + 1 ] . size (); ++ index ) {
+        if ( smith_form_results [ dimension_index + 1 ] [ index ] . first > 1 ) {
+          if ( first_torsion_subgroup ) {
+            first_torsion_subgroup = false;
+            if ( printed_betti ) std::cout << " + "; 
+          } else {
+            std::cout << " + ";
+          } /* if-else */
+          std::cout << "Z_" << smith_form_results [ dimension_index + 1 ] [ index ] . first;
+          if ( smith_form_results [ dimension_index ] [ index ] . second > 1 ) 
+            std::cout << "^" << smith_form_results [ dimension_index + 1 ] [ index ] . second;
+          minimal_number_of_generators [ dimension_index ] += smith_form_results [ dimension_index + 1 ] [ index ] . second; 
+        } /* if */
+      } /* for */
+    } /* if */
+    if ( !printed_betti && first_torsion_subgroup ) std::cout << " 0";
+    std::cout << "\n"; 
+  } /* for */
+  minimal_number_of_generators_output = minimal_number_of_generators;
 	return; 
 } /* void Homology(...) */
 	

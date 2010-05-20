@@ -34,7 +34,7 @@ int main (int argc, char * const argv[]) {
     std::cout << "usage ./chomp filename i\n filename is cubical complex file \n n is 1 or 0 (indicates whether or not to do preprocessing) \n";
     exit(-1);
   }
-  
+  std::cout << argc << "\n";
   /* Use command line argument to determine whether or not to do preprocessing */
   do_preprocess = atoi(argv [ 2 ]);
   /* Load the cubical_complex from file */
@@ -59,6 +59,19 @@ T vector_sum ( const std::vector<T> add_my_elements_together ) {
 	for ( unsigned int index = 0; index < add_my_elements_together . size (); ++ index ) 
 		return_value += add_my_elements_together [ index ] ;
 	return return_value; } /* endfunction */
+
+template < class Cell_Complex >
+void inspect ( Cell_Complex & my_complex ) {
+  std::cout << "Inspecting the complex.\n";
+  std::cout << "The complex has dimension " << my_complex . dimension () << "\n";
+  std::cout << "The complex has size " << my_complex . size () << "\n";
+  for ( typename Cell_Complex::const_iterator iter = my_complex . begin (); iter != my_complex . end (); ++ iter ) {
+    typename Cell_Complex::Chain my_chain = my_complex . boundary ( iter );
+    typename Cell_Complex::Chain another_chain = my_complex . coboundary ( iter );
+    std::cout << " bd ( " << *iter << ") = " << my_chain << "\n";
+    std::cout << " cbd ( " << *iter << ") = " << another_chain << "\n";
+  } /* for */
+} /* inspect */
 
 template < class Cell_Complex_Template >
 compute_results compute_example ( Cell_Complex_Template & my_complex ) {
@@ -91,6 +104,9 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension (); dim ++ ) 
 		std::cout << my_morse_complex . size ( dim ) << " "; 
 	std::cout << "\n";
+  
+  //inspect ( my_morse_complex );
+  
 	/* Compute the homology */
 	std::vector<int> Betti_Numbers, Minimal_Number_of_Generators;
 	std::cout << "  Computing Homology ... \n";
