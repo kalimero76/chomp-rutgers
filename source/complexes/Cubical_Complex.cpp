@@ -361,13 +361,19 @@ std::vector < int > Cubical_Complex::count_all_boundaries ( void ) const {
                 Cubical_detail::set_functor ( 2 * dimension_index ) );
     } /* for */
   } else {
-    for ( size_type cell_index = 0; cell_index < total_size_; ++ cell_index ) {
-      number_of_boundaries [ cell_index ] = boundary_count_ [ lookup_ [ cell_index ] . address_ ];
-    } /* for */
+    if ( boundary_count_available_ ) {
+      for ( size_type cell_index = 0; cell_index < total_size_; ++ cell_index ) {
+        number_of_boundaries [ cell_index ] = boundary_count_ [ lookup_ [ cell_index ] . address_ ];
+      } /* for */
+    } else {
+      for ( size_type cell_index = 0; cell_index < total_size_; ++ cell_index ) {
+        number_of_boundaries [ cell_index ] = boundary ( lookup ( cell_index ) ) . size ();
+      } /* for */
+    } /* if-else */
   } /* if-else */
   return number_of_boundaries;
 } /* Cubical_Complex::count_all_boundaries */
-
+  
 void Cubical_Complex::boundary ( std::vector < size_type > & output, const size_type index ) const {
   output . clear ();
 	const_iterator cell_iterator = lookup ( index );
@@ -534,11 +540,13 @@ void Cubical_Complex::Allocate_Bitmap ( const std::vector<unsigned int> & user_d
   size_ . resize ( dimension_ + 1, 0 );
   total_size_ = 0;
   closed_complex_ = true;
+  boundary_count_available_ = false;
 	unsigned long number_of_full_cubes = 1;
 	for ( unsigned long index = 0; index < dimension_; ++ index ) { 
-		dimension_sizes_ [ index ] = ( 1 + user_dimension_sizes [ index ] );
+		dimension_sizes_ [ index ] = ( 2 + user_dimension_sizes [ index ] );
 		jump_values_ [ index ] = number_of_full_cubes;
-		number_of_full_cubes *= ( 1 + user_dimension_sizes [ index ] ); 
+		number_of_full_cubes *= ( 2 + user_dimension_sizes [ index ] ); 
+    /* +2 for lower-left and upper-right buffers */
   } /* for */
 	bitmap_ . clear ();
   bitmap_ . resize ( number_of_full_cubes << dimension_, false );
@@ -574,12 +582,50 @@ void Cubical_Complex::finalize ( void ) {
   } /* while */
 } /* Cubical_Complex::finalize */
 
+void Cubical_Complex::Remove_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {
+  std::vector<unsigned int> neighbor_coordinates( dimension_, 0);
+	/* Calculate the number of the read cube */
+	long full_cube_number = 0;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) 
+		full_cube_number += jump_values_ [dimension_index] * ( (long) cube_coordinates [ dimension_index ] + 1 ); // lower-left buffer +1
+	/* Erase the pieces from all neighboring cubes */
+	for ( int neighbor_index = 0; neighbor_index < ( 1 << dimension_ ); ++ neighbor_index ) {
+		neighbor_coordinates = cube_coordinates;
+		int temp = neighbor_index;
+		long offset = 0;
+		bool flag = false;
+		for ( unsigned int dimension_index = 0;  dimension_index < dimension_ ; ++ dimension_index ) {
+			if ( temp % 2 == 0 ) {
+				neighbor_coordinates [ dimension_index ] ++;
+				offset += jump_values_ [ dimension_index ]; 
+      } /* if */
+			temp = temp >> 1; 
+			if ( neighbor_coordinates [ dimension_index ] == dimension_sizes_ [ dimension_index ] ) flag = true; 
+    } /* for */
+		if ( flag ) continue;
+		/* this is inefficient */
+		for( int piece_index = 0; piece_index < 1 << dimension_; piece_index ++ ) 
+			if ( ( piece_index & ~neighbor_index ) == 0)  /* clever bitwise test */  {
+        /* Figure out the dimension of the cell */
+        unsigned int cell_dimension = 0;
+        for ( unsigned int bit_index = 0; bit_index < dimension_; ++ bit_index ) {
+          if ( piece_index & ( 1 << bit_index ) ) ++ cell_dimension; 
+        } /* for */
+        /* erase the cell */
+        erase ( iterator ( this, ( ( full_cube_number + offset ) << dimension_ ) + piece_index , cell_dimension ) ); 
+      } /* if */
+  } /* for */
+  //std::cout << " . \n";
+  closed_complex_ = false;
+	return; 
+} /* Cubical_Complex::Remove_Full_Cube */
+
 void Cubical_Complex::Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates, bool update ) {
 	std::vector<unsigned int> neighbor_coordinates( dimension_, 0);
 	/* Calculate the number of the read cube */
 	long full_cube_number = 0;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) 
-		full_cube_number += jump_values_ [dimension_index] * ( (long) cube_coordinates [dimension_index] );
+		full_cube_number += jump_values_ [dimension_index] * ( (long) cube_coordinates [dimension_index] + 1 ); // lower-left buffer +1
 	/* Insert the pieces from all neighboring cubes */
 	for ( int neighbor_index = 0; neighbor_index < ( 1 << dimension_ ); ++ neighbor_index ) {
 		neighbor_coordinates = cube_coordinates;
@@ -691,7 +737,7 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
   } /* scope */
   
   for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
-    user_dimension_sizes [ dimension_index ] = max_entry [ dimension_index ] - min_entry [ dimension_index ] + 3;
+    user_dimension_sizes [ dimension_index ] = max_entry [ dimension_index ] - min_entry [ dimension_index ] + 1;
   } /* for */
   
 	/* Allocate */
@@ -715,7 +761,7 @@ void Cubical_Complex::Load_From_File ( const char * FileName ) {
 			while ( text_buffer[index] != ',' && text_buffer[index] != ')') index++;
 			text_buffer[index] = 0; 
       index++;
-      cube_coordinates[dimension_index] = atoi(ptr) + 1 - min_entry[dimension_index]; 
+      cube_coordinates[dimension_index] = atoi(ptr) - min_entry[dimension_index]; 
 
     } /* for */
 		/* Now Add the Cube to the complex. */
@@ -887,11 +933,17 @@ void Cubical_Complex::coreductions ( void ) {
   Address_List coboundary;
   unsigned long address = 0;
 
+  if ( closed_complex_ == false ) {
+    std::cout << "TODO: Cubical_Complex::coreductions for non-closed complexes. Exiting.\n";
+    exit ( -1 );
+  }
+  
   /* Set up number_of_boundaries */
   for ( address = 0; address < bitmap_size_; ++ address ) {
     number_of_boundaries [ address ] = 2 * type_dims_ [ types_inv_ [ address & mask_ ] ];
   } /* for */
-
+  boundary_count_available_ = true;
+  
   /* * * * * * * 
    * MAIN LOOP *
    * * * * * * */

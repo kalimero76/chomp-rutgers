@@ -121,9 +121,15 @@ public:
   size_type ace_end ( unsigned int dimension ) const;
   /* Cubical Complex */
   /** Load_From_File.
-   Cubical format with full cubes. (n1, n2, ... ), all non-negative integers. */
+   Cubical format with full cubes. (n1, n2, ... ).
+   It automatically translates the tuples so that the minimal entry for a given
+   ordinate is set to 0. */
 	void Load_From_File ( const char * FileName );
   
+  /** Remove_Full_Cube.
+   Remove the full cube (3^d cells) of coordinates. */
+  void Remove_Full_Cube ( const std::vector<unsigned int> & cube_coordinates );
+
   /** Add_Full_Cube.
      Adds the full cube (3^d cells) of coordinates. if update == true, begin_ and size_ updated. */
   void Add_Full_Cube ( const std::vector<unsigned int> & coordinates, bool update = true );
@@ -133,7 +139,12 @@ public:
 
   /** Allocate_Bitmap.
    Initializes bitmap so that the complex may contain a full cubical complex
-   which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1) */
+   which full cubes (0,0,...,0) to (sizes[0] - 1, sizes[1] - 1, ... , sizes [ dimension - 1] - 1).
+   Internally this is stored with \prod_i ( sizes[i]+1 ) * 2^d bits, using a lower left and upper right
+   buffer for the following technical reasons:
+      - the lower left buffer is so the coboundary routine doesn't need a special check to see if it is at 
+      the edge of memory
+      - the upper right buffer is to store the lower dimensional cells which may boundaries */
 	void Allocate_Bitmap ( const std::vector<unsigned int> & sizes );
   
   const std::vector<unsigned int> & dimension_sizes ( void ) const; 
@@ -157,6 +168,7 @@ private:
   /* Decomposable Complex */
   std::vector<Ring> connection_;
   std::vector< int > boundary_count_;
+  bool boundary_count_available_;
   std::vector<size_type> king_count_;
   /* Cubical Complex */
   unsigned long bitmap_size_;

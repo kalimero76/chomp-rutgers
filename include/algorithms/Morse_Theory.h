@@ -53,8 +53,8 @@ typedef Abstract_Complex< Default_Cell > Morse_Complex;
 
 namespace morse {
   
-  template < class Cell_Complex > Morse_Complex 
-  reduction ( const Cell_Complex & complex );
+  template < class Cell_Complex > void
+  reduction ( Morse_Complex & reduced_complex, const Cell_Complex & complex );
 
   template < class Cell_Complex > std::list<Morse_Complex> 
   reduction_tower ( Cell_Complex & complex );

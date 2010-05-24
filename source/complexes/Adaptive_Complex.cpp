@@ -491,14 +491,14 @@ void Adaptive_Tree::Finalize(){
 
 	Fill_With_Cells_Of_Full_Cube( &full_cube_cells );
 	//Go thru all the leaves and add lower dimensional cells
-	for( unsigned long leaf_index = 0; leaf_index <= leaf_lookup . size (); ++ leaf_index){
-		//std::cout << "Initaizing cube cubes = " << leaf->leaf_number << " out of " << leaf_lookup.Size() << " \n";
+	for( unsigned long leaf_index = 0; leaf_index < leaf_lookup . size (); ++ leaf_index ) {
+		//std::cout << "Initializing cube = " << leaf_index << " out of " << leaf_lookup . size () << " \n";
 		Finalize_Cube( leaf_lookup [ leaf_index ], &full_cube_cells);
 	}
 	std::cout << "Cubes Intialized \n";
   finalized = true;
 	return;
-}
+} /* Adaptive_Tree::Finalize */
 
 /*/////////////////////////////////////////////////////////////////
  * Adaptive_const_iterator implementation ///////////////
@@ -582,11 +582,6 @@ unsigned int Adaptive_const_iterator::dimension () const {
 const Adaptive_Complex & Adaptive_const_iterator::container () const {
   return * referral;
 } /* Adaptive_const_iterator::container */
-
-
-/*///////////////////////////////////////////////////////////////////////////////////////
- * Adaptive_Conatiner Implementaion /////////////////////////////////////////////////////
- *///////////////////////////////////////////////////////////////////////////////////////
 
 
 /*/////////////////////////////////////////////////////////////////
@@ -976,6 +971,7 @@ void Adaptive_Complex::Finalize(){
       begin_ [ 0 ] . piece_iterator = adaptive_tree->leaf_lookup [ temp_full_cube_number ]->elementary_cells[ 0 ].begin();
       begin_ [ 0 ] . dimension_ = 0;
       begin_ [ 0 ] . referral = this;
+      break;
     } /* if */
   } /* for */
   /* Iterate through the complex to fill in begin_ */
@@ -1155,6 +1151,7 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Own
 	int nodes_to_be_visited = 0;
 	int nodes_visited = 0;
 
+  //std::cout << "Find_Possible_Owners\n";
 	Adaptive_Tree::Node * new_node = NULL;
 	Adaptive_Tree::Node * old_node = NULL;
 	std::vector<int> acsending_path;
@@ -1168,22 +1165,25 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Own
 	for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index){
 		if( ( cell_ID >> ( dimension_index + dimension_ ) ) % 2 != 0 )/* reduced dimension */
 			if( ( cell_ID >> dimension_index ) % 2 != 0 ) /* reduced to the right : suppose to be visited from left*/
-				nodes_to_be_visited += ( 1 << ( dimension_index +  dimension_ ) );
+				nodes_to_be_visited |= ( 1 << ( dimension_index +  dimension_ ) );
 			else /* reduced to the left : suppose to be visited from the right */
-				nodes_to_be_visited += ( 1 << dimension_index  );
+				nodes_to_be_visited |= ( 1 << dimension_index  );
 	}
 	while( ( new_node->parent != NULL ) && ( nodes_to_be_visited != nodes_visited ) ){
 			//climbing up
+    //std::cout << "climbing up \n";
 			old_node = new_node;
 			new_node = new_node->parent;
-			//We arrived from left
-			if( new_node->left_child == old_node)
+      /* Did we arrive from the left? */
+			if( new_node->left_child == old_node) 
 			{
+        //We arrived from left
+        //std::cout << "arrived from left \n";
 				//if we never arived from left before and its a splitting dimension visited from the left child
 				if( (  ( nodes_visited >> ( dimension_ + new_node->splitting_dimension - 1 ) ) % 2 == 0 ) &&
 						( ( nodes_to_be_visited >> ( dimension_ + new_node->splitting_dimension - 1 ) ) % 2 != 0 ) ){
 					// update visited_nodes and start descending
-					nodes_visited += ( 1 << ( dimension_ + new_node->splitting_dimension - 1 ) );
+					nodes_visited |= ( 1 << ( dimension_ + new_node->splitting_dimension - 1 ) );
 					descend_info.current_node = new_node->right_child;
 					descend_info.back_before_forward = true;
 					descend_info.forward_is_smaller = false;
@@ -1191,17 +1191,23 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Own
 					descend_info.relative_position_table.clear();
 					descend_info.relative_position_table.resize(dimension_);
 					descend_info.relative_position_table[ new_node->splitting_dimension - 1 ].Set_To_Opposite( true );
-					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_visited,  to_all_neighbours );
+          //std::cout << descend_info . current_node << " --> Descending A ";
+          //if ( descend_info . current_node -> right_child != NULL )          
+          //  std::cout << descend_info . current_node -> right_child -> leaf_number << " - ";
+
+
+					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_to_be_visited/*nodes_visited*/,  to_all_neighbours );
+          //for ( unsigned int s = 0; s < possible_owners . size (); ++ s ) std::cout << possible_owners [ s ] . current_node -> leaf_number << ", ";
+          //std::cout << "\n";
 				}
 				acsending_path.push_back( 0 );
-			}
-			//we arived from right
-			else{
+			} else { //we arived from right
+        //std::cout << "arrived from right \n";
 				//if we never arived from right before and its a pliting dimension visited from the right child
 				if( ( ( nodes_visited >> ( new_node->splitting_dimension - 1 ) ) % 2 == 0 ) &&
 						( ( nodes_to_be_visited >> ( new_node->splitting_dimension - 1 ) ) % 2 != 0 ) ){
 					// update visited_nodes and start descending
-					nodes_visited += 1 << ( new_node->splitting_dimension - 1 );
+					nodes_visited |= 1 << ( new_node->splitting_dimension - 1 );
 					descend_info.current_node = new_node->left_child;
 					descend_info.back_before_forward = false;
 					descend_info.forward_is_smaller = false;
@@ -1209,14 +1215,17 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Find_Possible_Own
 					descend_info.relative_position_table.clear();
 					descend_info.relative_position_table.resize(dimension_);
 					descend_info.relative_position_table[ new_node->splitting_dimension - 1 ].Set_To_Opposite( false );
-					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_visited, to_all_neighbours  );
+          //std::cout << descend_info . current_node << " --> Descending B ";
+					Descend_To_Possible_Owners( possible_owners, descend_info, nodes_to_be_visited/*nodes_visited*/, to_all_neighbours  );
+          //for ( unsigned int s = 0; s < possible_owners . size (); ++ s ) std::cout << possible_owners [ s ] . current_node -> leaf_number << ", ";
+          //std::cout << "\n";
 				}
 				acsending_path.push_back( 1 );
 			}
 		}
 
 	return possible_owners;
-}
+} /* Adaptive_Complex::Find_Possible_Owners */
 
 
 std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours ) const{
@@ -1227,15 +1236,21 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 	while( descend_info_stack.size() > 0 ){
 		current_descend = descend_info_stack.back();
 		descend_info_stack.pop_back();
+    //std::cout << "* current node = " << current_descend.current_node << "\n";
 		while(  current_descend.current_node->splitting_dimension != 0  ){/*Node in the descending path is not a leaf*/
 			if( current_descend.ascending_path.size() > 0 ){ /*Ascending path is not empty*/
+        //std::cout << " Ascending path is not empty \n ";
+
 				//if cubes are on the opposite sides in this dimension we have to take the opposite child as we came from in ascending_path
 				if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_max == 0 ||
 					current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_min == 0 ){
-					if( current_descend.ascending_path.back() == 0 )
+					if( current_descend.ascending_path.back() == 0 ) {
+            //std::cout << "right1 ";
 						current_descend.current_node = current_descend.current_node->right_child;
-					else
+					} else {
+            //std::cout << "left1 ";
 						current_descend.current_node = current_descend.current_node->left_child;
+          }
 					current_descend.ascending_path.pop_back();
 				}
 				//current_descend.ascending_path is not empty so if the cubes are not on the opposite sides then they have a common side in this dimension
@@ -1244,6 +1259,7 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 					if( ( current_descend.ascending_path.back() == 0 && (splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ) ||
 					  ( current_descend.ascending_path.back() == 1 && (splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 )	)
 					{
+            //std::cout << "node is a splitting node. ";
 						bool last_split = true;
 						//check if there is another split in the same dimension and the same direction as the one for the current_node
 						if ( current_descend.ascending_path.size() > dimension_ )
@@ -1252,6 +1268,7 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 									last_split = false;
 						//for the last splitting we have to check also the opposite path
 						if( last_split ){
+              //std::cout << "last_split ";
 							Adaptive_Tree::Descend_Info copy_current_descend;
 							copy_current_descend.current_node = current_descend.current_node;
 							copy_current_descend.relative_position_table = current_descend.relative_position_table;
@@ -1259,10 +1276,12 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 							copy_current_descend.ascending_path = current_descend.ascending_path;
 							copy_current_descend.forward_is_smaller = current_descend.forward_is_smaller;
 							if( copy_current_descend.ascending_path.back() == 0 ){
+                //std::cout << "right2 ";
 								copy_current_descend.relative_position_table[ copy_current_descend.current_node->splitting_dimension - 1 ].Set_To_Opposite( true );
 								copy_current_descend.current_node = copy_current_descend.current_node->right_child;
 							}
 							else{
+                //std::cout << "left2 ";
 								copy_current_descend.relative_position_table[ copy_current_descend.current_node->splitting_dimension - 1 ].Set_To_Opposite( false );
 								copy_current_descend.current_node = copy_current_descend.current_node->left_child;
 							}
@@ -1272,34 +1291,42 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 						}
 					}
 					//This path is taken in both case cubes on the same side and it is not the last spliting in this dimension and this direction (it is the last splitting)
-					if( current_descend.ascending_path.back() == 0 )
+					if( current_descend.ascending_path.back() == 0 ) {
+            //std::cout << "left3 ";
 						current_descend.current_node = current_descend.current_node->left_child;
-					else
+					} else {
+            //std::cout << "right3 ";
 						current_descend.current_node = current_descend.current_node->right_child;
+          }
 					current_descend.ascending_path.pop_back();
 				}
 			}
 			else{/* Ascending path is empty */
+        //std::cout << " Ascending path is empty \n ";
+
 				current_descend.forward_is_smaller = true;
 				if( ( splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1  ||
 				    (splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 	){/*if the node is a spliiting node*/
 
-					if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_min == 0 )/*Forward cube on the right side*/
+					if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_min == 0 )/*Forward cube on the right side*/ {
 						current_descend.current_node = current_descend.current_node->left_child;
-					else if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_max == 0 )/*Forward cube on the left side*/
+            //std::cout << "left4. ";
+          } else if( current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_max == 0 )/*Forward cube on the left side*/ {
+            //std::cout << "right4. ";
 						current_descend.current_node = current_descend.current_node->right_child;
-					else{/* cubes are touching in an interval*/
+          } else {/* cubes are touching in an interval*/
+            //std::cout << "cubes are touching in an interval. ";
 						if( ( splitting_nodes >> (dimension_ + current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ){/*cell is on the right*/
+              //std::cout << "right5. ";
 							current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_min_forward_min = -1;
 							current_descend.current_node = current_descend.current_node->right_child;
-						}
-						else if( ( splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ){/*cell is on the left*/
+						} else if( ( splitting_nodes >> ( current_descend.current_node->splitting_dimension - 1 )) % 2 == 1 ){/*cell is on the left*/
+              //std::cout << "left5. ";
 							current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_max = 1;
 							current_descend.current_node = current_descend.current_node->left_child;
 						}
 					}
-				}
-				else{/* node is not a splitting node*/
+				} else {/* node is not a splitting node*/
 					/*Add the right cube to the stack*/
 					Adaptive_Tree::Descend_Info copy_current_descend;
 					copy_current_descend.current_node = current_descend.current_node->right_child;;
@@ -1312,20 +1339,25 @@ std::vector< Adaptive_Tree::Descend_Info > & Adaptive_Complex::Descend_To_Possib
 					/*continue with the left cube */
 					current_descend.relative_position_table[ current_descend.current_node->splitting_dimension - 1 ].back_max_forward_max = 1;
 					current_descend.current_node = current_descend.current_node->left_child;
+          //std::cout << "left6. ";
 				}
 			}
-		}
+		} /* while */
 		/* Cube is not smaller but is the first one in the lexicographical order */
 		if( ( current_descend.ascending_path.size() == 0 ) && ( !descend_info.back_before_forward ) )
 			current_descend.forward_is_smaller = true;
 		/* if we searhc for all the neighbours */
 		if( to_all_neighbours )
 			current_descend.forward_is_smaller = true;
-		if( current_descend.forward_is_smaller )
+		if( current_descend.forward_is_smaller ) {
+      //std::cout << "pushing " << current_descend . current_node -> leaf_number << ". ";
 			possible_owners.push_back( current_descend );
+    } else {
+      //std::cout << "not pushing " << current_descend . current_node -> leaf_number << ".";
+    }
 	}
 	return possible_owners;
-}
+} /* Adaptive_Complex::Descend_To_Possible_Owners */
 
 #ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */

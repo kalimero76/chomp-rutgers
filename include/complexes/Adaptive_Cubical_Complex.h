@@ -17,116 +17,96 @@
 #include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
 
 /* Forward Declarations */
-struct Adaptive_Cubical_Node;
-class Adaptive_Cubical_Cell;
-class Adaptive_Cubical_Chain;
-class Adaptive_Cubical_const_iterator;
-class Adaptive_Cubical_Container;
-class Adaptive_Cubical_Complex;
 
-/** struct Adaptive_Cubical_Node **/
-struct Adaptive_Cubical_Node {
-  Adaptive_Cubical_Node * parent;
-  Adaptive_Cubical_Node * left;
-  Adaptive_Cubical_Node * right;
-  unsigned int splitting_dimension;
-};
+/* * * * * * * * * * * * *
+ * Adaptive_Cubical_Cell *
+ * * * * * * * * * * * * */
 
-/** class Adaptive_Cubical_Cell **/
-class Adaptive_Cubical_Cell {
+/* * * * * * * * * * * * * *
+ * Adaptive_Cubical_Chain  *
+ * * * * * * * * * * * * * */
+
+/* * * * * * * * * * * * * * *
+ * Adaptive_Cubical_Complex  *
+ * * * * * * * * * * * * * * */
+
+class Adaptive_Cubical_Complex {
 public:
-  unsigned int dimension;
-  unsigned int pathLength ( void ) const;
-  const unsigned int & splittingDimension ( unsigned int index ) const;
-  unsigned int & splittingDimension ( unsigned int index );
-  const bool & splittingDirection ( unsigned int index ) const;
-  bool & splittingDirection ( unsigned int index );
-
-private:
-  friend class Adaptive_Cubical_Container;
-  friend class Adaptive_Cubical_const_iterator;
-  unsigned int type_;
-  std::deque < std::pair < unsigned int, bool > > data_;
-};
-
-/** class Adaptive_Cubical_Chain **/
-class Adaptive_Cubical_Chain {
-};
-
-/** class Adaptive_Cubical_Container. **/
-class Adaptive_Cubical_Container {
-public:
-  /* typedefs */
-  typedef Default_Ring Ring;
-  typedef Adaptive_Cubical_Cell Cell;
-  typedef Default_Chain Chain;
-  typedef size_t size_type;
-  typedef Cell value_type;
-  typedef Cell key_type;
-  typedef Adaptive_Cubical_const_iterator const_iterator;
+	/* typedefs */	 
+  typedef unsigned int size_type; // for > 4E9 cubes, use unsigned long
+	typedef Adaptive_Cubical_Chain Chain;
+	typedef Adaptive_Cubical_Cell Cell;
+	typedef Default_Ring Ring;
+	typedef Cell key_type;
+	typedef Cell value_type;
+  typedef Cubical_const_iterator const_iterator;
   typedef const_iterator iterator;
-  
-  /* Constructors */
-  Adaptive_Cubical_Container ( void );
-  Adaptive_Cubical_Container ( unsigned int dimension );
-  ~Adaptive_Cubical_Container ( void );
-  
-  /* "Simple Associative Container" concept (just the basics)*/
-  iterator find ( const key_type & find_me ) const;
+  /* Basic Container */
+  std::pair<iterator, bool> insert ( const value_type & insert_me );
   void erase ( const iterator & erase_me );
-  
-  /* "Cell Container" concept */
+  void clear ( void );
+  iterator find ( const key_type & find_me ) const;
+  iterator begin ( void ) const;
+  iterator end ( void ) const;
+  size_type size ( void ) const;
+  /* Cell Complex */
   iterator begin ( unsigned int dimension ) const;
   iterator end ( unsigned int dimension ) const;
   size_type size ( unsigned int dimension ) const;
   Chain boundary ( const const_iterator & input ) const;
   Chain coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
+  /* Index Complex */
+  void index ( void );
+  size_type index_begin ( unsigned int dimension ) const;
+  size_type index_end ( unsigned int dimension ) const;
+  size_type index ( const const_iterator & lookup ) const;
+  size_type & index ( const const_iterator & lookup );
+  std::vector < const_iterator > & lookup ( void );
+  const const_iterator & lookup ( size_type index ) const;
+  const_iterator & lookup ( size_type index );
+  std::vector < int > count_all_boundaries ( void ) const;
+  void boundary ( std::vector < size_type > & output, const size_type index ) const;
+  void coboundary ( std::vector < size_type > & output, const size_type index ) const;
+  void boundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  void coboundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  /* Decomposable Complex */
+  void decompose ( void );
+  char type ( size_type index, unsigned int dimension ) const;
+  size_type mate ( size_type queen_index, unsigned int dimension ) const;
+  const Ring & connection ( size_type queen_index ) const;
+  Ring & connection ( size_type queen_index );  
+  size_type ace_begin ( unsigned int dimension ) const;
+  size_type ace_end ( unsigned int dimension ) const;
+  void preprocess ( void );
   
-private:
-  /* Friends */
-  friend class Adaptive_Cubical_Complex;
-  friend class Adaptive_Cubical_const_iterator;
-  /* Data */
-  unsigned int dimension_;
-  typedef Adaptive_Cubical_Node Node;
-  std::vector < Node * > tree_data_;
-  std::vector < const_iterator > begin_;
-  std::vector < const_iterator > end_;
-  std::vector < size_type > size_;
+  /* Adaptive Cubical Complex */
+  
+  
+  
+private:  
+	friend class Cubical_const_iterator;
+  /* Cell Complex */
+  size_type total_size_;
+  std::vector<const_iterator> begin_;
+  const_iterator end_;
+  std::vector<size_type> size_;
+  unsigned int dimension_; 
+  /* Index Complex */
+  std::vector < size_type > index_;
+  std::vector < const_iterator > lookup_;
+  std::vector<size_type> index_begin_;
+  /* Decomposable Complex */
+  std::vector<Ring> connection_;
+  std::vector< int > boundary_count_;
+  std::vector<size_type> king_count_;
+  /* Adaptive Cubical Complex */
+	std::vector<bool> bitmap_;
 };
 
-/** class Adaptive_Cubical_const_iterator **/
-class Adaptive_Cubical_const_iterator {
-public:
-  Adaptive_Cubical_const_iterator ( void );  
-  Adaptive_Cubical_const_iterator ( const Adaptive_Cubical_Container * const referral );  
-  Adaptive_Cubical_const_iterator & operator ++ ( void );
-  bool operator != ( const Adaptive_Cubical_const_iterator & right_hand_side ) const;
-  bool operator == ( const Adaptive_Cubical_const_iterator & right_hand_side ) const;
-  bool operator < ( const Adaptive_Cubical_const_iterator & right_hand_side ) const;
-  const Adaptive_Cubical_Container::value_type & operator * ( void ) const;
-  const Adaptive_Cubical_Container::value_type * operator -> ( void ) const;
-private:
-  friend class Adaptive_Cubical_Container;
-  typedef Adaptive_Cubical_Node Node;
-  unsigned int dimension_;
-  Node * node_;
-  mutable Adaptive_Cubical_Cell dereference_value;
-  const Adaptive_Cubical_Container * referral_;
-  unsigned long type_;
-  void next_type ( void );
-};
-
-/** class Adaptive_Cubical_Complex **/
-class Adaptive_Cubical_Complex : public Cell_Complex_Archetype < Adaptive_Cubical_Container > {
-public:
-  /** addCube. Add the cell and also those cells which comprise its closure. */
-  void addCube ( const Cell & cell );
-  /** addCell. Add the cell. Subdivide other cells as necessary. */
-  void addCell ( const Cell & cell );
-
-};
+/* * * * * * * * * * * * * * *
+ * Adaptive_Cubical_iterator *
+ * * * * * * * * * * * * * * */
 
 #ifdef CHOMP_HEADER_ONLY_
 #include "complexes/Adaptive_Cubical_Complex.cpp"

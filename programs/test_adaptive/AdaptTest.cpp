@@ -20,6 +20,7 @@ class compute_results;
 template < class Cell_Complex_Template > compute_results compute_example ( Cell_Complex_Template & my_complex );
 template < class T > void print_my_vector ( std::vector<T> print_me );
 template < class T > T vector_sum ( const std::vector<T> add_my_elements_together );
+template < class Cell_Complex > void inspect ( Cell_Complex & my_complex );
 
 int do_preprocess;
 
@@ -35,23 +36,60 @@ public:
 };
 
 int main() {
-	Adaptive_Complex my_adaptive_complex(4);
-  std::vector<std::vector<bool> > split;
-
-	split.resize(1);
-	split[0].resize(4);
+	Adaptive_Complex my_adaptive_complex(2);
+  {
+  std::vector<std::vector<bool> > split ( 2, std::vector<bool> ( 2, false ) );
+  
 	split[0][0] = false;
 	split[0][1] = false;
-	split[0][2] = false;
-	split[0][3] = false;
-	//split[0][4] = 1;
+  split[1][0] = false;
+	split[1][1] = false;
 	my_adaptive_complex.Add_Full_Cube(split);
+  
+  split[0][0] = false;
+	split[0][1] = false;
+  split[1][0] = true;
+	split[1][1] = false;
+	my_adaptive_complex.Add_Full_Cube(split);
+  
+  split[0][0] = false;
+	split[0][1] = false;
+  split[1][0] = false;
+	split[1][1] = true;
+	my_adaptive_complex.Add_Full_Cube(split);
+  
+  split[0][0] = false;
+	split[0][1] = false;
+  split[1][0] = false;
+	split[1][1] = true;
+	my_adaptive_complex.Add_Full_Cube(split);
+  }
+  {
+  std::vector<std::vector<bool> > split ( 1, std::vector<bool> ( 2, false ) );
+  split[0][0] = true;
+	split[0][1] = false;
+	my_adaptive_complex.Add_Full_Cube(split);
+  
+  split[0][0] = false;
+  split[0][1] = true;
+  my_adaptive_complex.Add_Full_Cube(split);
+  
+  split[0][0] = true;
+  split[0][1] = true;
+  my_adaptive_complex.Add_Full_Cube(split);
+    
+  }
 	my_adaptive_complex.Finalize();
 
+  inspect ( my_adaptive_complex );
+
+  
 	std::vector<int> Betti_Numbers, Minimal_Number_of_Generators;
 	my_adaptive_complex . index ();
   Homology <   Adaptive_Complex  > ( Betti_Numbers, Minimal_Number_of_Generators, my_adaptive_complex );
 
+  inspect ( my_adaptive_complex );
+  
   do_preprocess = true;
   compute_example ( my_adaptive_complex ); 
 	return 0;
