@@ -668,40 +668,28 @@ Adaptive_Complex::Chain Adaptive_Complex::boundary ( const Adaptive_const_iterat
 	Cell cell;
 	Cell lower_dimensional_cell;
 	std::vector<Cell> lower_dimensional_cell_pieces;
-	std::pair< const_iterator, Ring > lower_dimensional_pair;
-
 	cell = *input;
-
-	lower_dimensional_cell . dimension () = cell . dimension () -1;
-
+	lower_dimensional_cell . dimension () = cell . dimension () - 1;
 	output.clear();
-
 	coincidence_index = 1;
 	/*Go thru all cells which are one dimesion lower than input*/
 	for( unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
 		 if( ( cell.data () >> ( dimension_ + dimension_index ) ) % 2 == 0  ){/*if the dimension is not reduced*/
 			 /*find the pieces for the left cell*/
-			 lower_dimensional_cell.data () = cell.data () + (1 << ( dimension_ + dimension_index) );
+			 lower_dimensional_cell.data () = cell.data () + ( 1 << ( dimension_ + dimension_index ) );
 			 /*Process the chain*/
-			 Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
-			 for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
-        lower_dimensional_pair.first = find ( *cell_iterator );
-				lower_dimensional_pair.second = -coincidence_index;
-				output.insert( lower_dimensional_pair );
-			 }
+			 Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell );
+			 for ( std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end(); ++ cell_iterator )
+         output.insert( std::pair < const_iterator, Ring > ( find ( *cell_iterator ), - coincidence_index ) );
 			 /*find the pieces for the right cell*/
-			 lower_dimensional_cell.data () +=  (1 <<  dimension_index );
+			 lower_dimensional_cell.data () += ( 1 <<  dimension_index );
 			 /*Process the chain*/
 			Find_Elementary_Cell( lower_dimensional_cell_pieces, lower_dimensional_cell);
-			for(std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator ){
-				lower_dimensional_pair.first = find ( *cell_iterator );
-				lower_dimensional_pair.second = coincidence_index;
-				output.insert( lower_dimensional_pair );
-			 }
+			for ( std::vector<Cell>::iterator cell_iterator = lower_dimensional_cell_pieces.begin();  cell_iterator != lower_dimensional_cell_pieces.end();++ cell_iterator )
+        output.insert( std::pair < const_iterator, Ring > ( find ( *cell_iterator ), coincidence_index ) );
 			coincidence_index = -coincidence_index;
-		 }
-	}
-
+		 } /* if */
+	} /* for */
 	return output;
 } /* Adaptive_Complex::boundary */
 
@@ -714,7 +702,6 @@ Adaptive_Complex::Chain Adaptive_Complex::coboundary ( const Adaptive_const_iter
 	Cell cell;
 	Cell higher_dimensional_cell;
 	std::vector<Cell> higher_dimensional_cell_pieces;
-	std::pair< const_iterator, Ring > higher_dimensional_pair;
 	std::vector< Adaptive_Tree::Descend_Info >  possible_owners;
 
 	cell = *input;
@@ -726,92 +713,122 @@ Adaptive_Complex::Chain Adaptive_Complex::coboundary ( const Adaptive_const_iter
 
 	higher_dimensional_cell . dimension () = cell . dimension () + 1;
 
+  Ring sign ( 1 );
 	/* go thru all 1 dimension higher dimensional cells in the cube*/
 	for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
 		cell_ID = cell.data () - ( full_cube_number << ( 2 * dimension_ ) );
-		if( ( cell_ID >> ( dimension_ + dimension_index ) ) % 2 == 1 ){/*if the dimension is  reduced*/
-			cell_ID -=  ( 1 << ( dimension_ + dimension_index) );
-			if( ( cell_ID >> ( dimension_index ) ) % 2 == 1 )/*if the dimension is  reduced to the right side*/
-				cell_ID -=  (1 <<  dimension_index );
+		if( ( cell_ID >> ( dimension_ + dimension_index ) ) % 2 == 1 ){ /*if the dimension is  reduced*/
+      Ring coincidence;
+			cell_ID ^=  ( 1 << ( dimension_ + dimension_index) );
+			if( ( cell_ID >> ( dimension_index ) ) % 2 == 1 ) { /* if the dimension is reduced to the right side */
+				cell_ID ^=  ( 1 <<  dimension_index );
+        coincidence = sign;
+      } else { /* Reduced to the left side */
+        coincidence = -sign;
+      } /* if-else */
 			/* if face is present in the cube add it to coboundary*/
 			if( (adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells.size() >  higher_dimensional_cell . dimension () ) &&
 				(adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].find( cell_ID) != adaptive_tree->leaf_lookup [ full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].end() )){
 				higher_dimensional_cell.data () = (full_cube_number << ( 2 * dimension_ ) ) + cell_ID;
-				higher_dimensional_pair.first = find ( higher_dimensional_cell );
-				higher_dimensional_pair.second = 1;
-				output.insert( higher_dimensional_pair );
+				output . insert ( std::pair < const_iterator, Ring > ( find ( higher_dimensional_cell ), coincidence ) );
 			}
-		}
-	}
+		} else { /* Dimension is not reduced */
+      sign = - sign;
+    } /* if-else */
+	} /* for */
 
 	/*Find all posiblle neighbours and look if they have a piece of coboundary*/
 	Find_Possible_Owners( possible_owners, cell, true );
 	/*go thru all neighbours*/
 	std::vector< Adaptive_Tree::Descend_Info >::iterator cube_iterator;
-	for( cube_iterator = possible_owners.begin(); cube_iterator != possible_owners.end(); ++cube_iterator ){
+	for( cube_iterator = possible_owners . begin (); cube_iterator != possible_owners . end (); ++ cube_iterator ) {
 		//if the original cube is smaller go down the ascent path and update the descend info
-		while( cube_iterator->ascending_path.size() > 0 && ( cube_iterator->forward_is_smaller ) ){
+		while( cube_iterator->ascending_path.size() > 0 && ( cube_iterator->forward_is_smaller ) ) {
 			unsigned int splitting_dimension = dimension_ - 1 - ( cube_iterator->ascending_path.size()  - 1 )  %  dimension_;
-			if( cube_iterator->relative_position_table[ splitting_dimension ].back_max_forward_min == 0)
-				if( cube_iterator->ascending_path.back() == 0)
-					cube_iterator->forward_is_smaller = false;
-			if( cube_iterator->relative_position_table[ splitting_dimension ].back_min_forward_max == 0)
-				if( cube_iterator->ascending_path.back() == 1)
-					cube_iterator->forward_is_smaller = false;
-			if( cube_iterator->relative_position_table[ splitting_dimension ].back_min_forward_min == 0)
-				if( cube_iterator->ascending_path.back() == 1)
-					cube_iterator->relative_position_table[ splitting_dimension ].back_min_forward_min = 1;
-			if( cube_iterator->relative_position_table[ splitting_dimension ].back_max_forward_max == 0)
-				if( cube_iterator->ascending_path.back() == 0)
-					cube_iterator->relative_position_table[ splitting_dimension ].back_max_forward_max = -1;
+			if ( cube_iterator -> relative_position_table [ splitting_dimension ] . back_max_forward_min == 0 &&
+				   cube_iterator -> ascending_path.back() == 0 )
+        cube_iterator -> forward_is_smaller = false;
+			if ( cube_iterator -> relative_position_table [ splitting_dimension ] . back_min_forward_max == 0 &&
+				   cube_iterator -> ascending_path.back () == 1 )
+        cube_iterator -> forward_is_smaller = false;
+			if ( cube_iterator -> relative_position_table[ splitting_dimension ] . back_min_forward_min == 0 &&
+           cube_iterator -> ascending_path.back () == 1 )
+        cube_iterator -> relative_position_table [ splitting_dimension ] . back_min_forward_min = 1;
+			if ( cube_iterator -> relative_position_table [ splitting_dimension ] . back_max_forward_max == 0 &&
+           cube_iterator -> ascending_path . back () == 0 )
+        cube_iterator->relative_position_table[ splitting_dimension ].back_max_forward_max = -1;
 			cube_iterator->ascending_path.pop_back();
-		}
-		/* look at all possible coboundry pieces in the cube*/
+		} /* while */
+    
+		/* look at all possible coboundary pieces in the cube*/
 		cell_ID = cell.data () - ( full_cube_number << ( 2 * dimension_ ) );
-		for(unsigned int expand_dimension = 0; expand_dimension < dimension_; ++expand_dimension ){
-			bool cell_present_in_neighbour = true;
+		for ( unsigned int expand_dimension = 0; expand_dimension < dimension_; ++ expand_dimension ) {
+			bool continue_flag = false; /* will set to true if cell is not present in neighbor */
+      Ring sign ( 1 );
+      Ring coincidence;
 			neighbour_cell_ID = 0;
-			if( ( cell_ID >> ( dimension_ + expand_dimension ) ) % 2 == 1 ){/*if the dimension is  reduced then expand it if it is possible to expand*/
-				if( cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_min == 1 &&  cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_max != 0 )
-					if( ( cell_ID >>  expand_dimension ) % 2 == 0 )
-						cell_present_in_neighbour = false;
-				if( cube_iterator->relative_position_table[ expand_dimension ].back_max_forward_max == -1 &&  cube_iterator->relative_position_table[ expand_dimension ].back_max_forward_min != 0 )
-					if( ( cell_ID >>  expand_dimension ) % 2 == 1 )
-						cell_present_in_neighbour = false;
-				if( cell_present_in_neighbour )
-					for(unsigned int dimension_index = 0; dimension_index < dimension_; ++dimension_index ){
-						if( ( ( cell_ID >> ( dimension_ + dimension_index ) ) % 2 == 1 ) && (expand_dimension != dimension_index ) ){/*if the dimension is  reduced and was not expanded*/
-							//if the face is not at the boundary of the neighbouring cube
-							if( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_min == 1 &&  cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max != 0 )
-								if( ( cell_ID >>  dimension_index ) % 2 == 0 )
-									cell_present_in_neighbour = false;
-							if( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_max == -1 &&  cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 )
-								if( ( cell_ID >>  dimension_index ) % 2 == 1 )
-									cell_present_in_neighbour = false;
-							if( cell_present_in_neighbour ){
-								neighbour_cell_ID += 1 << ( dimension_index + dimension_ );
-								if( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max == 0	)/*cubes are on the opposite sides ie the face is on the right hand side*/
-									neighbour_cell_ID += 1 << ( dimension_index );
-								else if ( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 &&
-										( cell_ID >>  dimension_index ) % 2 == 1  )/*cubes are on the same side again face is on the right hand side*/
-									neighbour_cell_ID += 1 << ( dimension_index );
-							}
-						}
-					}
-					/*Add the  the cell if it is present*/
-					if( cell_present_in_neighbour ){
-						neighbour_full_cube_number = cube_iterator->current_node->leaf_number;
-						if( (adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells.size() >  higher_dimensional_cell . dimension () ) &&
-							(adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].find( neighbour_cell_ID) != adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].end() )){
-							higher_dimensional_cell.data () = (neighbour_full_cube_number << ( 2 * dimension_ ) ) + neighbour_cell_ID;
-							higher_dimensional_pair.first = find ( higher_dimensional_cell );
-							higher_dimensional_pair.second = 1;
-							output.insert( higher_dimensional_pair );
-						}
-					}
-			}
-		}
-	}
+			if ( not ( ( cell_ID >> ( dimension_ + expand_dimension ) ) & 1 ) ) continue; /* dimension is not reduced */
+      /* The dimension is reduced so it is possible to expand*/
+      if ( cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_min == 1 &&  
+          cube_iterator->relative_position_table[ expand_dimension ].back_min_forward_max != 0 &&
+          not ( ( cell_ID >>  expand_dimension ) & 1 ) ) continue; /* cell is not present in neighbor */
+      if ( cube_iterator->relative_position_table[ expand_dimension ].back_max_forward_max == -1 && 
+          cube_iterator->relative_position_table[ expand_dimension ].back_max_forward_min != 0  &&
+          ( ( cell_ID >>  expand_dimension ) & 1 ) ) continue; /* cell is not present in neighbor */
+      for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+        if ( not ( ( cell_ID >> ( dimension_ + dimension_index ) ) & 1 ) ) {
+          /* This dimension is not reduced */
+          sign = - sign;
+          continue;  
+        } /* if */
+        /* This dimension is reduced. */
+        if ( expand_dimension == dimension_index ) {
+          if ( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max == 0	||
+             ( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 
+              && ( ( cell_ID >>  dimension_index ) & 1 ) ) )  {
+            /* The cell is the right-boundary of the found coboundary w.r.t expand_dimension */
+            coincidence = sign;
+          } else {
+            /* The cell is the left-boundary of the found coboundary w.r.t expand_dimension */
+            coincidence = - sign;
+          } /* if-else */
+          continue; 
+        } /* if */
+        /* The dimension is reduced and was not expanded*/
+        //if the face is not at the boundary of the neighbouring cube
+        if ( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_min == 1 &&  
+            cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max != 0 &&
+            not ( ( cell_ID >>  dimension_index ) & 1 ) )  {
+          /* cell is not present in neighbor */
+          continue_flag = true;
+          break;
+        } /* if */
+        if ( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_max == -1 &&  
+            cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 &&
+            ( ( cell_ID >>  dimension_index ) & 1 ) ) {
+          /* cell is not present in neighbor */
+          continue_flag = true;
+          break;
+        } /* if */
+        neighbour_cell_ID |= 1 << ( dimension_index + dimension_ );
+        if( cube_iterator->relative_position_table[ dimension_index ].back_min_forward_max == 0	)/*cubes are on the opposite sides i.e. the face is on the right hand side*/
+          neighbour_cell_ID |= 1 << ( dimension_index );
+        else if ( cube_iterator->relative_position_table[ dimension_index ].back_max_forward_min != 0 && ( ( cell_ID >>  dimension_index ) & 1 )  ) 
+          /*cubes are on the same side again face is on the right hand side*/
+          neighbour_cell_ID |= 1 << ( dimension_index );
+      } /* for */
+      if ( continue_flag ) continue;
+      /*Add the the cell if it is present*/
+      neighbour_full_cube_number = cube_iterator->current_node->leaf_number;
+      if( (adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells.size() >  higher_dimensional_cell . dimension () ) &&
+          (adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].find( neighbour_cell_ID) 
+          != adaptive_tree->leaf_lookup [ neighbour_full_cube_number ]->elementary_cells[ higher_dimensional_cell . dimension () ].end() )){
+        
+        higher_dimensional_cell.data () = (neighbour_full_cube_number << ( 2 * dimension_ ) ) + neighbour_cell_ID;
+        output . insert ( std::pair < const_iterator, Ring > ( find ( higher_dimensional_cell ), coincidence ) );
+      } /* if */
+    } /* for */
+  } /* for */
 	return output;
 } /* Adaptive_Complex::coboundary */
 
