@@ -621,6 +621,7 @@ Adaptive_const_iterator Adaptive_Complex::find ( const Adaptive_Complex::key_typ
 
 void Adaptive_Complex::clear ( void ) {
   delete adaptive_tree;
+  adaptive_tree = NULL;
   begin_ . clear ();
   begin_ . reserve ( 0 );
   index_ . clear ();
@@ -1073,7 +1074,7 @@ Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
 }
 /* Destructor */
 Adaptive_Complex::~Adaptive_Complex ( void ) {
-  delete adaptive_tree;
+  if ( adaptive_tree != NULL ) delete adaptive_tree;
 } /* endfunction */
 
 std::vector< double > & Adaptive_Complex::Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates){

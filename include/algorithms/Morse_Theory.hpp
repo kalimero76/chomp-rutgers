@@ -385,7 +385,7 @@ namespace morse {
     return tower;
   };
   
-  template < class Cell_Complex > Morse_Complex * //TERRIBLE
+  template < class Cell_Complex > Morse_Complex
   deep_reduction ( Cell_Complex & complex ) {
     typedef typename Cell_Complex::size_type size_type;
     clock_t start, stop;
@@ -421,7 +421,7 @@ namespace morse {
       reduced = next;
     }; /* while */
     reduced -> index ();
-    return reduced;
+    return *reduced;
   };
   
 } /* namespace morse */

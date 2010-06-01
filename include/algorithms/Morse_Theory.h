@@ -61,7 +61,7 @@ namespace morse {
   
   /* Destroy original complex to save memory, and only remember the most
      reduced complex found. */
-  template < class Cell_Complex > Morse_Complex *
+  template < class Cell_Complex > Morse_Complex
   deep_reduction ( Cell_Complex & complex );
   
 } /* namespace morse */

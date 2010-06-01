@@ -94,6 +94,7 @@ public:
   /* Abstract Container */
   void generate_coboundary_information ( void );
   Abstract_Complex ( void );
+  Abstract_Complex ( const Abstract_Complex & copy_me );
   Abstract_Complex ( unsigned int dimension );
   void constructor ( unsigned int dimension );
   size_type mass ( void );

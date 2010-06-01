@@ -138,8 +138,7 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	/* Create Morse Complex */
 	std::cout << "  Using morse theory to reduce ... \n";
 	start_clock = clock ();
-  Morse_Complex * my_morse_complex_ptr = morse::deep_reduction ( my_complex );
-  Morse_Complex & my_morse_complex = * my_morse_complex_ptr;
+  Morse_Complex my_morse_complex = morse::deep_reduction ( my_complex );
 	std::cout << " ... morse reduction completed. \n";
 	stop_clock = clock (); 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " so far elapsed \n";
@@ -185,7 +184,6 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	return_value . total_time =  total_time;
 	return_value . morse_time =  morse_time;
 	return_value . smith_time =  homology_time;
-  delete my_morse_complex_ptr;
   return return_value;
 } /* compute_example */
 

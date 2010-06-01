@@ -307,10 +307,41 @@ Abstract_Complex<Cell_Type>::Abstract_Complex ( void ) {
 } /* Abstract_Complex<Cell_Type>::Abstract_Complex */
 
 template < class Cell_Type >
+Abstract_Complex<Cell_Type>::Abstract_Complex ( const Abstract_Complex & copy_me ) {
+  /* Shallow copies that work */
+  cells_ = copy_me . cells_;
+  dimension_ = copy_me . dimension_;
+  size_ = copy_me . size_;
+  total_size_ = copy_me . total_size_;
+  boundary_ = copy_me . boundary_;
+  coboundary_ = copy_me . coboundary_;
+  index_begin_ = copy_me . index_begin_;
+  connection_ = copy_me . connection_;
+  king_count_ = copy_me . king_count_;
+  /* Copy begin_, end_ */
+  end_ = const_iterator ( this, cells_ . end (), dimension_ + 1 );
+  begin_ . resize ( dimension_ + 2, end_ );
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) { 
+    if ( copy_me . begin_ [ dimension_index ] == copy_me . end_ ) break;
+    begin_ [ dimension_index ] = find ( * copy_me . begin_ [ dimension_index ] );
+  } /* for */
+  /* Copy the indexing information if it exists */
+  if ( not copy_me . index_ . empty () ) {
+    lookup_ . resize ( total_size_ + 1 );
+    const_iterator copy_iterator = copy_me . begin ();
+    for ( const_iterator cell_iterator = begin (); cell_iterator != end (); ++ cell_iterator, ++ copy_iterator ) { 
+      size_type cell_index = index_ [ copy_iterator ];
+      index_ [ cell_iterator ] = cell_index;
+      lookup_ [ cell_index ] = cell_iterator;
+    } /* for */
+    index_ [ end_ ] = total_size_;
+    lookup_ [ total_size_ ] = end_;
+  } /* if */
+} /* Abstract_Complex<Cell_Type>::Abstract_Complex */
+
+template < class Cell_Type >
 Abstract_Complex<Cell_Type>::Abstract_Complex ( unsigned int dimension ) : dimension_(dimension) {
   end_ = const_iterator ( this, cells_ . end (), dimension_ + 1 );
-  /* Remark. since cells_ . end () is changing around when we insert things, we use the big dimension.
-     This is too bad, since this means the comparisons need to check the dimension as well. */
   begin_ . resize ( dimension_ + 2, end_ );
   size_ . resize ( dimension_ + 1, 0 );
   total_size_ = 0;
