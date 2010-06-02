@@ -235,3 +235,58 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	return return_value; 
 } /* void Homology(...) */
 
+/* Compute the homology of maps using "H_*(G) method" */
+template < class Toplex, class Map >
+void Map_Homology_V1 ( const Toplex & X, const Toplex & Y, const Map & f ) {
+  typedef Toplex::Complex Complex;
+  typedef Graph_Complex < Toplex, Map > Graph;
+  Complex complex_X = X . complex ();
+  Complex complex_Y = Y . complex ();
+  Morse_Complex reduced_X = morse::reduction ( complex_X );
+  Morse_Complex reduced_Y = morse::reduction ( complex_Y );  
+  Graph graph ( X, Y, f );
+  
+  /* Find the homology generators from the graph and codomain. */
+  std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > graph_generators = Homology_Generators ( graph );
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > codomain_generators ( graph_generators . size () );
+  
+  /* Project the homology generators of the graph to the domain and codomain */
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > domain_generators ( graph_generators . size () );
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > codomain_cycles ( graph_generators . size () );
+  for ( unsigned int generator_index = 0; generator_index < graph_generators . size () ; ++ generator_index ) {
+    domain_projections [ generator_index ] = psi ( graph . projectToDomain ( graph_generators ) );
+    codomain_cycles [ generator_index ] = psi ( graph . projectToCodomain ( graph_generators ) );
+  } /* for */
+  
+  /* Write the codomain cycles in terms of the codomain generators. */
+  
+  // TODO
+  
+  /* Return algebraic information */
+  return;
+} /* void Map_Homology(...) */
+
+/* Compute the homology of maps using "preboundary method" */
+template < class Toplex, class Map >
+void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
+  typedef Toplex::Complex Complex;
+  Complex complex_X = X . complex ();
+  Complex complex_Y = Y . complex ();
+  Graph_Complex < Toplex, Map > graph ( X, Y, f );
+  
+  /* Step 1. Obtain a homology generator g in X. */
+  /* Step 2. Find a cycle c in the graph which projects to g: \pi_X ( c ) = g */
+  /*  a) Find a chain c which projects to g
+   b) For i = 1 ... dim Y
+   For each i-fiber F in the graph containing a term of dc, 
+   c -= preboundary in F of \pi_F ( dc )
+   end
+   end
+   Step 3. Project c into Y to obtain h = \pi_Y ( c )
+   Step 4. Write h in terms of a generator basis for Y.
+   */
+  
+  for ( unsigned int dimension_index = 1; dimension_index <= Y . dimension (); ++ dimension_index ) {
+    
+  } /* for */
+} /* void Map_Homology(...) */

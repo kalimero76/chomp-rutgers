@@ -98,7 +98,7 @@ namespace Adaptive_Cubical {
     typedef Top_Cell key_type;
     typedef Top_Cell value_type;
     /* Basic Container */
-    void erase ( const iterator & erase_me );
+    void erase ( iterator erase_me );
     void clear ( void );
     iterator find ( const key_type & find_me ) const;
     iterator begin ( void ) const;
@@ -106,10 +106,10 @@ namespace Adaptive_Cubical {
     size_type size ( void ) const;
     /* Toplex */
     Subset cover ( const Geometric_Description & geometric_region ) const;
-    Geometric_Description geometry ( const iterator & cell_iterator ) const;
+    Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
     /* Adaptive Toplex */
-    Subset subdivide ( const iterator & cell_to_divide );
+    Subset subdivide ( iterator cell_to_divide );
     /* Adaptive Cubical Toplex */
     void initialize ( const Geometric_Description & outer_bounds_of_toplex );
     Toplex ( void );

@@ -115,10 +115,19 @@ int main (int argc, char * const argv[]) {
   subdivide_toplex ( my_toplex );
   subdivide_toplex ( my_toplex );
   subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
 
   /* Complex */
   children = my_toplex . cover ( bounds );
+  clock_t start_clock, stop_clock;
+  std::cout << "Initializing complex...\n";
+  start_clock = clock ();
   Adaptive_Complex my_adaptive_complex = my_toplex . complex ( children );
+  stop_clock = clock ();
+  std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
+
   //inspect_complex ( my_adaptive_complex );
   compute_example ( my_adaptive_complex );
 	return 0;

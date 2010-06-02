@@ -108,7 +108,7 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex  *
    * * * * * * * * * * * * * * * * * */
-  void Toplex::erase ( const iterator & erase_me ) {
+  void Toplex::erase ( iterator erase_me ) {
     /* Update begin_ if necessary */
     /* TODO: if this is being used to kill an entire subtree, not just a leaf, then
        this will not update begin_ properly. */
@@ -253,7 +253,7 @@ namespace Adaptive_Cubical {
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
   
-  Toplex::Subset Toplex::subdivide ( const iterator & cell_to_divide ) {
+  Toplex::Subset Toplex::subdivide ( iterator cell_to_divide ) {
     Subset children;
     std::deque < std::pair < const_iterator, unsigned int > > work_deque;
     work_deque . push_back ( std::pair < const_iterator, unsigned int > ( cell_to_divide, 0 ) );

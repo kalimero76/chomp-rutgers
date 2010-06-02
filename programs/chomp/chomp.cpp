@@ -30,7 +30,7 @@ public:
 
 int main (int argc, char * const argv[]) {
 
-  if ( argc < 2 ) {
+  if ( argc < 3 ) {
     std::cout << "usage ./chomp filename i\n filename is cubical complex file \n n is 1 or 0 (indicates whether or not to do preprocessing) \n";
     exit(-1);
   }

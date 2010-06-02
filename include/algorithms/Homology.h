@@ -20,6 +20,10 @@ void Homology ( const Geometric_Complex_Template & the_complex );
 template < class Geometric_Complex_Template >
 void Homology (  std::vector<int> & Betti_output, std::vector<int> & minimal_number_of_generators_output, const Geometric_Complex_Template & the_complex );
 
+/* Compute the homology of maps */
+template < class Toplex, class Map >
+void Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f );
+
 /* Print out the homology generators... TODO: return the homology generators */
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
