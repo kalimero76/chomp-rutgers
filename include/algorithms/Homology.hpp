@@ -235,6 +235,8 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	return return_value; 
 } /* void Homology(...) */
 
+#if 0
+
 /* Compute the homology of maps using "H_*(G) method" */
 template < class Toplex, class Map >
 void Map_Homology_V1 ( const Toplex & X, const Toplex & Y, const Map & f ) {
@@ -290,3 +292,4 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
     
   } /* for */
 } /* void Map_Homology(...) */
+#endif
