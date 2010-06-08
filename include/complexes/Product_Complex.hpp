@@ -8,171 +8,462 @@
  * * * * * * * * * * * */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
+std::ostream & operator << ( std::ostream & output_stream, const Product_Cell<First_Cell_Complex, Second_Cell_Complex> & print_me ) {
+  return output_stream << "(" << print_me . first << " x " << print_me . second << ", " << print_me . dimension << ")";
+} /* operator << for Product_Cell<> */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
-Product_Cell ( void ) {}
+Product_Cell ( void ) {
+} /* Product_Cell<>::Product_Cell */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 Product_Cell ( const typename First_Cell_Complex::Cell & first, 
               const typename Second_Cell_Complex::Cell & second ) 
-: first(first), second(second) {
-  dimension = first . dimension + second . dimension;
-}
+: first_(first), second_(second), dimension_(first . dimension + second . dimension) {
+} /* Product_Cell<>::Product_Cell */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 bool Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 operator < ( const Product_Cell & right_hand_side ) const {
-  if ( first < right_hand_side . first ) return true;
-  if ( first != right_hand_side . first ) return false;
-  if ( second < right_hand_side . second ) return true;
+  if ( first_ < right_hand_side . first_ ) return true;
+  if ( first_ != right_hand_side . first_ ) return false;
+  if ( second_ < right_hand_side . second_ ) return true;
   return false;
-}
+} /* Product_Cell<>::operator < */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 bool Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 operator != ( const Product_Cell & right_hand_side ) const {
-  if ( first != right_hand_side . first || second != right_hand_side . second ) return true;
+  if ( first_ != right_hand_side . first_ || second_ != right_hand_side . second_ ) return true;
   return false;
-}
+} /* Product_Cell<>::operator != */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 bool Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 operator == ( const Product_Cell & right_hand_side ) const {
-  if ( first == right_hand_side . first && second == right_hand_side . second ) return true;
+  if ( first_ == right_hand_side . first_ && second_ == right_hand_side . second_ ) return true;
   return false;
-}
+} /* Product_Cell<>::operator == */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-std::ostream & operator << ( std::ostream & output_stream, const Product_Cell<First_Cell_Complex, Second_Cell_Complex> & print_me ) {
-  return output_stream << "(" << print_me . first << " x " << print_me . second << ", " << print_me . dimension << ")";
-}
+unsigned int Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
+dimension ( void ) const {
+  return dimension_;
+} /* Product_Cell<>::dimension */
 
-/* * * * * * * * * * * * * *
- * class Product_Container *
- * * * * * * * * * * * * * */
+/* * * * * * * * * * * * *
+ * class Product_Complex *
+ * * * * * * * * * * * * */
 
-template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-Product_Container ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor )
-: first_factor(&first_factor), second_factor(&second_factor) {}
+/* Basic Implicit Container */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::size_type 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-size ( void ) const {
-  return remembered_size;
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 find ( const Cell & find_me ) const {
   typename First_Cell_Complex::const_iterator first_iterator = first_factor -> find ( find_me . first );
   typename Second_Cell_Complex::const_iterator second_iterator = second_factor -> find (find_me . second );
   return const_iterator ( this, first_iterator, second_iterator );
-}
+} /* Product_Complex<>::find */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 begin ( void ) const {
-  return remember_begin;
-}
+  return begin_ [ 0 ];
+} /* Product_Complex<>::begin */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 end ( void ) const {
-  return remember_end;
-}
-
-/*
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-find ( const Product_Container<First_Cell_Complex, Second_Cell_Complex>::Cell & find_me ) {
-  typename First_Cell_Complex::iterator first_iterator = first_factor . find ( find_me . first );
-  typename Second_Cell_Complex::iterator second_iterator = second_factor . find (find_me . second );
-  return iterator ( this, first_iterator, second_iterator );
-}
+  return end_;
+} /* Product_Complex<>::end */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-begin ( void ) {
-  return iterator ( this, first_factor . begin (), second_factor . begin () );
-}
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+size ( void ) const {
+  return total_size_;
+} /* Product_Complex<>::size */
+
+/* Cell Complex */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::iterator 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::
-end ( void ) {
-  return iterator ( this, first_factor . end (), second_factor . end () );
-}
-*/
-
-/* * * * * * * * * * * * * * * * * * *
- * Product_Container::const_iterator *
- * * * * * * * * * * * * * * * * * * */
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+begin ( unsigned int dimension ) const {
+  return begin_ [ dimension ];
+} /* Product_Complex<>::begin */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-const_iterator ( void ) { }
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+end ( unsigned int dimension ) const {
+  return begin_ [ dimension + 1 ];
+} /* Product_Complex<>::end */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-const_iterator ( const Product_Container * const referral ) : referral(referral) {}
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+size ( unsigned int dimension ) const {
+  return size_ [ dimension ];
+} /* Product_Complex<>::size */
+
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-const_iterator ( const Product_Container * const referral, const typename First_Cell_Complex::const_iterator & first,
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Chain 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+boundary ( const const_iterator & cell_iterator) const {
+  Chain return_value;
+  /* produce boundary via formula d(a x b) = da x b +- a x db */
+  /* Obtain da =: first_boundary, db =: second_boundary */
+  typename First_Cell_Complex::Chain first_boundary = 
+    first_factor . boundary ( cell_iterator . first_ );
+  typename Second_Cell_Complex::Chain second_boundary = 
+    second_factor . boundary ( cell_iterator . second_ );
+  /* Construct boundary */
+  return_value += tensor_product ( first_boundary, cell_iterator . second_ );
+  if ( cell_iterator . first_ . dimension () & 1 ) {
+    return_value -= tensor_product ( cell_iterator . first_, second_boundary );
+  } else {
+    return_value += tensor_product ( cell_iterator . first_, second_boundary );
+  } /* if-else */
+  return return_value;
+} /* Product_Complex<>::boundary */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Chain
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+coboundary ( const const_iterator & cell_iterator ) const {
+  Chain return_value;
+  /* produce coboundary via formula d'(a x b) = d'a x b +- a x d'b */
+  /* Obtain da =: first_boundary, db =: second_boundary */
+  typename First_Cell_Complex::Chain first_coboundary =
+    first_factor . coboundary ( cell_iterator . first_ );
+  typename Second_Cell_Complex::Chain second_coboundary =
+    second_factor . coboundary ( cell_iterator . second_ );
+  /* Construct coboundary */
+  return_value += tensor_product ( first_coboundary, cell_iterator . second_ );
+  if ( cell_iterator . first_ . dimension () & 1 ) {
+    return_value -= tensor_product ( cell_iterator . first_, second_coboundary );
+  } else {
+    return_value += tensor_product ( cell_iterator . first_, second_coboundary );
+  } /* if-else */
+  return return_value;
+} /* Product_Complex<>::coboundary */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+unsigned int Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+dimension ( void ) const {
+  return dimension_;
+} /* Product_Complex<>::dimension */
+ 
+/* Index Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+index ( void ) {
+  lookup_ . resize ( size () + 1 );
+  connection_ . resize ( size (), 0 );
+  size_type cell_index = 0;
+  for ( const_iterator cell_iterator = begin (); cell_iterator != end (); ++ cell_iterator, ++ cell_index ) {
+    index_ [ cell_iterator ] = cell_index;
+    lookup_ [ cell_index ] = cell_iterator;
+  } /* for */
+  index_ [ end_ ] = total_size_;
+  lookup_ [ total_size_ ] = end_;
+  index_begin_ . resize ( dimension_ + 2, 0 );
+  size_type sum = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    sum += size_ [ dimension_index ];
+    index_begin_ [ dimension_index + 1 ] = sum;
+  } /* for */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::index */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+index_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ]; 
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::index_begin */ 
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+index_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::index_end */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+index ( const const_iterator & lookup ) const {
+  return index_ . find ( lookup ) -> second;
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::index */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+index ( const const_iterator & lookup ) {
+  return index_ [ lookup ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::index */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+std::vector < Product_const_iterator<First_Cell_Complex, Second_Cell_Complex> > & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+lookup ( void ) {
+  return lookup_;
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::lookup */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+const Product_const_iterator<First_Cell_Complex, Second_Cell_Complex> & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+lookup ( size_type index ) const {
+  return lookup_ [ index ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::lookup */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex> & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+lookup ( size_type index ) {
+  return lookup_ [ index ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::lookup */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+std::vector < int > 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+count_all_boundaries ( void ) const {
+  std::vector < int > number_of_boundaries ( total_size_ );
+  for ( const_iterator cell_iterator = begin_ [ 0 ]; cell_iterator != end_; ++ cell_iterator )
+    number_of_boundaries [ index ( cell_iterator ) ] = boundary ( cell_iterator ) . size ();
+  return number_of_boundaries;
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::count_all_boundaries */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+boundary ( std::vector < size_type > & output, const size_type input ) const {
+  output . clear ();
+  Chain boundary_chain = boundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = boundary_chain . begin (); 
+       term_iterator != boundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( index ( term_iterator -> first ) );
+  } /* for */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::boundary */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+coboundary ( std::vector < size_type > & output, const size_type input ) const {
+  output . clear ();
+  Chain coboundary_chain = coboundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = coboundary_chain . begin (); 
+       term_iterator != coboundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( index ( term_iterator -> first ) );
+  } /* for */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::coboundary */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+boundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type input ) const {
+  output . clear ();
+  Chain boundary_chain = boundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = boundary_chain . begin (); 
+       term_iterator != boundary_chain. end (); ++ term_iterator ) {
+    output . push_back ( std::pair < size_type, Ring > ( index ( term_iterator -> first ), 
+                                                        term_iterator -> second ) );
+  } /* for */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::boundary */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+coboundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type input ) const {
+  output . clear ();
+  Chain coboundary_chain = coboundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = coboundary_chain . begin (); 
+       term_iterator != coboundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( std::pair < size_type, Ring > ( index ( term_iterator -> first ), 
+                                                        term_iterator -> second ) );
+  } /* for */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::coboundary */
+
+/* Decomposable Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+decompose ( void ) {
+  index (); 
+  king_count_ = morse::decompose ( *this );
+} /*  Product_Complex<First_Cell_Complex, Second_Cell_Complex>::decompose */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+char Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+type ( size_type index, unsigned int dimension ) const {
+  if ( index < index_begin_ [ dimension ] + king_count_ [ dimension + 1 ] ) return 0; /* QUEEN */
+  if ( index < index_begin_ [ dimension + 1 ] - king_count_ [ dimension ] ) return 1; /* ACE */
+  return 2; /* KING */
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::type */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+mate ( size_type queen_index, unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + index_begin_ [ dimension + 2 ] - queen_index - 1;
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::mate */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+const typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Ring & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+connection ( size_type queen_index ) const {
+  return connection_ [ queen_index ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::connection */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Ring & 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+connection ( size_type queen_index ) {
+  return connection_ [ queen_index ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::connection */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+ace_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + king_count_ [ dimension + 1 ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::ace_begin */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::size_type 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+ace_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ] - king_count_ [ dimension ];
+} /* Product_Complex<First_Cell_Complex, Second_Cell_Complex>::ace_end */
+
+/* Product Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor ) :
+first_factor(first_factor), second_factor(second_factor) {
+  /* Initialize dimension_, total_size_ */
+  dimension_ = first_factor . dimension () + second_factor . dimension ();
+  total_size_ = first_factor . size () * second_factor . size ();
+  /* Initialize end_ */
+  end_ = const_iterator ( this, first_factor . end (), second_factor . end () );
+  /* Initialize begin_, size_ */
+  begin_ . resize ( dimension_ + 2, end_ );
+  size_ . resize ( dimension_ + 1, 0 );
+  for ( unsigned int first_dimension_index = 0; 
+        first_dimension_index <= first_factor . dimension (); 
+        ++ first_dimension_index ) {
+    for ( unsigned int second_dimension_index = 0; 
+          second_dimension_index <= second_factor . dimension (); 
+          ++ second_dimension_index ) {
+      const unsigned int dimension_sum = first_dimension_index + second_dimension_index;
+      const size_type first_size = first_factor . size ( first_dimension_index );
+      const size_type second_size = first_factor . size ( second_dimension_index );
+      if ( first_size == 0 || second_size == 0 ) continue;
+      size_ [ dimension_sum ] += first_size * second_size;
+      if ( begin_ [ dimension_sum ] == end_ ) {
+        begin_ [ dimension_sum ] = 
+          const_iterator ( this, 
+                           first_factor . begin ( first_dimension_index ),
+                           second_factor . begin ( second_dimension_index ) );
+      } /* if */
+    } /* for */
+  } /* for */
+  /* TODO: worry about intermediate chain groups being empty */
+} /* Product_Complex<>::Product_Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Chain < First_Cell_Complex, Second_Cell_Complex >::Chain_Term
+Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
+tensor_product ( const typename First_Cell_Complex::const_iterator & first_iter, const typename Second_Cell_Complex::const_iterator & second_iter ) const {
+  return typename Chain::Chain_Term ( Product_const_iterator < First_Cell_Complex, Second_Cell_Complex> ( this, first_iter, second_iter ), 1 );  
+} /* Product_Complex<>::tensor_product */
+
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_Chain < First_Cell_Complex, Second_Cell_Complex >
+Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
+tensor_product ( const typename First_Cell_Complex::Chain & first_chain, const typename Second_Cell_Complex::const_iterator & second_iter ) const {
+  Chain return_value;
+  for ( typename First_Cell_Complex::Chain::const_iterator first_chain_term = first_chain . begin ();
+       first_chain_term != first_chain . end (); ++ first_chain_term )
+    return_value += typename Chain::Chain_Term ( tensor_product ( first_chain_term -> first, second_iter ) . first , first_chain_term -> second );
+  return return_value;
+} /* Product_Complex<>::tensor_product */
+
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_Chain < First_Cell_Complex, Second_Cell_Complex > 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
+tensor_product ( const typename First_Cell_Complex::const_iterator & first_iter, const typename Second_Cell_Complex::Chain & second_chain ) const {
+  Chain return_value;
+  for ( typename Second_Cell_Complex::Chain::const_iterator second_chain_term = second_chain . begin ();
+       second_chain_term != second_chain . end (); ++ second_chain_term )
+    return_value += typename Chain::Chain_Term ( tensor_product ( first_iter, second_chain_term -> first ) . first , second_chain_term -> second );
+  return return_value;
+} /* Product_Complex<>::tensor_product */
+
+/* * * * * * * * * * * * * *
+ * Product_const_iterator  *
+ * * * * * * * * * * * * * */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+Product_const_iterator ( void ) {
+} /* Product_const_iterator<>::Product_const_iterator */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+Product_const_iterator ( const Complex * const container ) : container_(container) {
+} /* Product_const_iterator<>::Product_const_iterator */
+
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+Product_const_iterator ( const Complex * const container, const typename First_Cell_Complex::const_iterator & first,
                 const typename Second_Cell_Complex::const_iterator & second )
-: referral(referral), first(first), second(second) {}
-
-/*
-template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-const_iterator ( const iterator & convert_me ) {
-  referral = convert_me . referral;
-  first = convert_me . first;
-  second = convert_me . second;
-}
-*/
+: container_(container), first_(first), second_(second) {
+} /* Product_const_iterator<>::Product_const_iterator */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-bool Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-operator != ( const const_iterator & right_hand_side ) const {
-  if ( first != right_hand_side . first || second != right_hand_side . second ) return true;
+bool Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+operator != ( const Product_const_iterator & right_hand_side ) const {
+  if ( first_ != right_hand_side . first_ || second_ != right_hand_side . second_ ) return true;
   return false;
-}
+} /* Product_const_iterator<>::operator != */
+
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-bool Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-operator == ( const const_iterator & right_hand_side ) const {
-  if ( first != right_hand_side . first || second != right_hand_side . second ) return false;
+bool Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+operator == ( const Product_const_iterator & right_hand_side ) const {
+  if ( first_ != right_hand_side . first_ || second_ != right_hand_side . second_ ) return false;
   return true;
-}
+} /* Product_const_iterator<>::operator == */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-const typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::value_type & 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
+bool Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+operator < ( const Product_const_iterator & right_hand_side ) const {
+  if ( first_ == right_hand_side . first_ ) {
+    return second_ < right_hand_side . second_;
+  } else {
+    return first_ < right_hand_side . first_;
+  } /* if-else */
+} /* Product_const_iterator<>::operator == */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::value_type 
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
 operator * ( void ) const {
-  dereference_value . first = * first;
-  dereference_value . second = * second;
-  dereference_value . dimension = first -> dimension + second -> dimension;
-  return dereference_value;
-}
+  return Cell ( first_, second_ );
+} /* Product_const_iterator<>::operator * */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-const typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::value_type * 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-operator -> ( void ) const {
-  return & * * this;
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator & 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex> & 
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
 operator ++ ( void ) {
   /* Iteration pattern.
    We iterate through several types of product cells of types (K, L). A cell
@@ -186,160 +477,63 @@ operator ++ ( void ) {
    that the < operator of the parent Cell definitions respect dimensionality in the obvious
    manner.
    */
-  unsigned int first_dimension = first -> dimension;
-  unsigned int second_dimension = second -> dimension;
-  ++ second;
-  if ( second == referral -> second_factor -> cells [ second_dimension ] . end () ) ++ first;
-  else return * this; /* Advanced one within type to (same, next) */
+  unsigned int first_dimension = first_ . dimension ();
+  unsigned int second_dimension = second_ . dimension ();
   
-  if ( first == referral -> first_factor -> cells [ first_dimension ] . end () ) {
-    if ( second_dimension == 0 || first_dimension == referral -> first_factor -> dimension ) {
-      return * this; /* Advanced to end() */
-    } else {
-      while ( 1 ) {
-        if ( first_dimension >= referral -> first_factor -> dimension || second_dimension == 0 ) break;
-        ++ first_dimension;
-        -- second_dimension;
-        first = referral -> first_factor -> cells [ first_dimension ] . begin ();
-        second = referral -> second_factor -> cells [ second_dimension ] . begin ();
-        if ( first == referral -> first_factor -> cells [ first_dimension ] . end ()  || 
-             second == referral -> second_factor -> cells [ second_dimension ] . end () ) continue;
-        return *this; /* Advanced to beginning of next non-empty type. */
-      }
-      /* we have reached the end */
-      first = referral -> first_factor -> cells [ first_dimension ] . end ();
-      second = referral -> second_factor -> cells [ second_dimension ] . end ();
-      return * this; /* advanced to end () */
-    }
-  } else {
-    second = referral -> second_factor -> cells [ second_dimension ] . begin ();
-    return * this; /* Advance one within type to form (next, begin) */
-  }
-}
-
-/*
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator & 
-Product_Container<First_Cell_Complex, Second_Cell_Complex>::const_iterator::
-operator = ( const iterator & right_hand_side ) {
-  referral = right_hand_side . referral;
-  first = right_hand_side . first;
-  second = right_hand_side . second;
-}
-*/
-
-/* * * * * * * * * * * * * 
- * class Product_Complex *
- * * * * * * * * * * * * */
-template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
-Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor ) :
-first_factor(first_factor), second_factor(second_factor) {
-  /* Allocate the containers. */
-  dimension = first_factor . dimension + second_factor . dimension;
-  cells . resize ( dimension + 1, Product_Container<First_Cell_Complex, Second_Cell_Complex> ( first_factor, second_factor ) );
-  for ( unsigned int dimension_index = 0; dimension_index <= dimension; ++ dimension_index ) {
-    cells [ dimension_index ] . dimension = dimension_index; 
-    cells [ dimension_index ] . remembered_size = 0;
-    
-    /* Give the ends (also give default values for the begin's in case the group ends up empty */
-    if ( first_factor . dimension < dimension_index ) {
-      cells [ dimension_index ] . remember_end = const_iterator ( & cells [ dimension_index ], first_factor . cells [ first_factor . dimension ] . end (), second_factor . cells [ dimension_index - first_factor . dimension ] . end () );
-      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ first_factor . dimension ] . end (), second_factor . cells [ dimension_index - first_factor . dimension ] . end () );
-    } else {
-      cells [ dimension_index ] . remember_end = const_iterator ( & cells [ dimension_index ], first_factor . cells [ dimension_index ] . end (), second_factor . cells [ 0 ] . end () );
-      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ dimension_index ] . end (), second_factor . cells [ 0 ] . end () );
-    }
-    
-    /* Find the beginnings */
-    for ( unsigned int index = 0; index <= dimension_index; ++ index ) {
-      if ( second_factor . dimension < dimension_index - index ) continue;
-      if ( first_factor . dimension < index ) break;
-      if ( first_factor . cells [ index ] . begin () == first_factor . cells [ index ] . end () ) continue;
-      if ( second_factor . cells [ dimension_index - index ] . begin () == second_factor . cells [ dimension_index - index ] . end () ) continue;
-      cells [ dimension_index ] . remember_begin = const_iterator ( & cells [ dimension_index ], first_factor . cells [ index ] . begin (), second_factor . cells [ dimension_index - index ] . begin () );
-      if ( first_factor . cells [ index ] . begin () != first_factor . cells [ index ] . end () && second_factor . cells [ dimension_index - index ] . begin () != second_factor . cells [ dimension_index - index ] . end () ) break;
-    }
-
-  }
-  /* Store the sizes of the containers */
-  for ( unsigned int first_dimension_index = 0; first_dimension_index <= first_factor . dimension; ++ first_dimension_index ) {
-    for ( unsigned int second_dimension_index = 0; second_dimension_index <= second_factor . dimension; ++ second_dimension_index ) {
-      cells [ first_dimension_index + second_dimension_index ] . remembered_size +=
-      first_factor . cells [ first_dimension_index ] . size () *
-      second_factor . cells [ second_dimension_index ] . size ();
-    }
-  }
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Chain < First_Cell_Complex, Second_Cell_Complex >::Chain_Term
-Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
-tensor_product ( const typename First_Cell_Complex::Cell & first_cell, const typename Second_Cell_Complex::Cell & second_cell ) const {
-  return typename Chain::Chain_Term ( Product_Cell < First_Cell_Complex, Second_Cell_Complex> ( first_cell, second_cell ), 1 );  
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Chain < First_Cell_Complex, Second_Cell_Complex >
-Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
-tensor_product ( const typename First_Cell_Complex::Chain & first_chain, const typename Second_Cell_Complex::Cell & second_cell ) const {
-  Chain return_value;
-  for ( typename First_Cell_Complex::Chain::const_iterator first_chain_term = first_chain . begin ();
-       first_chain_term != first_chain . end (); ++ first_chain_term )
-    return_value += typename Chain::Chain_Term ( tensor_product ( first_chain_term -> first, second_cell ) . first , first_chain_term -> second );
-  return return_value;
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-Product_Chain < First_Cell_Complex, Second_Cell_Complex > 
-Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
-tensor_product ( const typename First_Cell_Complex::Cell & first_cell, const typename Second_Cell_Complex::Chain & second_chain ) const {
-  Chain return_value;
-  for ( typename Second_Cell_Complex::Chain::const_iterator second_chain_term = second_chain . begin ();
-       second_chain_term != second_chain . end (); ++ second_chain_term )
-    return_value += typename Chain::Chain_Term ( tensor_product ( first_cell, second_chain_term -> first ) . first , second_chain_term -> second );
-  return return_value;
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Chain & 
-Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
-Boundary_Map ( Chain & boundary, const const_iterator & cell_iterator) const {
-  /* produce boundary via formula d(a x b) = da x b +- a x db */
-  /* Obtain da =: first_boundary, db =: second_boundary */
-  typename First_Cell_Complex::Chain first_boundary; 
-  first_factor . Boundary_Map ( first_boundary, cell_iterator . first );
-  typename Second_Cell_Complex::Chain second_boundary; 
-  second_factor . Boundary_Map ( second_boundary, cell_iterator . second );
-  /* Construct boundary */
-  const typename First_Cell_Complex::Cell & first_cell = * cell_iterator . first;
-  const typename Second_Cell_Complex::Cell & second_cell = * cell_iterator . second;
-  boundary += tensor_product ( first_boundary, second_cell );
-  if ( cell_iterator . first -> dimension & 1 ) boundary -= tensor_product ( first_cell, second_boundary );
-  else boundary += tensor_product ( first_cell, second_boundary );
-  return boundary;
-}
-
-template < class First_Cell_Complex, class Second_Cell_Complex >
-typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::Chain & 
-Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
-Coboundary_Map ( Chain & coboundary, const const_iterator & cell_iterator ) const {
-  /* produce coboundary via formula d'(a x b) = d'a x b +- a x d'b */
-  /* Obtain da =: first_boundary, db =: second_boundary */
-  typename First_Cell_Complex::Chain first_coboundary; 
-  first_factor . Coboundary_Map ( first_coboundary, cell_iterator . first );
-  typename Second_Cell_Complex::Chain second_coboundary; 
-  second_factor . Coboundary_Map ( second_coboundary, cell_iterator . second );
+  ++ second_;
+  /* If advanced one within (K, L) type return answer immediately */
+  if ( second_ != container_ -> second_factor . end ( second_dimension ) ) return *this;
   
-  /* Construct coboundary */
-  const typename First_Cell_Complex::Cell & first_cell = * cell_iterator . first;
-  const typename Second_Cell_Complex::Cell & second_cell = * cell_iterator . second;
-  //std::cout << "pc: cob(" << first_cell << ", " << second_cell << ") = \n"; 
-  coboundary += tensor_product ( first_coboundary, second_cell );
-  //std::cout << coboundary << "\n";
-  if ( cell_iterator . first -> dimension & 1 ) coboundary -= tensor_product ( first_cell, second_coboundary );
-  else coboundary += tensor_product ( first_cell, second_coboundary );
-  //std::cout << coboundary << "\n";
+  ++ first_;
+  /* If remaining in type (K, L) loop, return answer */
+  if ( first_ != container_ -> first_factor . end ( first_dimension ) ) {
+    second_ = container_ -> second_factor . begin ( second_dimension );
+    return *this;
+  } /* if */
+  
+  /* Find next non-empty type. */
+  unsigned int dimension = first_dimension + second_dimension;
+  const unsigned int K_max = container_ -> first_factor . dimension ();
+  const unsigned int L_max = container_ -> second_factor . dimension ();
+  while ( 1 ) {
+    if ( first_dimension == K_max || second_dimension == 0 ) {
+      /* The type is exhausted. */
+      ++ dimension;
+      if ( dimension > container_ -> dimension_ ) {
+        /* We are completely finished */
+        return *this = container_ -> end_;
+      } /* if */
+      /* Obtain the next type */
+      if ( L_max < dimension ) {
+        first_dimension = dimension - L_max;
+        second_dimension = L_max;
+      } else {
+        first_dimension = 0;
+        second_dimension = dimension;
+      } /* if-else */
+    } else {
+      ++ first_dimension;
+      -- second_dimension;
+    } /* if-else */
+    /* If have found the next type, return answer */
+    if ( container_ -> first_factor . size ( first_dimension ) > 0 
+        && container_ -> second_factor . size ( second_dimension ) > 0 ) {
+      first_ = container_ -> first_factor . begin ( first_dimension );
+      second_ = container_ -> second_factor . begin ( second_dimension );
+      return * this;
+    } /* if */
+  } /* while */
+} /* Product_const_iterator<>::operator ++ */
 
-  return coboundary;
-}
+template < class First_Cell_Complex, class Second_Cell_Complex >
+unsigned int Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+dimension ( void ) const {
+  return first_ . dimension () + second_ . dimension ();
+} /* Product_const_iterator<>::dimension */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+const Product_Complex<First_Cell_Complex, Second_Cell_Complex> & 
+Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
+container ( void ) const {
+  return container_;
+} /* Product_const_iterator<>::container */

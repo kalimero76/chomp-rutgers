@@ -13,6 +13,8 @@
 #include <vector>
 #include <list>
 
+#include "archetypes/Chain_Archetype.h" /* For Default_Ring */
+
 /* * * * * * * * * * * *
  * typedef Morse_Chain *
  * * * * * * * * * * * */

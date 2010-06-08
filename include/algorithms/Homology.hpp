@@ -235,29 +235,34 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	return return_value; 
 } /* void Homology(...) */
 
+
 #if 0
+
+#include "complexes/Graph_Complex.h"
 
 /* Compute the homology of maps using "H_*(G) method" */
 template < class Toplex, class Map >
-void Map_Homology_V1 ( const Toplex & X, const Toplex & Y, const Map & f ) {
-  typedef Toplex::Complex Complex;
+void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f ) {
+  typedef typename Toplex::Complex Complex;
   typedef Graph_Complex < Toplex, Map > Graph;
-  Complex complex_X = X . complex ();
-  Complex complex_Y = Y . complex ();
-  Morse_Complex reduced_X = morse::reduction ( complex_X );
-  Morse_Complex reduced_Y = morse::reduction ( complex_Y );  
+  
+  /* Produce the graph complex */
   Graph graph ( X, Y, f );
   
-  /* Find the homology generators from the graph and codomain. */
-  std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > graph_generators = Homology_Generators ( graph );
-  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > codomain_generators ( graph_generators . size () );
+  /* Find the homology generators of the graph */
+  std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > 
+    graph_generators = Homology_Generators ( graph );
+  
+  /* Find the homology generators of the codomain */
+  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
+    codomain_generators = Homology_Generators ( graph . codomain () );
   
   /* Project the homology generators of the graph to the domain and codomain */
-  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > domain_generators ( graph_generators . size () );
-  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > codomain_cycles ( graph_generators . size () );
-  for ( unsigned int generator_index = 0; generator_index < graph_generators . size () ; ++ generator_index ) {
-    domain_projections [ generator_index ] = psi ( graph . projectToDomain ( graph_generators ) );
-    codomain_cycles [ generator_index ] = psi ( graph . projectToCodomain ( graph_generators ) );
+  std::vector < std::vector < std::pair < typename Complex::Chain unsigned int > > > 
+    codomain_cycles ( graph_generators . size () );
+  for ( unsigned int generator_index = 0; generator_index < graph_generators . size (); 
+        ++ generator_index ) {
+    codomain_cycles [ generator_index ] = graph . projectToCodomain ( graph_generators );
   } /* for */
   
   /* Write the codomain cycles in terms of the codomain generators. */
@@ -265,8 +270,12 @@ void Map_Homology_V1 ( const Toplex & X, const Toplex & Y, const Map & f ) {
   // TODO
   
   /* Return algebraic information */
-  return;
+  return /* TODO */;
 } /* void Map_Homology(...) */
+
+#endif
+
+#if 0 
 
 /* Compute the homology of maps using "preboundary method" */
 template < class Toplex, class Map >
