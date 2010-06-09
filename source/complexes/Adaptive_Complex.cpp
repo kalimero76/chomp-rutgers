@@ -482,12 +482,12 @@ void Adaptive_Tree::Finalize(){
   if ( finalized ) return;
 	std::vector< std::map < int, bool > > full_cube_cells;
 
-	std::cout << "Initializing tree \n";
+	//std::cout << "Initializing tree \n";
 	node_visitor.Set_To( &tree_root );
 	Leaf_Lookup_Initialize( &node_visitor);
 
-	std::cout << "Tree initialized \n";
-	std::cout << "Number of cubes = " << leaf_lookup.size() <<  "\n";
+	//std::cout << "Tree initialized \n";
+	//std::cout << "Number of cubes = " << leaf_lookup.size() <<  "\n";
 
 	Fill_With_Cells_Of_Full_Cube( &full_cube_cells );
 	//Go thru all the leaves and add lower dimensional cells
@@ -495,7 +495,7 @@ void Adaptive_Tree::Finalize(){
 		//std::cout << "Initializing cube = " << leaf_index << " out of " << leaf_lookup . size () << " \n";
 		Finalize_Cube( leaf_lookup [ leaf_index ], &full_cube_cells);
 	}
-	std::cout << "Cubes Intialized \n";
+	//std::cout << "Cubes Intialized \n";
   finalized = true;
 	return;
 } /* Adaptive_Tree::Finalize */
@@ -548,7 +548,7 @@ Adaptive_const_iterator & Adaptive_const_iterator::operator ++ ( void ) {
 			return *this;
 		}
 	}
-} /* endfunction */
+} /* Adaptive_const_iterator::operator ++ */
 
 bool Adaptive_const_iterator::operator != ( const const_iterator & right_hand_side ) const {
 	if( full_cube_number != right_hand_side.full_cube_number ) return true;
@@ -664,6 +664,8 @@ Adaptive_Complex::size_type Adaptive_Complex::size ( unsigned int dimension ) co
 } /* Adaptive_Complex::size */
 
 Adaptive_Complex::Chain Adaptive_Complex::boundary ( const Adaptive_const_iterator & input ) const {
+  std::cout << "Adaptive_Complex::boundary\n";
+  std::cout << "Finding boundary of " << *input << "\n";
   Adaptive_Complex::Chain output;
 	int coincidence_index;
 	Cell cell;
@@ -979,6 +981,7 @@ void Adaptive_Complex::Finalize(){
 	adaptive_tree->Finalize();
   /* Gives correct values to begin_*/
   /* Set end_ */
+  end_ . referral = this;
   end_ . full_cube_number = adaptive_tree->leaf_lookup . size ();
   /* Find begin [ 0 ] */ /* TODO: this fails if there are no vertices */
   begin_ [ 0 ] = end_;
@@ -1006,12 +1009,11 @@ void Adaptive_Complex::Finalize(){
     begin_ [ dimension ] = end_;
   } /* while */
   begin_ [ dimension_ + 1 ] = end_;
-}
+} /* Adaptive_Complex::Finalize */
 
-/* Constructor */
 Adaptive_Complex::Adaptive_Complex ( void ) {
   
-} /* endfunction */
+} /* Adaptive_Complex::Adaptive_Complex */
 
 Adaptive_Complex::Adaptive_Complex ( unsigned int complex_dimension ) : dimension_(complex_dimension)  {
 	adaptive_tree = new Adaptive_Tree ( this );

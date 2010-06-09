@@ -7,21 +7,6 @@
  *
  */ 
 
-#include <ext/hash_map> /* for hash<> specialization */
-namespace std { using namespace __gnu_cxx; }
-#include <map> /* For map<...> */
-
-namespace __gnu_cxx {
-  template <>
-  struct hash<Default_Cell> {
-    hash<unsigned long> internal_hasher;
-    size_t operator () (const Default_Cell & hash_me) const {
-			return internal_hasher ( hash_me . data_ ); 
-    } 
-  };
-} /* end namespace */
-
-
 /* * * * * * * * * * * * * * * *
  * Chain_Archetype Definitions *
  * * * * * * * * * * * * * * * */

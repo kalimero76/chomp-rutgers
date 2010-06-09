@@ -11,12 +11,9 @@
 #ifndef CHOMP_ADAPTIVE_CUBICAL_TOPLEX_
 #define CHOMP_ADAPTIVE_CUBICAL_TOPLEX_
 
-#include <ext/hash_set>
-
-//namespace std {
-//  using namespace __gnu_cxx;
-//} /* namespace std */
-
+#include <vector>
+#include <tr1/unordered_set> //PORTABILITY ISSUE
+namespace std { using namespace tr1; }
 #include "complexes/Adaptive_Complex.h"
 
 namespace Adaptive_Cubical {
@@ -62,7 +59,7 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_Subset *
    * * * * * * * * * * * * * * * * * * * * */
-  typedef std::hash_set < Adaptive_Cubical::Top_Cell > Toplex_Subset;
+  typedef std::unordered_set < Adaptive_Cubical::Top_Cell > Toplex_Subset;
   
   /* * * * * * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_const_iterator  *
@@ -77,6 +74,7 @@ namespace Adaptive_Cubical {
     bool operator == ( const Toplex_const_iterator & right_hand_side ) const;
     bool operator < ( const Toplex_const_iterator & right_hand_side ) const;
     const Adaptive_Cubical::Top_Cell & operator * ( void ) const; 
+    Node * node ( void );
   private:
     friend class Toplex;
     Node * node_;
@@ -105,9 +103,13 @@ namespace Adaptive_Cubical {
     iterator end ( void ) const;
     size_type size ( void ) const;
     /* Toplex */
+    unsigned int dimension ( void ) const;
     Subset cover ( const Geometric_Description & geometric_region ) const;
     Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
+    Complex complex ( void ) const;
+    Complex complex ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
+    
     /* Adaptive Toplex */
     Subset subdivide ( iterator cell_to_divide );
     /* Adaptive Cubical Toplex */

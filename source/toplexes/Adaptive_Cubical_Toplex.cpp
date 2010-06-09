@@ -8,6 +8,8 @@
  */
 
 #include <deque>
+#include <algorithm>
+
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 
 namespace Adaptive_Cubical {
@@ -105,6 +107,10 @@ namespace Adaptive_Cubical {
     return node_ -> contents_;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator * */
   
+  Node * Toplex_const_iterator::node ( void ) {
+    return node_;
+  } /* Adaptive_Cubical::Toplex_const_iterator::node */
+
   /* * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex  *
    * * * * * * * * * * * * * * * * * */
@@ -115,22 +121,31 @@ namespace Adaptive_Cubical {
     /* TODO: if both children of a node are erased, erase also that node */
     if ( erase_me == begin_ ) ++ begin_;
     /* Disconnect from parent */
-    if ( erase_me . node_ -> parent_ != NULL ) {
+    Node * node = erase_me . node_;
+    while ( 1 ) {
+      Node * parent = node -> parent_;
+      if ( parent == NULL ) break;  
       /* This is not the root: a parent exists. */
-      if ( erase_me . node_ -> parent_ -> left_ == erase_me . node_ ) {
+      if ( parent -> left_ == node ) {
         /* This is a left-child; disconnect accordingly. */
-        erase_me . node_ -> parent_ -> left_ = NULL;
+        parent -> left_ = NULL;
       } else {
         /* This is a right-child; disconnect accordingly. */
-        erase_me . node_ -> parent_ -> right_ = NULL;
+        parent -> right_ = NULL;
       } /* if-else */
-    } /* if */
+      if ( parent -> left_ != parent -> right_ ) break;
+      /* We will erase this node and move on to erase its parent */
+      find_ [ node -> contents_ ] = end_;
+      -- size_;
+      delete node;
+      node = parent;
+    } /* while */
     /* Update find_ */
-    find_ [ erase_me . node_ -> contents_ ] = end_;
+    find_ [ node -> contents_ ] = end_;
     /* Update size_ */
     -- size_;
     /* Deallocate the node */
-    delete erase_me . node_;
+    delete node;
   } /* Adaptive_Cubical::Toplex::erase */
   
   void Toplex::clear ( void ) {
@@ -157,6 +172,10 @@ namespace Adaptive_Cubical {
     return size_;
   } /* Adaptive_Cubical::Toplex::size */
   
+  unsigned int Toplex::dimension ( void ) const {
+    return dimension_;
+  } /* Adaptive_Cubical::Toplex::dimension */
+
   Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region ) const {
     /* Todo: optimize geometric checks, it is inefficient to call geometry at every level */
     Subset cover_set;
@@ -217,38 +236,66 @@ namespace Adaptive_Cubical {
     return return_value;
   } /* Adaptive_Cubical::Toplex::geometry */
   
+  namespace detail {
+    
+    struct AddTopCellToComplexFunctor {
+      Toplex::Complex & complex;
+      const Toplex & toplex;
+      AddTopCellToComplexFunctor ( Toplex::Complex & complex, const Toplex & toplex ) 
+      : complex(complex), toplex(toplex) {}
+      void operator () ( const Toplex::Top_Cell & top_cell ) {
+        /* Determine depth of cell */
+        unsigned int depth = 0;
+        Node * leaf = toplex . find ( top_cell ) . node ();
+        Node * node = leaf;
+        while ( node -> parent_ != NULL ) {
+          node = node -> parent_;
+          if ( node -> dimension_ == 0 ) ++ depth;
+        } /* while */
+        /* Determine 'splitting' used for Add_Full_Cube in Miro Kramar's Adaptive Complex */
+        std::vector < std::vector <bool> > splitting ( depth );
+        std::vector<bool> subdivision_choice ( toplex . dimension () );
+        node = leaf;
+        int outer_index = depth;
+        int inner_index = toplex . dimension ();
+        while ( 1 ) {
+          -- inner_index;
+          Node * parent = node -> parent_;
+          ( parent -> left_ == node ) ? subdivision_choice [ inner_index ] = false : 
+                                        subdivision_choice [ inner_index ] = true;
+          if ( inner_index == 0 ) {
+            -- outer_index;
+            splitting [ outer_index ] = subdivision_choice;
+            if ( outer_index == 0 ) break;
+            inner_index = toplex . dimension ();
+          } /* if */
+          node = parent;
+        } /* while */
+        complex . Add_Full_Cube ( splitting );
+      } /* operator () */
+    };
+  } /* namespace detail */
+  
+  Toplex::Complex Toplex::complex ( void ) const {
+    Complex return_value ( dimension_);
+    std::for_each ( begin (), end (), detail::AddTopCellToComplexFunctor ( return_value, *this ) );
+    return_value . Finalize ();
+    return return_value;
+  } /* Adaptive_Cubical::Toplex::complex */
+  
+  Toplex::Complex Toplex::complex ( const const_iterator & cell_iterator ) const {
+    Complex return_value ( dimension_);
+    detail::AddTopCellToComplexFunctor my_functor ( return_value, *this );
+    my_functor ( * cell_iterator );
+    return_value . Finalize ();
+    return return_value;
+  } /* Adaptive_Cubical::Toplex::complex */
+  
   Toplex::Complex Toplex::complex ( const Subset & subset_of_toplex ) const {
     Complex return_value ( dimension_);
-    /* Iterate through all the top cells in the subset. */
-    for ( Subset::const_iterator cell_iterator = subset_of_toplex . begin (); cell_iterator != subset_of_toplex . end (); ++ cell_iterator ) {
-      /* Determine depth of cell */
-      unsigned int depth = 0;
-      Node * leaf = find ( * cell_iterator ) . node_;
-      Node * node = leaf;
-      while ( node -> parent_ != NULL ) {
-        node = node -> parent_;
-        if ( node -> dimension_ == 0 ) ++ depth;
-      } /* while */
-      /* Determine 'splitting' used for Add_Full_Cube in Miro Kramar's Adaptive Complex */
-      std::vector < std::vector <bool> > splitting ( depth );
-      std::vector<bool> subdivision_choice ( dimension_ );
-      node = leaf;
-      int outer_index = depth;
-      int inner_index = dimension_;
-      while ( 1 ) {
-        -- inner_index;
-        Node * parent = node -> parent_;
-        ( parent -> left_ == node ) ? subdivision_choice [ inner_index ] = false : subdivision_choice [ inner_index ] = true;
-        if ( inner_index == 0 ) {
-          -- outer_index;
-          splitting [ outer_index ] = subdivision_choice;
-          if ( outer_index == 0 ) break;
-          inner_index = dimension_;
-        } /* if */
-        node = parent;
-      } /* while */
-      return_value . Add_Full_Cube ( splitting );
-    } /* for */
+    std::for_each ( subset_of_toplex . begin (), 
+               subset_of_toplex . end (), 
+               detail::AddTopCellToComplexFunctor ( return_value, *this ) );
     return_value . Finalize ();
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */

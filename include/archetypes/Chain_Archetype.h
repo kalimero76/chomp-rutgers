@@ -10,10 +10,13 @@
 #ifndef CHOMP_CHAIN_ARCHETYPE_
 #define CHOMP_CHAIN_ARCHETYPE_
 
-#include <ext/hash_map> /* for hash<> specialization */
-namespace std { using namespace __gnu_cxx; }
-#include <map> /* For map<...>, used by Default_Chain typedef */
 #include <iostream> /* For ostream, used by output streaming overload for Default_Cell , also debug*/
+#include "boost/functional/hash.hpp"
+
+/* Declarations */
+class Default_Cell;
+size_t hash_value ( const Default_Cell & hash_me );
+template < class > class Chain_Archetype;
 
 /* * * * * * * * * * * * * * * * **
 ** Elementary Chains and Chains  **
@@ -29,17 +32,21 @@ public:
 	bool operator == ( const Default_Cell & right_hand_side ) const;
 	bool operator != ( const Default_Cell & right_hand_side ) const;
 	friend std::ostream & operator << ( std::ostream & output_stream, const Default_Cell & print_me );
-  friend class __gnu_cxx::hash<Default_Cell>;
   unsigned long & data ( void );
   const unsigned long & data ( void ) const;
   unsigned int & dimension ( void );
   const unsigned int & dimension ( void ) const;
-
+  
 private:
+  friend size_t hash_value ( const Default_Cell & hash_me );
   unsigned long data_;
   unsigned int dimension_;
 };
 
+size_t hash_value ( const Default_Cell & hash_me ) {
+  boost::hash<unsigned long> hasher;
+  return hasher ( hash_me . data_ ); 
+} /* hash_value for Default_Cell */
 
 // Forward Declaration of friend functions for Chain_Archetype
 template < class Pair_Associative_Container > class Chain_Archetype;

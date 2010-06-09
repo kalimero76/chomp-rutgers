@@ -9,7 +9,10 @@
 #ifndef CHOMP_PRODUCT_COMPLEX_
 #define CHOMP_PRODUCT_COMPLEX_
 
-#include <set> /* for map */
+#include <vector>
+#include <map>
+#include "boost/functional/hash.hpp"
+
 #include "archetypes/Chain_Archetype.h" /* for Default_Cell, Default_Chain */
 
 /**************************************************************************
@@ -43,12 +46,12 @@ public:
 	bool operator == ( const Product_Cell & right_hand_side ) const;
 	bool operator != ( const Product_Cell & right_hand_side ) const;
   unsigned int dimension ( void ) const;
-	friend std::ostream & operator << <>( std::ostream & output_stream, const Product_Cell & print_me );
 private:
+  friend std::ostream & operator << <>( std::ostream & output_stream, const Product_Cell & print_me );
   friend class Product_Complex < First_Cell_Complex, Second_Cell_Complex >;
-  unsigned int dimension_;
   typename First_Cell_Complex::Cell first_;
   typename Second_Cell_Complex::Cell second_;
+  unsigned int dimension_;
 };
 
 /* * * * * * * * * * * *
@@ -113,6 +116,8 @@ public:
   size_type ace_end ( unsigned int dimension ) const;
   /* Product Complex */
   Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor );
+  typename First_Cell_Complex::Chain projectFirst ( const Chain & project_me );
+  typename Second_Cell_Complex::Chain projectSecond ( const Chain & project_me );
 
 private:
   friend class Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>;
@@ -145,6 +150,14 @@ private:
 /* * * * * * * * * * * * * *
  * Product_const_iterator  *
  * * * * * * * * * * * * * */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+std::ostream & operator << ( std::ostream & output_stream, const Product_const_iterator < First_Cell_Complex, Second_Cell_Complex > & print_me );
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+size_t hash_value ( const Product_const_iterator 
+                   < First_Cell_Complex, Second_Cell_Complex > & hash_me );
+
 template < class First_Cell_Complex_Template, class Second_Cell_Complex_Template >
 class Product_const_iterator {
 public:
@@ -152,6 +165,9 @@ public:
   typedef Second_Cell_Complex_Template Second_Cell_Complex;
   typedef Product_Complex<First_Cell_Complex, Second_Cell_Complex> complex_type;
   typedef Product_Complex < First_Cell_Complex, Second_Cell_Complex > Complex;
+  typedef Product_Cell<First_Cell_Complex, Second_Cell_Complex> Cell;
+	typedef Cell key_type;
+	typedef Cell value_type;
   Product_const_iterator ( void );
   Product_const_iterator ( const Complex * const container );
   Product_const_iterator ( const Complex * const container, 
@@ -166,12 +182,24 @@ public:
   const Complex & container ( void ) const;
 private:
   friend class Product_Complex < First_Cell_Complex, Second_Cell_Complex >;
+  friend std::ostream & operator << <> ( std::ostream & output_stream, const Product_const_iterator < First_Cell_Complex, Second_Cell_Complex > & print_me );
+
+  friend size_t hash_value <> ( const Product_const_iterator 
+                            < First_Cell_Complex, Second_Cell_Complex > & hash_me );
   const Complex * container_;
   typename First_Cell_Complex::const_iterator first_;
   typename Second_Cell_Complex::const_iterator second_;
   unsigned int dimension_;
 };
 
+template < class First_Cell_Complex, class Second_Cell_Complex >
+size_t hash_value ( const Product_const_iterator 
+                   < First_Cell_Complex, Second_Cell_Complex > & hash_me ) {
+  std::size_t seed = 0;
+  boost::hash_combine(seed, hash_me . first_);
+  boost::hash_combine(seed, hash_me . second_);
+  return seed;
+} /* hash_value */
 
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "complexes/Product_Complex.hpp"

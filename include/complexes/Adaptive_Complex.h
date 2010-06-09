@@ -10,12 +10,16 @@
 #ifndef CHOMP_ADAPTIVE_COMPLEX_
 #define CHOMP_ADAPTIVE_COMPLEX_
 
+#include <vector>
+#include <map>
+#include "boost/functional/hash.hpp"
+
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
-#include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
 
 /* forward declarations */
 class Adaptive_Complex;
 class Adaptive_const_iterator;
+size_t hash_value ( const Adaptive_const_iterator & hash_me );
 class Adaptive_Tree;
 
 /* * * * * * * * * * * * * * *
@@ -155,15 +159,21 @@ public:
   const Adaptive_Cell * operator -> ( void ) const;
   unsigned int dimension () const;
   const Adaptive_Complex & container () const;
-private:
+//private:
   friend class Adaptive_Complex;
   friend class Adaptive_Tree;
+  friend size_t hash_value ( const Adaptive_const_iterator & hash_me );
   const Adaptive_Complex * referral;
   mutable Adaptive_Cell dereference_value;
   unsigned int dimension_;
   unsigned long full_cube_number;
   std::map<int, bool>::const_iterator piece_iterator;
 };
+
+size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
+  boost::hash < unsigned long > hasher;
+  return hasher ( * reinterpret_cast < const unsigned long * > ( & hash_me . piece_iterator ) );
+} /* hash_value */
 
 /* * * * * * * * * * * * * *
  * typedef Adaptive_Chain  *

@@ -156,21 +156,21 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	first_t = 0;
 	for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension (); ++ dimension_index ) {
 		/* Compute the SNF of the new boundary matrix, d_{dimension_index} */
-		std::vector < typename Cell_Complex::Cell > translation_table;
-        Matrix boundary_matrix;
+		std::vector < typename Cell_Complex::const_iterator > translation_table;
+    Matrix boundary_matrix;
 		Dense_Matrix_Boundary_Map ( boundary_matrix, translation_table, complex, dimension_index + 1 );
-        
-        if ( dimension_index < complex . dimension () )
-            capd::matrixAlgorithms::smithForm( boundary_matrix, second_Q, second_Qinv, second_R, second_Rinv, second_s, second_t);
-        else {
-            second_Qinv = second_Q = Matrix::Identity( complex . size ( complex . dimension () ) );
-            second_s = second_t = 0;
-        }
-
+    
+    if ( dimension_index < complex . dimension () )
+      capd::matrixAlgorithms::smithForm( boundary_matrix, second_Q, second_Qinv, second_R, second_Rinv, second_s, second_t);
+    else {
+      second_Qinv = second_Q = Matrix::Identity( complex . size ( complex . dimension () ) );
+      second_s = second_t = 0;
+    }
+    
 		/* Obtain the relevant sub-matrix from second_Qinv */
 		MatrixSlice<Matrix> image_slice ( second_Qinv, second_t + 1, second_Qinv . numberOfRows (), 1, second_Qinv . numberOfColumns () );
 		Matrix image_cycles;
-        
+    
 		if ( dimension_index > 0 ) {
 			Matrix image ( image_slice );
 			/* Obtain the relevant sub-matrix from first_R */
@@ -178,20 +178,20 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			Matrix cycle ( cycle_slice );
 			/* REMARK: Had to copy the slices because CAPD doesn't support * on MatrixSlice class. */
 			image_cycles = image * cycle;
-        } else { /* Everything is a cycle */
+    } else { /* Everything is a cycle */
 			image_cycles = Matrix ( image_slice );
 		}
-                
+    
 		/* Put "image_cycles" into columnEchelon form by column operations. */
 		Matrix S, Sinv; int l;
-        S = Sinv = Matrix ( image_cycles . numberOfColumns (), image_cycles . numberOfColumns () ); // columnEchelon should do this.
-        capd::matrixAlgorithms::columnEchelon ( image_cycles, S, Sinv, l );
-        
-        /* Now convert the answer into the correct space */
-        MatrixSlice<Matrix> image_inv_slice ( second_Q, 1, second_Q . numberOfRows (), second_t + 1, second_Q . numberOfColumns () );
+    S = Sinv = Matrix ( image_cycles . numberOfColumns (), image_cycles . numberOfColumns () ); // columnEchelon should do this.
+    capd::matrixAlgorithms::columnEchelon ( image_cycles, S, Sinv, l );
+    
+    /* Now convert the answer into the correct space */
+    MatrixSlice<Matrix> image_inv_slice ( second_Q, 1, second_Q . numberOfRows (), second_t + 1, second_Q . numberOfColumns () );
 		Matrix image_inv ( image_inv_slice );
 		Matrix betti_generators_matrix= image_inv * image_cycles;
-
+    
 		/* The generators are now sitting in the first n - t_1 - t_2 columns of betti_generators. */
 		/* Prepare the output */
 		unsigned int betti_number = second_Q . numberOfColumns () - first_t - second_t;
@@ -199,21 +199,21 @@ Homology_Generators ( const Cell_Complex & complex ) {
 		std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & generators = return_value [ dimension_index ];
 		generators . resize ( betti_number + torsion_number );
 		using namespace capd::vectalg;
-
+    
 		/* Insert the betti generators */
-        //std::cout << "The betti number is " << betti_number << ".\n";
+    //std::cout << "The betti number is " << betti_number << ".\n";
 		for ( unsigned int betti_index = 0; betti_index < betti_number; ++ betti_index ) {
 			generators [ betti_index ] . second = 0;
 			typename Cell_Complex::Chain & generator_chain = generators [ betti_index ] . first;
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = betti_generators_matrix . column ( betti_index );
 			unsigned long index = 0;
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
-			entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::Cell, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-            //std::cout << "Betti Chain: " << generator_chain << "\n";
+           entry != generator_vector . end (); ++ entry ) 
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+      //std::cout << "Betti Chain: " << generator_chain << "\n";
 		}
-
-
+    
+    
 		/* Insert the torsion generators */
 		for ( unsigned int torsion_index = 0; torsion_index < torsion_number; ++ torsion_index ) {
 			generators [ betti_number + torsion_index ] . second = boundary_matrix ( second_s + torsion_index + 1, second_s + torsion_index + 1);
@@ -221,13 +221,13 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = second_Q . column ( second_s + torsion_index );
 			unsigned long index = 0;
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
-			entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::Cell, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-            //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
-
+           entry != generator_vector . end (); ++ entry ) 
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+      //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
+      
 		}
 		/* Store second_* into first_* */
-
+    
 		first_R = second_R;
 		first_t = second_t;
 		
@@ -235,46 +235,61 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	return return_value; 
 } /* void Homology(...) */
 
-
-#if 0
-
 #include "complexes/Graph_Complex.h"
+#include "algorithms/basic.h"
 
 /* Compute the homology of maps using "H_*(G) method" */
 template < class Toplex, class Map >
 void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f ) {
   typedef typename Toplex::Complex Complex;
-  typedef Graph_Complex < Toplex, Map > Graph;
+  typedef Graph_Complex < Toplex > Graph;
   
   /* Produce the graph complex */
   Graph graph ( X, Y, f );
+  
+  std::cout << "Graph Complex generated.\n";
+  
+  utility::inspect_complex ( graph );
   
   /* Find the homology generators of the graph */
   std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > 
     graph_generators = Homology_Generators ( graph );
   
+  std::cout << "Graph generators computed.\n";
+
   /* Find the homology generators of the codomain */
   std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
     codomain_generators = Homology_Generators ( graph . codomain () );
-  
+
+  std::cout << "Codomain generators computed.\n";
+
   /* Project the homology generators of the graph to the domain and codomain */
-  std::vector < std::vector < std::pair < typename Complex::Chain unsigned int > > > 
+  std::vector < std::vector < typename Complex::Chain > > 
     codomain_cycles ( graph_generators . size () );
-  for ( unsigned int generator_index = 0; generator_index < graph_generators . size (); 
-        ++ generator_index ) {
-    codomain_cycles [ generator_index ] = graph . projectToCodomain ( graph_generators );
+  for ( unsigned int dimension_index = 0; 
+        dimension_index < graph_generators . size (); 
+        ++ dimension_index ) {
+    codomain_cycles [ dimension_index ] . resize ( graph_generators [ dimension_index ] . size () );
+    for ( unsigned int generator_index = 0; 
+         generator_index < graph_generators [ dimension_index ]. size (); 
+         ++ generator_index ) {
+      codomain_cycles [ dimension_index ] 
+                      [ generator_index ] = 
+        graph . projectToCodomain ( graph_generators [ dimension_index ] 
+                                                     [ generator_index ] . first );
+      
+    } /* for */
   } /* for */
   
   /* Write the codomain cycles in terms of the codomain generators. */
   
+  std::cout << "Only algebra remains.\n";
   // TODO
   
   /* Return algebraic information */
   return /* TODO */;
 } /* void Map_Homology(...) */
-
-#endif
-
+ 
 #if 0 
 
 /* Compute the homology of maps using "preboundary method" */

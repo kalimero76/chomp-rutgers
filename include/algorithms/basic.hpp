@@ -61,16 +61,21 @@ T vector_sum ( const std::vector<T> add_my_elements_together ) {
   
 template < class Cell_Complex >
 void inspect_complex ( Cell_Complex & my_complex ) {
-  std::cout << "Inspecting the complex.\n";
+  std::cout << "Inspecting the complex!\n";
   std::cout << "The complex has dimension " << my_complex . dimension () << "\n";
   std::cout << "The complex has size " << my_complex . size () << "\n";
-  for ( typename Cell_Complex::const_iterator iter = my_complex . begin (); iter != my_complex . end (); ++ iter ) {
+  std::cout << "begins at " << * my_complex . begin () << "\n";
+  typename Cell_Complex::const_iterator it = my_complex . begin ();
+  ++ it;
+  std::cout << "next is " << * it << "\n";
+  for ( typename Cell_Complex::const_iterator iter = my_complex . begin (); 
+        iter != my_complex . end (); ++ iter ) {
     typename Cell_Complex::Chain my_chain = my_complex . boundary ( iter );
     typename Cell_Complex::Chain another_chain = my_complex . coboundary ( iter );
     std::cout << " bd ( " << *iter << ") = " << my_chain << "\n";
     std::cout << " cbd ( " << *iter << ") = " << another_chain << "\n";
   } /* for */
-} /* inspect */
+} /* inspect_complex */
   
   template < class Cell_Complex >
   void AKQ_inspect ( const Cell_Complex & my_complex ) {

@@ -9,7 +9,7 @@
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 std::ostream & operator << ( std::ostream & output_stream, const Product_Cell<First_Cell_Complex, Second_Cell_Complex> & print_me ) {
-  return output_stream << "(" << print_me . first << " x " << print_me . second << ", " << print_me . dimension << ")";
+  return output_stream << "(" << print_me . first_ << " x " << print_me . second_ << ", " << print_me . dimension_ << ")";
 } /* operator << for Product_Cell<> */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
@@ -21,7 +21,7 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
 Product_Cell ( const typename First_Cell_Complex::Cell & first, 
               const typename Second_Cell_Complex::Cell & second ) 
-: first_(first), second_(second), dimension_(first . dimension + second . dimension) {
+: first_(first), second_(second), dimension_(first . dimension () + second . dimension () ) {
 } /* Product_Cell<>::Product_Cell */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
@@ -63,8 +63,8 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
 Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 find ( const Cell & find_me ) const {
-  typename First_Cell_Complex::const_iterator first_iterator = first_factor -> find ( find_me . first );
-  typename Second_Cell_Complex::const_iterator second_iterator = second_factor -> find (find_me . second );
+  typename First_Cell_Complex::const_iterator first_iterator = first_factor . find ( find_me . first_ );
+  typename Second_Cell_Complex::const_iterator second_iterator = second_factor . find (find_me . second_ );
   return const_iterator ( this, first_iterator, second_iterator );
 } /* Product_Complex<>::find */
 
@@ -377,6 +377,36 @@ first_factor(first_factor), second_factor(second_factor) {
 } /* Product_Complex<>::Product_Complex */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
+typename First_Cell_Complex::Chain 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
+projectFirst ( const Chain & project_me ) {
+  typename First_Cell_Complex::Chain return_value;
+  for ( typename Chain::const_iterator term_iterator = project_me . begin ();
+       term_iterator != project_me . end (); ++ term_iterator ) {
+    typename First_Cell_Complex::Chain::Chain_Term projected_term 
+    ( term_iterator -> first . first_, term_iterator -> second );
+    if ( projected_term . first . dimension () == dimension_ ) 
+      return_value += projected_term;
+  } /* for */
+  return return_value;
+} /* Product_Complex<>::projectFirst */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+typename Second_Cell_Complex::Chain 
+Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
+projectSecond ( const Chain & project_me ) {
+  typename Second_Cell_Complex::Chain return_value;
+  for ( typename Chain::const_iterator term_iterator = project_me . begin ();
+       term_iterator != project_me . end (); ++ term_iterator ) {
+    typename Second_Cell_Complex::Chain::Chain_Term projected_term 
+    ( term_iterator -> first . second_, term_iterator -> second );
+    if ( projected_term . first . dimension () == dimension_ ) 
+      return_value += projected_term;
+  } /* for */
+  return return_value;
+} /* Product_Complex<>::projectSecond */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Chain < First_Cell_Complex, Second_Cell_Complex >::Chain_Term
 Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
 tensor_product ( const typename First_Cell_Complex::const_iterator & first_iter, const typename Second_Cell_Complex::const_iterator & second_iter ) const {
@@ -410,6 +440,11 @@ tensor_product ( const typename First_Cell_Complex::const_iterator & first_iter,
 /* * * * * * * * * * * * * *
  * Product_const_iterator  *
  * * * * * * * * * * * * * */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+std::ostream & operator << ( std::ostream & output_stream, const Product_const_iterator < First_Cell_Complex, Second_Cell_Complex > & print_me ) {
+  return output_stream << "(" << * print_me . first_ << ", " << * print_me . second_ << ")";
+} /* operator << for Product_const_iterator <> */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
@@ -458,7 +493,7 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::value_type 
 Product_const_iterator<First_Cell_Complex, Second_Cell_Complex>::
 operator * ( void ) const {
-  return Cell ( first_, second_ );
+  return value_type ( *first_, *second_ );
 } /* Product_const_iterator<>::operator * */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
@@ -479,18 +514,16 @@ operator ++ ( void ) {
    */
   unsigned int first_dimension = first_ . dimension ();
   unsigned int second_dimension = second_ . dimension ();
-  
   ++ second_;
   /* If advanced one within (K, L) type return answer immediately */
   if ( second_ != container_ -> second_factor . end ( second_dimension ) ) return *this;
-  
   ++ first_;
   /* If remaining in type (K, L) loop, return answer */
   if ( first_ != container_ -> first_factor . end ( first_dimension ) ) {
     second_ = container_ -> second_factor . begin ( second_dimension );
     return *this;
   } /* if */
-  
+
   /* Find next non-empty type. */
   unsigned int dimension = first_dimension + second_dimension;
   const unsigned int K_max = container_ -> first_factor . dimension ();

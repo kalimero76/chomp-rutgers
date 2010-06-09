@@ -10,15 +10,12 @@
 #define CHOMP_CUBICAL_COMPLEX_
 
 #include <iostream>
+#include <map>
+#include <vector>
+#include "boost/functional/hash.hpp"
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
 #include "archetypes/Cell_Complex_Archetype.h" /* for Cell_Complex */
 #include "algorithms/Morse_Theory.h"
-#include <ext/hash_map>
-namespace std {
-  using namespace __gnu_cxx;
-}
-
-#include <vector>
 
 /********************************************************************************
  *                             CUBICAL COMPLEXES                                *
@@ -38,6 +35,8 @@ typedef Default_Cell Cubical_Cell;
  * class Cubical_const_iterator  *
  * * * * * * * * * * * * * * * * */
 
+size_t hash_value ( const Cubical_const_iterator & hash_me );
+
 class Cubical_const_iterator {
 public:
   typedef Cubical_Complex complex_type;
@@ -55,11 +54,17 @@ public:
 private:
   friend std::ostream & operator << ( std::ostream & output_stream, const Cubical_const_iterator & print_me);
   friend class Cubical_Complex;
+  friend size_t hash_value ( const Cubical_const_iterator & hash_me );
   const Cubical_Complex * container_;
   unsigned long address_;
   unsigned int dimension_;
   void next_type ( void ); 
 };
+
+size_t hash_value ( const Cubical_const_iterator & hash_me ) {
+  boost::hash < unsigned long > hasher;
+  return hasher ( hash_me . address_ );
+} /* hash_value */
 
 /* * * * * * * * * * * * *
  * typedef Cubical_Chain *
