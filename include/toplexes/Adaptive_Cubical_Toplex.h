@@ -12,6 +12,7 @@
 #define CHOMP_ADAPTIVE_CUBICAL_TOPLEX_
 
 #include <vector>
+#include <map>
 #include <tr1/unordered_set> //PORTABILITY ISSUE
 namespace std { using namespace tr1; }
 #include "complexes/Adaptive_Complex.h"
@@ -107,6 +108,7 @@ namespace Adaptive_Cubical {
     Subset cover ( const Geometric_Description & geometric_region ) const;
     Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
     Complex complex ( void ) const;
+    Complex complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     Complex complex ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
     

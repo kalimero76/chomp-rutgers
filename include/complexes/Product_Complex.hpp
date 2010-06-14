@@ -63,8 +63,8 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
 Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 find ( const Cell & find_me ) const {
-  typename First_Cell_Complex::const_iterator first_iterator = first_factor . find ( find_me . first_ );
-  typename Second_Cell_Complex::const_iterator second_iterator = second_factor . find (find_me . second_ );
+  typename First_Cell_Complex::const_iterator first_iterator = first_factor -> find ( find_me . first_ );
+  typename Second_Cell_Complex::const_iterator second_iterator = second_factor -> find (find_me . second_ );
   return const_iterator ( this, first_iterator, second_iterator );
 } /* Product_Complex<>::find */
 
@@ -121,9 +121,9 @@ boundary ( const const_iterator & cell_iterator) const {
   /* produce boundary via formula d(a x b) = da x b +- a x db */
   /* Obtain da =: first_boundary, db =: second_boundary */
   typename First_Cell_Complex::Chain first_boundary = 
-    first_factor . boundary ( cell_iterator . first_ );
+    first_factor -> boundary ( cell_iterator . first_ );
   typename Second_Cell_Complex::Chain second_boundary = 
-    second_factor . boundary ( cell_iterator . second_ );
+    second_factor -> boundary ( cell_iterator . second_ );
   /* Construct boundary */
   return_value += tensor_product ( first_boundary, cell_iterator . second_ );
   if ( cell_iterator . first_ . dimension () & 1 ) {
@@ -142,9 +142,9 @@ coboundary ( const const_iterator & cell_iterator ) const {
   /* produce coboundary via formula d'(a x b) = d'a x b +- a x d'b */
   /* Obtain da =: first_boundary, db =: second_boundary */
   typename First_Cell_Complex::Chain first_coboundary =
-    first_factor . coboundary ( cell_iterator . first_ );
+    first_factor -> coboundary ( cell_iterator . first_ );
   typename Second_Cell_Complex::Chain second_coboundary =
-    second_factor . coboundary ( cell_iterator . second_ );
+    second_factor -> coboundary ( cell_iterator . second_ );
   /* Construct coboundary */
   return_value += tensor_product ( first_coboundary, cell_iterator . second_ );
   if ( cell_iterator . first_ . dimension () & 1 ) {
@@ -344,37 +344,50 @@ ace_end ( unsigned int dimension ) const {
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+Product_Complex ( void ) {
+} /* Product_Complex<>::Product_Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor ) :
-first_factor(first_factor), second_factor(second_factor) {
+first_factor(&first_factor), second_factor(&second_factor) {
+  construct ( first_factor, second_factor );
+} /* Product_Complex<>::Product_Complex */
+
+template < class First_Cell_Complex, class Second_Cell_Complex >
+void Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
+construct ( const First_Cell_Complex & first_factor_in, const Second_Cell_Complex & second_factor_in ) {
+  first_factor = & first_factor_in;
+  second_factor = & second_factor_in;
   /* Initialize dimension_, total_size_ */
-  dimension_ = first_factor . dimension () + second_factor . dimension ();
-  total_size_ = first_factor . size () * second_factor . size ();
+  dimension_ = first_factor -> dimension () + second_factor -> dimension ();
+  total_size_ = first_factor -> size () * second_factor -> size ();
   /* Initialize end_ */
-  end_ = const_iterator ( this, first_factor . end (), second_factor . end () );
+  end_ = const_iterator ( this, first_factor -> end (), second_factor -> end () );
   /* Initialize begin_, size_ */
   begin_ . resize ( dimension_ + 2, end_ );
   size_ . resize ( dimension_ + 1, 0 );
   for ( unsigned int first_dimension_index = 0; 
-        first_dimension_index <= first_factor . dimension (); 
+        first_dimension_index <= first_factor -> dimension (); 
         ++ first_dimension_index ) {
     for ( unsigned int second_dimension_index = 0; 
-          second_dimension_index <= second_factor . dimension (); 
+          second_dimension_index <= second_factor -> dimension (); 
           ++ second_dimension_index ) {
       const unsigned int dimension_sum = first_dimension_index + second_dimension_index;
-      const size_type first_size = first_factor . size ( first_dimension_index );
-      const size_type second_size = first_factor . size ( second_dimension_index );
+      const size_type first_size = first_factor -> size ( first_dimension_index );
+      const size_type second_size = first_factor -> size ( second_dimension_index );
       if ( first_size == 0 || second_size == 0 ) continue;
       size_ [ dimension_sum ] += first_size * second_size;
       if ( begin_ [ dimension_sum ] == end_ ) {
         begin_ [ dimension_sum ] = 
           const_iterator ( this, 
-                           first_factor . begin ( first_dimension_index ),
-                           second_factor . begin ( second_dimension_index ) );
+                           first_factor -> begin ( first_dimension_index ),
+                           second_factor -> begin ( second_dimension_index ) );
       } /* if */
     } /* for */
   } /* for */
   /* TODO: worry about intermediate chain groups being empty */
-} /* Product_Complex<>::Product_Complex */
+} /* Product_Complex<>::construct */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 typename First_Cell_Complex::Chain 
@@ -516,18 +529,18 @@ operator ++ ( void ) {
   unsigned int second_dimension = second_ . dimension ();
   ++ second_;
   /* If advanced one within (K, L) type return answer immediately */
-  if ( second_ != container_ -> second_factor . end ( second_dimension ) ) return *this;
+  if ( second_ != container_ -> second_factor -> end ( second_dimension ) ) return *this;
   ++ first_;
   /* If remaining in type (K, L) loop, return answer */
-  if ( first_ != container_ -> first_factor . end ( first_dimension ) ) {
-    second_ = container_ -> second_factor . begin ( second_dimension );
+  if ( first_ != container_ -> first_factor -> end ( first_dimension ) ) {
+    second_ = container_ -> second_factor -> begin ( second_dimension );
     return *this;
   } /* if */
 
   /* Find next non-empty type. */
   unsigned int dimension = first_dimension + second_dimension;
-  const unsigned int K_max = container_ -> first_factor . dimension ();
-  const unsigned int L_max = container_ -> second_factor . dimension ();
+  const unsigned int K_max = container_ -> first_factor -> dimension ();
+  const unsigned int L_max = container_ -> second_factor -> dimension ();
   while ( 1 ) {
     if ( first_dimension == K_max || second_dimension == 0 ) {
       /* The type is exhausted. */
@@ -549,10 +562,10 @@ operator ++ ( void ) {
       -- second_dimension;
     } /* if-else */
     /* If have found the next type, return answer */
-    if ( container_ -> first_factor . size ( first_dimension ) > 0 
-        && container_ -> second_factor . size ( second_dimension ) > 0 ) {
-      first_ = container_ -> first_factor . begin ( first_dimension );
-      second_ = container_ -> second_factor . begin ( second_dimension );
+    if ( container_ -> first_factor -> size ( first_dimension ) > 0 
+        && container_ -> second_factor -> size ( second_dimension ) > 0 ) {
+      first_ = container_ -> first_factor -> begin ( first_dimension );
+      second_ = container_ -> second_factor -> begin ( second_dimension );
       return * this;
     } /* if */
   } /* while */

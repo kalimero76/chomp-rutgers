@@ -115,7 +115,9 @@ public:
   size_type ace_begin ( unsigned int dimension ) const;
   size_type ace_end ( unsigned int dimension ) const;
   /* Product Complex */
+  Product_Complex ( void );
   Product_Complex ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor );
+  void construct ( const First_Cell_Complex & first_factor, const Second_Cell_Complex & second_factor );
   typename First_Cell_Complex::Chain projectFirst ( const Chain & project_me );
   typename Second_Cell_Complex::Chain projectSecond ( const Chain & project_me );
 
@@ -137,8 +139,8 @@ private:
   bool boundary_count_available_;
   std::vector<size_type> king_count_;
   /* Product Complex */
-  const First_Cell_Complex & first_factor;
-  const Second_Cell_Complex & second_factor;
+  const First_Cell_Complex * first_factor;
+  const Second_Cell_Complex * second_factor;
   typename Chain::Chain_Term tensor_product ( const typename First_Cell_Complex::const_iterator & first_iter, 
                                               const typename Second_Cell_Complex::const_iterator & second_iter ) const;
   Chain tensor_product ( const typename First_Cell_Complex::Chain & first_chain, 

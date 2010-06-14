@@ -274,12 +274,27 @@ namespace Adaptive_Cubical {
         complex . Add_Full_Cube ( splitting );
       } /* operator () */
     };
+    
   } /* namespace detail */
   
   Toplex::Complex Toplex::complex ( void ) const {
     Complex return_value ( dimension_);
     std::for_each ( begin (), end (), detail::AddTopCellToComplexFunctor ( return_value, *this ) );
     return_value . Finalize ();
+    return return_value;
+  } /* Adaptive_Cubical::Toplex::complex */
+  
+  Toplex::Complex Toplex::complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const {
+    Complex return_value ( dimension_);
+    std::for_each ( begin (), end (), detail::AddTopCellToComplexFunctor ( return_value, *this ) );
+    return_value . Finalize ();
+    /* Now fill in the boxes */
+    const_iterator top_cell_iterator = begin ();
+    for ( Complex::const_iterator cell_iterator = return_value . begin ( dimension_ );
+         cell_iterator != return_value . end ( dimension_ ); ++ cell_iterator ) {
+      boxes [ * top_cell_iterator ] = cell_iterator;
+      ++ top_cell_iterator;
+    } /* for */
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
   
