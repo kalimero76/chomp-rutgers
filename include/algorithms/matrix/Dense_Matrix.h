@@ -30,6 +30,10 @@ void Dense_Matrix_Boundary_Map ( typename Dense < typename Cell_Complex::Ring >:
                                  std::vector < typename Cell_Complex::const_iterator > & translation_table,
                                  const Cell_Complex & complex, const unsigned int dimension );
 
+template < class Cell_Complex >
+typename Dense < typename Cell_Complex::Ring >::Matrix chains_to_matrix 
+( const std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & input );
+
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/matrix/Dense_Matrix.hpp"
 #endif

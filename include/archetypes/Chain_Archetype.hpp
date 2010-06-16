@@ -43,7 +43,8 @@ Chain_Archetype < Pair_Associative_Container > & Chain_Archetype < Pair_Associat
 operator -= ( const typename Chain_Archetype < Pair_Associative_Container >::Chain_Term & term ) {
 	typename Chain_Archetype < Pair_Associative_Container > :: iterator existing_term = find ( term . first );
 	if ( existing_term == this -> end () ) {
-    if ( term . second != 0 ) this -> insert ( term ); // no term? then introduce it, we are done.
+    if ( term . second != 0 ) this -> insert ( term ) . first 
+      -> second = - term . second; // no term? then introduce it and flip sign
 	} else if ( ( existing_term -> second -= term . second ) == 0 )	// side effect does the work... 
 		this -> erase ( existing_term );									// and if term zeros out we erase it.
 	return *this; 

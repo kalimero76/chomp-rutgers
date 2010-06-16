@@ -664,8 +664,8 @@ Adaptive_Complex::size_type Adaptive_Complex::size ( unsigned int dimension ) co
 } /* Adaptive_Complex::size */
 
 Adaptive_Complex::Chain Adaptive_Complex::boundary ( const Adaptive_const_iterator & input ) const {
-  std::cout << "Adaptive_Complex::boundary\n";
-  std::cout << "Finding boundary of " << *input << "\n";
+  //std::cout << "Adaptive_Complex::boundary\n";
+  //std::cout << "Finding boundary of " << *input << "\n";
   Adaptive_Complex::Chain output;
 	int coincidence_index;
 	Cell cell;

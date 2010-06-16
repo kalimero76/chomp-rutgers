@@ -55,7 +55,7 @@ void Dense_Matrix_Boundary_Map ( typename Dense < typename Cell_Complex::Ring >:
     right_cell_iter != complex . end ( dimension ); ++ right_cell_iter ) {
         ++ index;
         /* We find the boundary of the current elementary chain. */
-      std::cout << "The boundary of " << (* right_cell_iter) << "\n";
+      //std::cout << "The boundary of " << (* right_cell_iter) << "\n";
         typename Cell_Complex::Chain boundary_chain = complex . boundary ( right_cell_iter );
         /* We loop through the terms in the boundary we have found. */
         for ( typename Cell_Complex::Chain::iterator chain_term = boundary_chain . begin (); 
@@ -63,3 +63,22 @@ void Dense_Matrix_Boundary_Map ( typename Dense < typename Cell_Complex::Ring >:
             output_matrix ( inverse_table [ chain_term -> first ], index ) = chain_term -> second; 
     } /* for */
 } /* Dense_Matrix_Boundary_Map */
+
+
+template < class Cell_Complex >
+typename Dense < typename Cell_Complex::Ring >::Matrix chains_to_matrix ( const std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & input, const unsigned int dimension, const Cell_Complex & complex ) {
+  typedef typename Dense < typename Cell_Complex::Ring >::Matrix Matrix;
+  Matrix return_value ( complex . size ( dimension ), input . size () );
+  const unsigned int offset = complex . index_begin ( dimension );
+  for ( unsigned int index = 0; index < input . size (); ++ index ) {
+    for ( typename Cell_Complex::Chain::const_iterator term_iterator = input [ index ] . first . begin (); 
+         term_iterator != input [ index ] . first . end (); ++ term_iterator ) {
+      return_value ( 1 + complex . index ( term_iterator -> first ) - offset, 1 + index ) = 
+        term_iterator -> second;
+      //std::cout << "M(" << complex . index ( term_iterator -> first ) - offset << ", " << index << ") = " << 
+      // term_iterator -> second << ".\n";
+    } /* for */
+  } /* for */
+  
+  return return_value;
+} /* chains_to_matrix */

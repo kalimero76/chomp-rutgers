@@ -37,6 +37,8 @@ public:
   ~Graph_Complex ( void );
   typename Toplex::Complex & codomain ( void ); // non-const since giving non-const reference
   typename Toplex::Complex::Chain projectToCodomain ( const Chain & project_me );
+  typename Toplex::Complex & domain ( void ); // non-const since giving non-const reference
+  typename Toplex::Complex::Chain projectToDomain ( const Chain & project_me );
 private:
   /* The order of these matters in constructor: */
   typename Toplex::Complex * domain_;

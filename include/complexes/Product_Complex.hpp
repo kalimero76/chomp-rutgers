@@ -398,7 +398,7 @@ projectFirst ( const Chain & project_me ) {
        term_iterator != project_me . end (); ++ term_iterator ) {
     typename First_Cell_Complex::Chain::Chain_Term projected_term 
     ( term_iterator -> first . first_, term_iterator -> second );
-    if ( projected_term . first . dimension () == dimension_ ) 
+    if ( term_iterator -> first . second_ . dimension () == 0  ) 
       return_value += projected_term;
   } /* for */
   return return_value;
@@ -408,13 +408,16 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Second_Cell_Complex::Chain 
 Product_Complex<First_Cell_Complex, Second_Cell_Complex > ::
 projectSecond ( const Chain & project_me ) {
+  //std::cout << "Projecting " << project_me << "\n";
   typename Second_Cell_Complex::Chain return_value;
   for ( typename Chain::const_iterator term_iterator = project_me . begin ();
        term_iterator != project_me . end (); ++ term_iterator ) {
     typename Second_Cell_Complex::Chain::Chain_Term projected_term 
     ( term_iterator -> first . second_, term_iterator -> second );
-    if ( projected_term . first . dimension () == dimension_ ) 
+    if ( term_iterator -> first . first_ . dimension () == 0 ) {
       return_value += projected_term;
+      //std::cout << "projecting " << * projected_term . first << " " << projected_term . second << "\n";
+    } /* if */
   } /* for */
   return return_value;
 } /* Product_Complex<>::projectSecond */

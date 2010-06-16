@@ -7,7 +7,17 @@
  *
  */
 
-#include "basic.h"
+template < class Complex >
+typename Complex::Chain boundary ( const typename Complex::Chain & input, const Complex & complex ) {
+  typename Complex::Chain return_value;
+  for ( typename Complex::Chain::const_iterator term_iterator = input . begin (); 
+        term_iterator != input . end (); ++ term_iterator ) {
+    typename Complex::Chain summand = complex . boundary ( term_iterator -> first );
+    summand *= term_iterator -> second;
+    return_value += summand;
+  } /* for */
+  return return_value;
+} /* boundary */
 
 template < class Chain >
 Chain boundary ( const Chain & input ) {

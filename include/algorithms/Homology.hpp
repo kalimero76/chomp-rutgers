@@ -124,29 +124,42 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 /*
 
 First, calculate the smith form of each boundary matrix, along with the transformation matrices
-CAPD smithForm gives us B_in = Q*B_out*Rinv and t = number of non-zero diagonal entries
+CAPD smithForm gives us 
+ B_in = Q*B_out*Rinv and 
+ s = number of "1"'s in the diagonal
+ t = number of non-zero diagonal entries
 
-The torsion generators can be pulled directly out of the 'middle' columns of Q.
-The betti number generators require a little work.
+The trivial (boundary) generators are the left-most columns of Q
+The torsion (weak boundary) generators are the middle columns of Q.
+The betti number generators require a little work. The relevant information
+ is involved in the Smith Normal Form decomposition of two consecutive boundary matrices.
+ One also needs (R, Rinv) from the previous decomposition. Then the betti generators are given by
+ a basis for the intersection of the spaces spanned by the right-most columns of R and the
+ right-most columns of Q. 
+ 
+This is because:
+ a) The right-most columns of R are a basis for the cycle subspace.
+ b) The right-most columns of Q are a basis for the non-boundary subspace. 
 
-The right-most columns of R_k are a basis for the cycle subspace.
-We need to know which cycles are neither boundaries nor weak boundaries.
-If we perform the product Q_inv * z for some cycle z, then we see how to write z 
-in terms of the 'image basis'. The right-most columns of Q, however, are not boundaries. If we 
-project out all but the bottom components of Q_inv z, and then multiply by Q, we get a new cycle
-which is equivalent in the sense that it has been deformed by the addition of boundaries. 
-Thus, we become interested in the matrix we obtain by multiplying the bottom-most rows of Q_inv to 
-the right-most rows of R. We need extract columns then from (bottom of Qinv) * (right of R), but
-we need to be careful because the columns need not be linearly independent. Thus there is some
-work to determine the rank r of this matrix (which is the betti number) and pull out exactly r
-linearly independent columns. (It needs to be shown that any r linearly independent columns in this
+The matrix given by the bottom-most rows of Qinv (corresponding to the right-most columns of Q)
+ is thus interesting because it gives a matrix which takes a chain, 'projects the boundary part out',
+ and expresses it in the Q-basis.
+
+In particular the product M=(bottom-Qinv)*(right-R) is important; to obtain the Betti generators
+ we must determine the rank r of this matrix (which is the betti number) and obtain exactly r
+ linearly independent column vectors which span the range of M. We then multiply these columns
+ by right-Q to get back into the ambient space.
+ 
+Proof:
+ 
+ (It needs to be shown that any r linearly independent columns in this
 matrix has the same span as the entire matrix itself.)
 
 */
 
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
-Homology_Generators ( const Cell_Complex & complex ) {
+Homology_Generators ( const Cell_Complex & complex, bool trivial_generators ) {
 	std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > return_value ( complex . dimension () + 1 );
 	typedef typename Dense<typename Cell_Complex::Ring>::Matrix Matrix;
 	/* Loop through Chain Groups */
@@ -170,7 +183,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 		/* Obtain the relevant sub-matrix from second_Qinv */
 		MatrixSlice<Matrix> image_slice ( second_Qinv, second_t + 1, second_Qinv . numberOfRows (), 1, second_Qinv . numberOfColumns () );
 		Matrix image_cycles;
-    
+
 		if ( dimension_index > 0 ) {
 			Matrix image ( image_slice );
 			/* Obtain the relevant sub-matrix from first_R */
@@ -194,10 +207,17 @@ Homology_Generators ( const Cell_Complex & complex ) {
     
 		/* The generators are now sitting in the first n - t_1 - t_2 columns of betti_generators. */
 		/* Prepare the output */
-		unsigned int betti_number = second_Q . numberOfColumns () - first_t - second_t;
-		unsigned int torsion_number = second_t - second_s;
+		const unsigned int betti_number = second_Q . numberOfColumns () - first_t - second_t;
+		const unsigned int torsion_number = second_t - second_s;
+    const unsigned int trivial_number = second_s;
+    
 		std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & generators = return_value [ dimension_index ];
-		generators . resize ( betti_number + torsion_number );
+		if ( trivial_generators ) {
+      generators . resize ( betti_number + torsion_number + trivial_number );
+    } else {
+      generators . resize ( betti_number + torsion_number );
+    } /* if-else */
+    
 		using namespace capd::vectalg;
     
 		/* Insert the betti generators */
@@ -206,7 +226,7 @@ Homology_Generators ( const Cell_Complex & complex ) {
 			generators [ betti_index ] . second = 0;
 			typename Cell_Complex::Chain & generator_chain = generators [ betti_index ] . first;
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = betti_generators_matrix . column ( betti_index );
-			unsigned long index = 0;
+      unsigned long index = 0;
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
            entry != generator_vector . end (); ++ entry ) 
 				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
@@ -224,8 +244,21 @@ Homology_Generators ( const Cell_Complex & complex ) {
            entry != generator_vector . end (); ++ entry ) 
 				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
       //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
-      
 		}
+    
+    /* Insert the trivial generators */
+    if ( trivial_generators )
+		for ( unsigned int trivial_index = 0; trivial_index < trivial_number; ++ trivial_index ) {
+			generators [ betti_number + torsion_number + trivial_index ] . second = 1;
+			typename Cell_Complex::Chain & generator_chain = generators [  betti_number + torsion_number + trivial_index  ] . first;
+			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = second_Q . column ( trivial_index );
+			unsigned long index = 0;
+			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
+           entry != generator_vector . end (); ++ entry ) 
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+      //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
+		} /* for */
+    
 		/* Store second_* into first_* */
     
 		first_R = second_R;
@@ -235,6 +268,34 @@ Homology_Generators ( const Cell_Complex & complex ) {
 	return return_value; 
 } /* void Homology(...) */
 
+namespace Homology_detail {
+  
+  /* Solve AX = B. warning -- writes over A
+     assume A has linearly independent columns */
+  template < class Matrix >
+  Matrix matrix_solve ( Matrix & A, Matrix & B ) {
+    
+    Matrix Q, Qinv, R, Rinv;
+    int s, t;
+    capd::matrixAlgorithms::smithForm( A, Q, Qinv, R, Rinv, s, t);
+    MatrixSlice<Matrix> Qinv_slice ( Qinv, 1, A . numberOfColumns (), 1, Qinv . numberOfColumns () );
+    Matrix slice ( Qinv_slice );
+    //std::cout << "smithForm: " << A << "\n";
+    Matrix Y = slice * B;
+    int n = Y . numberOfRows ();
+    int m = Y . numberOfColumns ();
+    
+    for (int i = 1; i <= n; ++ i ) {
+      for ( int j = 1; j <= m; ++ j ) {
+        Y(i,j)=Y(i,j)/A(i,i);
+      } /* for */
+    } /* for */
+    return R * Y;
+  } /* matrix_solve */
+  
+} /* namespace Homology_detail */
+
+#include <ctime>
 #include "complexes/Graph_Complex.h"
 #include "algorithms/basic.h"
 
@@ -245,26 +306,34 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
   typedef Graph_Complex < Toplex > Graph;
   
   /* Produce the graph complex */
+  clock_t start, stop;
+  start = clock ();
   Graph graph ( X, Y, f );
+  stop = clock ();
   
   std::cout << "Graph Complex generated.\n";
-  
-  utility::inspect_complex ( graph );
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
   
   /* Find the homology generators of the graph */
+  start = clock ();
   std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > 
     graph_generators = Homology_Generators ( graph );
-  
+  stop = clock ();
   std::cout << "Graph generators computed.\n";
 
-  /* Find the homology generators of the codomain */
-  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
-    codomain_generators = Homology_Generators ( graph . codomain () );
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
 
+  /* Find the homology generators of the codomain */
+  start = clock ();
+  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
+    codomain_generators = Homology_Generators ( graph . codomain (), true );
+  stop = clock ();
   std::cout << "Codomain generators computed.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
 
   /* Project the homology generators of the graph to the domain and codomain */
-  std::vector < std::vector < typename Complex::Chain > > 
+  start = clock ();
+  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
     codomain_cycles ( graph_generators . size () );
   for ( unsigned int dimension_index = 0; 
         dimension_index < graph_generators . size (); 
@@ -273,18 +342,62 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
     for ( unsigned int generator_index = 0; 
          generator_index < graph_generators [ dimension_index ]. size (); 
          ++ generator_index ) {
+      //std::cout << "Graph generator: " << graph_generators [ dimension_index ] 
+      //[ generator_index ] . first << "\n";
       codomain_cycles [ dimension_index ] 
-                      [ generator_index ] = 
+                      [ generator_index ] . first = 
         graph . projectToCodomain ( graph_generators [ dimension_index ] 
                                                      [ generator_index ] . first );
-      
+      codomain_cycles [ dimension_index ] [ generator_index ] . second = 
+        graph_generators [ dimension_index ] [ generator_index ] . second;
+      //std::cout << "Projected to codomain: " << codomain_cycles [ dimension_index ] 
+      //[ generator_index ] . first << "\n";
+      //std::cout << "Projected to domain: " << graph . projectToDomain ( graph_generators [ dimension_index ] 
+      //                           [ generator_index ] . first ) << "\n";
+
     } /* for */
   } /* for */
-  
+  stop = clock ();
+  std::cout << "Generators projected to codomain.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+
   /* Write the codomain cycles in terms of the codomain generators. */
   
-  std::cout << "Only algebra remains.\n";
-  // TODO
+  start = clock ();
+  /* Re-express codomain_cycles in basis given by codomain_generators */
+  /* Need to index the cells of the codomain */
+  graph . codomain () . index ();
+  typedef typename Dense<typename Complex::Ring>::Matrix Matrix;
+  for ( unsigned int dimension_index = 0; dimension_index < codomain_generators . size (); 
+       ++ dimension_index ) {
+    unsigned int trivial_count = 0;
+    for ( unsigned int codomain_generator_index = 0; 
+         codomain_generator_index < codomain_generators [ dimension_index ] . size ();
+         ++ codomain_generator_index ) {
+      if ( codomain_generators [ dimension_index ] [ codomain_generator_index ] . second == 1 ) {
+        ++ trivial_count;
+      } /* if */
+    } /* for */
+    /* Create cycle matrix */
+    Matrix matC = chains_to_matrix < Complex > ( codomain_cycles [ dimension_index ], dimension_index, graph . codomain () );
+    Matrix matG = chains_to_matrix < Complex > ( codomain_generators [ dimension_index ], dimension_index, graph . codomain () );
+    std::cout << "Dimension " << dimension_index << ": \n";
+    //std::cout << matC << "\n";
+    //std::cout << matG << "\n";
+    /* Solve for matX:  matG * matX = matC */
+    Matrix matX = Homology_detail::matrix_solve ( matG, matC );
+    MatrixSlice<Matrix> output_slice ( matX, 1, matX . numberOfRows () - trivial_count, 1, matX . numberOfColumns () );
+    Matrix output ( output_slice );
+    //std::cout << matX << "\n";
+    //std::cout << trivial_count << "\n";
+    std::cout << output << "\n";
+  } /* for */
+ 
+  stop = clock ();
+  std::cout << "Algebra complete.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+
+  
   
   /* Return algebraic information */
   return /* TODO */;
