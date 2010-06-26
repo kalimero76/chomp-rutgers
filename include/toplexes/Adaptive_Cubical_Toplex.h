@@ -13,6 +13,7 @@
 
 #include <vector>
 #include <map>
+#include <iterator>
 #include <tr1/unordered_set> //PORTABILITY ISSUE
 namespace std { using namespace tr1; }
 #include "complexes/Adaptive_Complex.h"
@@ -67,6 +68,13 @@ namespace Adaptive_Cubical {
    * * * * * * * * * * * * * * * * * * * * * * * * */
   class Toplex_const_iterator {
   public:
+    /* Iterator typedefs */
+    typedef std::forward_iterator_tag iterator_category;
+    typedef Adaptive_Cubical::Top_Cell value_type;
+    typedef Adaptive_Cubical::Top_Cell * pointer;
+    typedef std::ptrdiff_t difference_type;
+    typedef Adaptive_Cubical::Top_Cell & reference;
+    
     typedef Adaptive_Cubical::Node Node;
     Toplex_const_iterator ( void );
     Toplex_const_iterator ( Node * node );
