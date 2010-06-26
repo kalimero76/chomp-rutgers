@@ -10,6 +10,8 @@
 #ifndef CHOMP_BASIC_H
 #define CHOMP_BASIC_H
 
+#include <vector>
+
 template < class Complex >
 typename Complex::Chain 
 boundary ( const typename Complex::Chain & input, const Complex & complex );

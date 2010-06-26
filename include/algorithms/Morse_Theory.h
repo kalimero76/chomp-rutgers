@@ -55,6 +55,32 @@ typedef Abstract_Complex< Default_Cell > Morse_Complex;
 
 namespace morse {
   
+  template < class Cell_Complex > 
+  std::vector < std::pair < typename Cell_Complex::size_type, 
+  typename Cell_Complex::Ring > > 
+  phi (const std::vector < std::pair < typename Cell_Complex::size_type, 
+       typename Cell_Complex::Ring > > & lift_me, 
+       const Cell_Complex & complex );
+  
+  template < class Cell_Complex > 
+  std::vector < std::pair < typename Cell_Complex::size_type, 
+  typename Cell_Complex::Ring > > 
+  psi (const std::vector < std::pair < typename Cell_Complex::size_type, 
+       typename Cell_Complex::Ring > > & sink_me, 
+       const Cell_Complex & complex, const Morse_Complex & morse_complex );
+  
+  template < class Cell_Complex >
+  typename Cell_Complex::Chain
+  phi_tower (const Morse_Complex::Chain & lift_me, 
+             const std::list<Morse_Complex> & tower, 
+             const Cell_Complex & complex );
+  
+  template < class Cell_Complex >
+  typename Morse_Complex::Chain
+  psi_tower (const typename Cell_Complex::Chain & sink_me, 
+             const std::list<Morse_Complex> & tower, 
+             const Cell_Complex & complex );
+  
   template < class Cell_Complex > void
   reduction ( Morse_Complex & reduced_complex, const Cell_Complex & complex );
 

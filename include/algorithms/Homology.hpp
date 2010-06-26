@@ -15,6 +15,8 @@
 #include "algorithms/matrix/Sparse_Matrix.h" /* For Sparse_Matrix<...> */
 #include "algorithms/matrix/Dense_Matrix.h"
 
+#include "algorithms/Morse_Theory.h"
+
 #include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
 
 /* Compute Homology Groups via Smith Normal Form */
@@ -159,9 +161,10 @@ matrix has the same span as the entire matrix itself.)
 
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
-Homology_Generators ( const Cell_Complex & complex, bool trivial_generators ) {
+Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators ) {
 	std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > return_value ( complex . dimension () + 1 );
 	typedef typename Dense<typename Cell_Complex::Ring>::Matrix Matrix;
+
 	/* Loop through Chain Groups */
 	Matrix first_R, second_Q, second_Qinv, second_R, second_Rinv;
 	int first_t, second_s, second_t;
@@ -266,7 +269,39 @@ Homology_Generators ( const Cell_Complex & complex, bool trivial_generators ) {
 		
 	} /* for */
 	return return_value; 
-} /* void Homology(...) */
+} /* void Homology_Generators_SNF(...) */
+
+template < class Cell_Complex >
+std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
+Homology_Generators_DMT ( Cell_Complex & complex ) {
+  std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
+    return_value;
+  /* Perform Successive Morse Reductions to complex */
+  std::cout << "Homology_Generators_DMT: calling reduction_tower \n";
+  std::list<Morse_Complex> morse_tower = morse::reduction_tower ( complex ); 
+  /* Get the Homology Generators on the deepest level */
+  std::cout << "Homology_Generators_DMT: calling SNF \n";
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
+    deep_generators = Homology_Generators_SNF ( morse_tower . back (), false );
+  /* Lift the Homology Generators to the top level */
+  std::cout << "Homology_Generators_DMT: lifting generators \n";
+  return_value . resize ( complex . dimension () + 1 );
+  for (unsigned int dimension_index = 0; 
+       dimension_index <= complex . dimension ();
+       ++ dimension_index) {
+    return_value [ dimension_index ] . resize ( deep_generators [ dimension_index ] . size () );
+    for (unsigned int generator_index = 0;
+         generator_index < deep_generators [ dimension_index ] . size ();
+         ++ generator_index) {
+      return_value [ dimension_index ] [ generator_index ] = std::make_pair 
+        (morse::phi_tower
+         (deep_generators [ dimension_index ] [ generator_index ] . first,
+                      morse_tower, complex),
+         deep_generators [ dimension_index ] [ generator_index ] . second);
+    } /* for */
+  } /* for */
+  return return_value;
+} /* Homology_Generators_DMT */
 
 namespace Homology_detail {
   
@@ -317,21 +352,26 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
   /* Find the homology generators of the graph */
   start = clock ();
   std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > 
-    graph_generators = Homology_Generators ( graph );
+    graph_generators = Homology_Generators_DMT ( graph );
   stop = clock ();
   std::cout << "Graph generators computed.\n";
 
   std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  
 
-  /* Find the homology generators of the codomain */
+  /* Get the morse reduction of the codomain */
+  std::list<Morse_Complex> codomain_tower = morse::reduction_tower ( graph . codomain () );
+  
+  /* Find the homology generators in the morse reduction of the codomain */
   start = clock ();
-  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
-    codomain_generators = Homology_Generators ( graph . codomain (), true );
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
+    codomain_generators = Homology_Generators_SNF ( codomain_tower . back (), true );
   stop = clock ();
   std::cout << "Codomain generators computed.\n";
   std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
 
-  /* Project the homology generators of the graph to the domain and codomain */
+  /* Project the homology generators of the graph to the codomain */
   start = clock ();
   std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
     codomain_cycles ( graph_generators . size () );
@@ -361,26 +401,53 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
   std::cout << "Generators projected to codomain.\n";
   std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
 
-  /* Write the codomain cycles in terms of the codomain generators. */
+  /* Project the codomain cycles to the morse-reduced codomain */
+  start = clock ();
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
+  reduced_cycles ( graph_generators . size () );
+  for ( unsigned int dimension_index = 0; 
+       dimension_index < graph_generators . size (); 
+       ++ dimension_index ) {
+    reduced_cycles [ dimension_index ] . resize ( graph_generators [ dimension_index ] . size () );
+    for ( unsigned int generator_index = 0; 
+         generator_index < graph_generators [ dimension_index ]. size (); 
+         ++ generator_index ) {
+      reduced_cycles [ dimension_index ] [ generator_index ] . first = 
+      morse::psi_tower (codomain_cycles [ dimension_index ] [ generator_index ] . first,
+                        codomain_tower, graph . codomain () );
+      reduced_cycles [ dimension_index ] [ generator_index ] . second = 
+      codomain_cycles [ dimension_index ] [ generator_index ] . second;
+     
+    } /* for */
+  } /* for */
+  stop = clock ();
+  std::cout << "Generators projected to codomain.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  /* Write the reduced cycles in terms of the reduced codomain generators. */
   
   start = clock ();
-  /* Re-express codomain_cycles in basis given by codomain_generators */
+  /* Re-express reduced_cycles in basis given by codomain_generators */
   /* Need to index the cells of the codomain */
-  graph . codomain () . index ();
   typedef typename Dense<typename Complex::Ring>::Matrix Matrix;
-  for ( unsigned int dimension_index = 0; dimension_index < codomain_generators . size (); 
+  for (unsigned int dimension_index = 0; 
+       dimension_index < codomain_generators . size (); 
        ++ dimension_index ) {
     unsigned int trivial_count = 0;
-    for ( unsigned int codomain_generator_index = 0; 
+    for (unsigned int codomain_generator_index = 0; 
          codomain_generator_index < codomain_generators [ dimension_index ] . size ();
          ++ codomain_generator_index ) {
-      if ( codomain_generators [ dimension_index ] [ codomain_generator_index ] . second == 1 ) {
+      if (codomain_generators [ dimension_index ] [ codomain_generator_index ] . second == 1 ) {
         ++ trivial_count;
       } /* if */
     } /* for */
     /* Create cycle matrix */
-    Matrix matC = chains_to_matrix < Complex > ( codomain_cycles [ dimension_index ], dimension_index, graph . codomain () );
-    Matrix matG = chains_to_matrix < Complex > ( codomain_generators [ dimension_index ], dimension_index, graph . codomain () );
+    Matrix matC = chains_to_matrix < Morse_Complex > (reduced_cycles [ dimension_index ], 
+                                                dimension_index, 
+                                                codomain_tower . back () );
+    Matrix matG = chains_to_matrix < Morse_Complex > (codomain_generators [ dimension_index ], 
+                                                dimension_index, 
+                                                codomain_tower . back () );
     std::cout << "Dimension " << dimension_index << ": \n";
     //std::cout << matC << "\n";
     //std::cout << matG << "\n";

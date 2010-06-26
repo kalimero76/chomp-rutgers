@@ -308,6 +308,8 @@ Abstract_Complex<Cell_Type>::Abstract_Complex ( void ) {
 
 template < class Cell_Type >
 Abstract_Complex<Cell_Type>::Abstract_Complex ( const Abstract_Complex & copy_me ) {
+  /* If it hasn't been initialized, do nothing */
+  if ( copy_me . begin_ . size () == 0 ) return;
   /* Shallow copies that work */
   cells_ = copy_me . cells_;
   dimension_ = copy_me . dimension_;

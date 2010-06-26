@@ -260,6 +260,221 @@ namespace morse {
   } /* morse::project */
  
 #endif
+
+  template < class Cell_Complex > 
+  std::vector < std::pair < typename Cell_Complex::size_type, 
+                                    typename Cell_Complex::Ring > > 
+  phi (const std::vector < std::pair < typename Cell_Complex::size_type, 
+                                       typename Cell_Complex::Ring > > & lift_me, 
+       const Cell_Complex & complex, const Morse_Complex & morse_complex ) {
+    /* phi = beta o i */
+    /* First we include, and calculate the boundary of the inclusion */
+    typedef typename Cell_Complex::size_type size_type;
+    typedef std::vector < std::pair < typename Cell_Complex::size_type, 
+                                      typename Cell_Complex::Ring > > Index_Chain;
+    Index_Chain answer_chain;
+    Morse_Chain<typename Cell_Complex::size_type> work_chain;
+    Index_Chain boundaries;
+    for (typename Index_Chain::const_iterator term_iterator = lift_me . begin ();
+         term_iterator != lift_me . end (); ++ term_iterator ) {
+      std::pair < typename Cell_Complex::size_type, typename Cell_Complex::Ring > value 
+      (( * morse_complex . lookup ( term_iterator -> first ) ) . data (), 
+       term_iterator -> second );
+      answer_chain . push_back ( value );
+      complex . boundary ( boundaries, value . first );
+      for ( typename Index_Chain::const_iterator bd_term_iterator = boundaries . begin ();
+           bd_term_iterator != boundaries . end (); ++ bd_term_iterator ) {
+        work_chain += 
+          std::make_pair ( bd_term_iterator -> first, 
+                           value . second * bd_term_iterator -> second);
+      } /* for */
+    } /* for */
+   
+    if ( work_chain . empty () ) return answer_chain;
+    
+    unsigned int dimension = complex . lookup ( work_chain
+                                               . begin () -> first ) . dimension ();
+
+    // Now we apply beta
+    /* Main loop */
+    while ( not work_chain . empty () ) {
+      const typename Morse_Chain<size_type>::iterator queen_term = work_chain . begin ();
+      const size_type & queen_index = queen_term -> first;
+      const size_type king_index = complex . mate ( queen_index, dimension );
+      complex . boundary ( boundaries, king_index );
+      /* Determine the factor */
+      const typename Cell_Complex::Ring factor = 
+      - queen_term -> second / complex . connection ( queen_index );
+      /* Add the king term to the answer chain */
+      answer_chain . push_back ( std::make_pair ( king_index, factor ) );
+      /* Process the boundary */
+      for ( typename Index_Chain::const_iterator term_iterator = boundaries . begin ();
+           term_iterator != boundaries . end (); ++ term_iterator ) {
+        typename Index_Chain::value_type value = * term_iterator;
+        if ( value . first >= complex . ace_begin ( dimension ) ) {
+          /* It's a King or Ace */ 
+          continue;
+        } /* if */
+        value . second *= factor;
+        /* It's a Queen. */
+        work_chain += value;
+      } /* for */
+    } /* while */
+    return answer_chain;
+  } /* morse::phi */
+  
+  template < class Cell_Complex > 
+  std::vector < std::pair < typename Cell_Complex::size_type, 
+  typename Cell_Complex::Ring > > 
+  psi (const std::vector < std::pair < typename Cell_Complex::size_type, 
+       typename Cell_Complex::Ring > > & sink_me, 
+       const Cell_Complex & complex, const Morse_Complex & morse_complex ) {
+    /* psi = j o alpha */
+    typedef typename Cell_Complex::size_type size_type;
+    typedef std::vector < std::pair < typename Cell_Complex::size_type, 
+    typename Cell_Complex::Ring > > Index_Chain;
+    Morse_Chain<typename Cell_Complex::size_type> work_chain;
+    Morse_Chain<typename Cell_Complex::size_type> canonical_chain;
+    Index_Chain boundaries;
+    Index_Chain answer_chain;
+    if ( sink_me . empty () ) return answer_chain;
+    unsigned int dimension = complex . lookup ( sink_me . begin () -> first ) 
+                                     . dimension ();
+    /* First we canonicalize, keeping in mind we may ignore kings */
+    /* Initial processing */ 
+    for ( typename Index_Chain::const_iterator term_iterator = sink_me . begin ();
+         term_iterator != sink_me . end (); ++ term_iterator ) {
+      typename Index_Chain::value_type value = * term_iterator;
+      if ( value . first >= complex . ace_end ( dimension ) ) {
+        /* It's a King */ continue;
+      } /* if */
+      if ( value . first < complex . ace_begin ( dimension ) ) {
+        /* It's a Queen. */
+        work_chain . insert ( value );
+      } else {
+        /* It's an Ace */
+        canonical_chain . insert ( value );
+      } /* if */
+    } /* for */    
+    /* Main loop */
+    while ( not work_chain . empty () ) {
+      const typename Morse_Chain<size_type>::iterator queen_term = work_chain . begin ();
+      const size_type & queen_index = queen_term -> first;
+      const size_type king_index = complex . mate ( queen_index, dimension );
+      complex . boundary ( boundaries, king_index );
+      /* Determine the factor */
+      const typename Cell_Complex::Ring factor = 
+      - queen_term -> second / complex . connection ( queen_index );
+      /* Process the boundary */
+      for ( typename Index_Chain::const_iterator term_iterator = boundaries . begin ();
+           term_iterator != boundaries . end (); ++ term_iterator ) {
+        typename Index_Chain::value_type value = * term_iterator;
+        if ( value . first >= complex . ace_end ( dimension ) ) {
+          /* It's a King */ continue;
+        } /* if */
+        value . second *= factor;
+        if ( value . first < complex . ace_begin ( dimension ) ) {
+          /* It's a Queen. */
+          work_chain += value;
+        } else {
+          /* It's an Ace */
+          canonical_chain += value;
+        } /* if */
+      } /* for */
+    } /* while */
+   /* Project canonical_chain into morse_complex */
+    for (typename Morse_Chain<typename Cell_Complex::size_type>::const_iterator 
+         term_iterator = canonical_chain . begin ();
+         term_iterator != canonical_chain . end (); ++ term_iterator ) {
+      Default_Cell find_me ( term_iterator -> first, dimension );
+      std::pair < typename Cell_Complex::size_type, typename Cell_Complex::Ring > value 
+        (morse_complex . index ( morse_complex . find ( find_me ) ), 
+         term_iterator -> second );
+      answer_chain . push_back ( value );
+    } /* for */
+    return answer_chain;
+  } /* morse::psi */
+  
+  template < class Cell_Complex >
+  typename 
+  Cell_Complex::Chain
+  phi_tower (const Morse_Complex::Chain & lift_me, 
+        const std::list<Morse_Complex> & tower, 
+        const Cell_Complex & complex ) {
+    typedef std::vector < std::pair < typename Cell_Complex::size_type, 
+                                      typename Cell_Complex::Ring > > Index_Chain;
+    /* Convert chain to index_chain */
+    Index_Chain bottom;
+    for (Morse_Complex::Chain::const_iterator term_iterator = lift_me . begin ();
+         term_iterator != lift_me . end (); ++ term_iterator ) {
+      // possible bug? is bottom complex indexed?
+      bottom . push_back ( std::make_pair (tower . back () . index ( term_iterator -> first ), 
+                                           term_iterator -> second ) );
+    } /* for */
+    /* Apply morse::phi successively */
+    Index_Chain intermediate;
+    std::list<Morse_Complex>::const_reverse_iterator last_level;
+    for (std::list<Morse_Complex>::const_reverse_iterator level = tower . rbegin (); 
+         level != tower . rend (); 
+         ++ level ) {
+      if ( level == tower . rbegin () ) {
+        intermediate = bottom;
+      } else {
+        intermediate = phi ( intermediate, * level, * last_level );
+      } /* if-else */
+      last_level = level;
+    } /* for */
+    Index_Chain top;
+    top = phi ( intermediate, complex, tower . front () );
+    
+    /* Convert index chain to cell complex chain */
+    typename Cell_Complex::Chain answer;
+    for (typename Index_Chain::const_iterator term_iterator = top . begin ();
+         term_iterator != top . end (); ++ term_iterator ) {
+      // possible bug? is bottom complex indexed?
+      answer . insert ( std::make_pair (complex . lookup ( term_iterator -> first ), 
+                                           term_iterator -> second ) );
+    } /* for */
+    return answer;
+  } /* morse::phi_tower */
+  
+  template < class Cell_Complex >
+  typename Morse_Complex::Chain
+  psi_tower (const typename Cell_Complex::Chain & sink_me, 
+             const std::list<Morse_Complex> & tower, 
+             const Cell_Complex & complex ) {
+    typedef std::vector < std::pair < typename Cell_Complex::size_type, 
+    typename Cell_Complex::Ring > > Index_Chain;
+    /* Convert chain to index_chain */
+    Index_Chain top;
+    for (typename Cell_Complex::Chain::const_iterator term_iterator = sink_me . begin ();
+         term_iterator != sink_me . end (); ++ term_iterator ) {
+      top . push_back ( std::make_pair (complex . index ( term_iterator -> first ), 
+                                        term_iterator -> second ) );
+    } /* for */
+    /* Apply morse::psi successively */
+    Index_Chain bottom;
+    std::list<Morse_Complex>::const_iterator last_level;
+    for (std::list<Morse_Complex>::const_iterator level = tower . begin (); 
+         level != tower . end (); 
+         ++ level ) {
+      if ( level == tower . begin () ) {
+        bottom = psi ( top, complex, * level );
+      } else {
+        bottom = psi ( bottom, * last_level, * level );
+      } /* if-else */
+      last_level = level;
+    } /* for */
+    
+    /* Convert index chain to cell complex chain */
+    typename Morse_Complex::Chain answer;
+    for (typename Index_Chain::const_iterator term_iterator = bottom . begin ();
+         term_iterator != bottom . end (); ++ term_iterator ) {
+      answer . insert ( std::make_pair ( tower . back () . lookup ( term_iterator -> first ), 
+                                        term_iterator -> second ) );
+    } /* for */
+    return answer;
+  } /* morse::psi_tower */
   
   template < class Cell_Complex > Morse_Chain<typename Cell_Complex::size_type>
   morse_boundary ( typename Cell_Complex::size_type ace_index, const Cell_Complex & complex ) {
@@ -359,9 +574,10 @@ namespace morse {
     complex . decompose ();
     stop = clock ();
     std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
-    std::cout << "Reducing given complex... ";
+    std::cout << "Reducing given complex... \n ";
     start = clock ();
     tower . push_back ( Morse_Complex () );
+    std::cout << "Calling morse::reduction... \n";
     morse::reduction ( tower . back (), complex );
     stop = clock ();
     std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";

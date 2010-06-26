@@ -27,7 +27,11 @@ void Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f );
 /* Print out the homology generators... TODO: return the homology generators */
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
-Homology_Generators ( const Cell_Complex & the_complex, bool trivial_generators = false );
+Homology_Generators_SNF ( const Cell_Complex & the_complex, bool trivial_generators = false );
+
+template < class Cell_Complex >
+std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
+Homology_Generators_DMT ( const Cell_Complex & the_complex );
 
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/Homology.hpp"

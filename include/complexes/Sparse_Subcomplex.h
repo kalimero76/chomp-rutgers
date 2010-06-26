@@ -46,7 +46,7 @@ public:
 	typedef Sparse_Subcomplex_Chain<Cell_Complex> Chain;
   typedef typename Cell_Complex::const_iterator Cell;
 	typedef typename Cell_Complex::Ring Ring;
-	typedef unsigned long size_type;
+	typedef unsigned int size_type;
 	typedef Cell key_type;
 	typedef Cell value_type;
   typedef Sparse_Subcomplex_const_iterator<Cell_Complex> const_iterator;
