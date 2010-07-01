@@ -170,7 +170,7 @@ public:
   std::map<int, bool>::const_iterator piece_iterator;
 };
 
-size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
+inline size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
   boost::hash < unsigned long > hasher;
   return hasher ( * reinterpret_cast < const unsigned long * > ( & hash_me . piece_iterator ) );
 } /* hash_value */

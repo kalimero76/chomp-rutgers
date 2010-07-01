@@ -61,7 +61,7 @@ private:
   void next_type ( void ); 
 };
 
-size_t hash_value ( const Cubical_const_iterator & hash_me ) {
+inline size_t hash_value ( const Cubical_const_iterator & hash_me ) {
   boost::hash < unsigned long > hasher;
   return hasher ( hash_me . address_ );
 } /* hash_value */

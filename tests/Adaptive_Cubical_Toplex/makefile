@@ -1,7 +1,7 @@
 CXX := g++
-CXXFLAGS := -O3 -m64 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I./ -ggdb
+CXXFLAGS := -O3 -m64 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I./ -ggdb -L../../lib/
 
-CXX_STANDALONE := $(CXX) $(CXXFLAGS)
+CXX_STANDALONE := $(CXX) $(CXXFLAGS) -lchomp-rutgers
 
 all: test
 

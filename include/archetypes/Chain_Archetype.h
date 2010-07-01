@@ -43,7 +43,7 @@ private:
   unsigned int dimension_;
 };
 
-size_t hash_value ( const Default_Cell & hash_me ) {
+inline size_t hash_value ( const Default_Cell & hash_me ) {
   boost::hash<unsigned long> hasher;
   return hasher ( hash_me . data_ ); 
 } /* hash_value for Default_Cell */

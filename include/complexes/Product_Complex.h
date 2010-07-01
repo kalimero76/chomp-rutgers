@@ -157,7 +157,7 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 std::ostream & operator << ( std::ostream & output_stream, const Product_const_iterator < First_Cell_Complex, Second_Cell_Complex > & print_me );
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-size_t hash_value ( const Product_const_iterator 
+inline size_t hash_value ( const Product_const_iterator 
                    < First_Cell_Complex, Second_Cell_Complex > & hash_me );
 
 template < class First_Cell_Complex_Template, class Second_Cell_Complex_Template >
@@ -195,7 +195,7 @@ private:
 };
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
-size_t hash_value ( const Product_const_iterator 
+inline size_t hash_value ( const Product_const_iterator 
                    < First_Cell_Complex, Second_Cell_Complex > & hash_me ) {
   std::size_t seed = 0;
   boost::hash_combine(seed, hash_me . first_);

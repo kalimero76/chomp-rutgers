@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#define CHOMP_HEADER_ONLY_
+//#define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 #include "complexes/Adaptive_Complex.h"
