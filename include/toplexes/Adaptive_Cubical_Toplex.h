@@ -14,8 +14,21 @@
 #include <vector>
 #include <map>
 #include <iterator>
+
+#define GCC_VERSION (__GNUC__ * 10000 \
++ __GNUC_MINOR__ * 100 \
++ __GNUC_PATCHLEVEL__)
+/* Test for GCC > 4.2.0 */
+#if GCC_VERSION > 40200
 #include <tr1/unordered_set> //PORTABILITY ISSUE
 namespace std { using namespace tr1; }
+#else
+#warning Old Version of GCC -- using hash_set instead of unordered_set
+#include <ext/hash_set>
+namespace std { using namespace __gnu_cxx; }
+#define unordered_set hash_set
+#endif
+
 #include "complexes/Adaptive_Complex.h"
 
 namespace Adaptive_Cubical {
