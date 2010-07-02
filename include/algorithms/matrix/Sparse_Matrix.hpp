@@ -11,9 +11,9 @@
 #include <utility> /* For pair<...> in set_entry */
 #include <iostream> /* for cout in debug_info*/
 
-Matrix_Indices::Matrix_Indices ( long row, long column ) : row(row), column(column) { }
+inline Matrix_Indices::Matrix_Indices ( long row, long column ) : row(row), column(column) { }
 
-bool Matrix_Indices::operator < ( const Matrix_Indices & right_hand_side) const {
+inline bool Matrix_Indices::operator < ( const Matrix_Indices & right_hand_side) const {
 	if ( row < right_hand_side . row ) return true;
 	if ( row > right_hand_side . row ) return false;
 	if ( column < right_hand_side . column ) return true;
