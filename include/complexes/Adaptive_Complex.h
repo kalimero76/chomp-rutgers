@@ -36,7 +36,7 @@ public:
      */
     unsigned int splitting_dimension;
     unsigned int leaf_number;
-    
+
     Node * left_child;
     Node * right_child;
     /* If the node is a leaf - faces stores the faces of the elementary cube belonging to this leaf */
@@ -49,11 +49,11 @@ public:
      */
     std::vector< std::map < int, bool > > elementary_cells;
   };
-  
+
   class Node_Visitor {
   public:
     Node * current_node;
-    
+
     void Set_To( Node * node );
     /* Functions returns a pointer to the required node.
      * If the node does not exist they return NULL
@@ -64,7 +64,7 @@ public:
     Node * Current_Node();
     bool Is_Leaf();
   };
-  
+
 
   /* To compare positions of two cubes. One is obtained be going backward along acsending_path
    * while the other one is obtained by procedure of finding neighbors
@@ -75,7 +75,7 @@ public:
     int back_min_forward_max;
     int back_max_forward_min;
     int back_max_forward_max;
-    
+
     /*Inplicitly set the positions in the way that back_min = forward_min
      * and back_max = forward_max
      */
@@ -83,7 +83,7 @@ public:
     void Set_To_Same();
     void Set_To_Opposite( bool back_above_forward );
   };
-  
+
   class Descend_Info {
   public:
     Node * current_node;
@@ -92,17 +92,17 @@ public:
     bool forward_is_smaller;
     std::vector<int> ascending_path;
   };
-  
+
   unsigned int tree_dimension;
   std::vector<unsigned int> dimension_sizes;
-  
+
   Node tree_root;
   Node_Visitor node_visitor;
-  
+
   Adaptive_Tree( Adaptive_Complex * complex );
   ~Adaptive_Tree( void );
-  
-  
+
+
   /*Splits the leaf int to 2^tree_dimension cubes
    * and add these cubes to the tree. The original leaf
    * won't be leaf any more.
@@ -126,10 +126,10 @@ public:
   void Add_Cell_To_Union (int cell, std::vector< int > * intersection );
   void Find_Neighbours( Node * leaf, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours);
   void Descend_To_Neighbours(Descend_Info * descend_info, std::vector<Descend_Info> * bigger_neighbours, std::vector<Descend_Info> * smaller_neighbours);
-  
+
   std::vector< Node * > leaf_lookup;
   void Leaf_Lookup_Initialize(Node_Visitor * node_visitor);
-  
+
   Adaptive_Complex * complex_;
   bool finalized;
 };
@@ -187,7 +187,7 @@ typedef Chain_Archetype < std::map < Adaptive_const_iterator, Default_Ring > > A
 
 class Adaptive_Complex {
 public:
-  /* typedefs */	 
+  /* typedefs */
   typedef unsigned int size_type; // for > 4E9 cubes, use unsigned long
 	typedef Adaptive_Chain Chain;
 	typedef Adaptive_Cell Cell;
@@ -230,7 +230,7 @@ public:
   char type ( size_type index, unsigned int dimension ) const;
   size_type mate ( size_type queen_index, unsigned int dimension ) const;
   const Ring & connection ( size_type queen_index ) const;
-  Ring & connection ( size_type queen_index );  
+  Ring & connection ( size_type queen_index );
   size_type ace_begin ( unsigned int dimension ) const;
   size_type ace_end ( unsigned int dimension ) const;
   void preprocess ( void ) {}
@@ -241,7 +241,7 @@ public:
 	Adaptive_Complex ( const Adaptive_Complex &);
 	/** Deconstructor (deep deconstruction required) */
 	~Adaptive_Complex ( void );
-  std::vector< double > & Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates);
+  double Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates);
 
 	/* ways to make it */
 	/* Each entry of the first vector must be a vector with size tree_dimension
@@ -264,7 +264,7 @@ private:
   std::vector<const_iterator> begin_;
   const_iterator end_;
   std::vector<size_type> size_;
-  unsigned int dimension_; 
+  unsigned int dimension_;
   /* Index Complex */
   std::map < const_iterator, size_type > index_;
   std::vector < const_iterator > lookup_;
@@ -276,7 +276,7 @@ private:
   /* Adaptive Complex */
   std::vector<Cell > & Find_Elementary_Cell( std::vector<Cell> & output, const Cell & input) const;
 	std::vector< Adaptive_Tree::Descend_Info > & Find_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, const Cell & input, bool to_all_neighbours ) const;
-	std::vector< Adaptive_Tree::Descend_Info > & Descend_To_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours) const;  
+	std::vector< Adaptive_Tree::Descend_Info > & Descend_To_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours) const;
 	Adaptive_Tree * adaptive_tree;
 };
 
