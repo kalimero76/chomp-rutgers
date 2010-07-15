@@ -774,7 +774,7 @@ Adaptive_Complex::Chain Adaptive_Complex::coboundary ( const Adaptive_const_iter
 		for ( unsigned int expand_dimension = 0; expand_dimension < dimension_; ++ expand_dimension ) {
 			bool continue_flag = false; /* will set to true if cell is not present in neighbor */
       Ring sign ( 1 );
-      Ring coincidence;
+      Ring coincidence ( 0 ); //init to prevent warning only
 			neighbour_cell_ID = 0;
 			if ( not ( ( cell_ID >> ( dimension_ + expand_dimension ) ) & 1 ) ) continue; /* dimension is not reduced */
       /* The dimension is reduced so it is possible to expand*/

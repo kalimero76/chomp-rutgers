@@ -351,9 +351,12 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
   
   /* Find the homology generators of the graph */
   start = clock ();
+  std::cout << "Calling Homology_Generators_DMT...\n";
   std::vector < std::vector < std::pair < typename Graph::Chain, unsigned int > > > 
     graph_generators = Homology_Generators_DMT ( graph );
   stop = clock ();
+  for ( unsigned int a = 0; a < graph_generators . size (); ++ a ) std::cout << 
+    graph_generators [ a ] . size () << " ";
   std::cout << "Graph generators computed.\n";
 
   std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
@@ -365,9 +368,12 @@ void /* TODO */ Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f
   
   /* Find the homology generators in the morse reduction of the codomain */
   start = clock ();
+  std::cout << "Calling Homology_Generators_SNF...\n";
   std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
     codomain_generators = Homology_Generators_SNF ( codomain_tower . back (), true );
   stop = clock ();
+  for ( unsigned int a = 0; a < codomain_generators . size (); ++ a ) std::cout << 
+    codomain_generators [ a ] . size () << " ";
   std::cout << "Codomain generators computed.\n";
   std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
 

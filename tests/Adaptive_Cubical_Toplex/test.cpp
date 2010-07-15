@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-//#define CHOMP_HEADER_ONLY_
+#define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 #include "complexes/Adaptive_Complex.h"
@@ -21,6 +21,8 @@ void subdivide_toplex ( Toplex & my_toplex ) {
 };
 
 void inspect_toplex ( const Toplex & my_toplex ) {
+  std::cout << "\n Inspection. \n";
+  std::cout << "Toplex has " << my_toplex . size () << " top cells.\n";
   for ( Toplex::const_iterator it = my_toplex . begin (); it != my_toplex . end (); ++ it )
     std::cout << "top cell " << * it << " has geometry " << my_toplex . geometry ( it ) << "\n";
 } /* inspect_toplex */
@@ -78,10 +80,28 @@ int main (int argc, char * const argv[]) {
   inspect_subset ( my_toplex, children );
   std::cout << "\nErasing " << * children . begin () << "\n";
   my_toplex . erase ( my_toplex . find ( * children . begin () ) );
-  
+
   
   /* Inspection: */
   std::cout << "\nInspection:\n";
+  inspect_toplex ( my_toplex );
+
+  /* Coarsening */
+  std::cout << "Coarsening\n";
+  my_toplex . coarsen ();
+
+  inspect_toplex ( my_toplex );
+
+  subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
+  subdivide_toplex ( my_toplex );
+
+  inspect_toplex ( my_toplex );
+
+  std::cout << "Coarsening\n";
+  my_toplex . coarsen ();
+  
   inspect_toplex ( my_toplex );
   
   /* Outer cover: */
@@ -89,15 +109,15 @@ int main (int argc, char * const argv[]) {
   children = my_toplex . cover ( square );
   inspect_subset ( my_toplex, children );
   
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
-  subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
+  //subdivide_toplex ( my_toplex );
 
   /* Complex */
   children = my_toplex . cover ( bounds );

@@ -118,7 +118,13 @@ namespace Adaptive_Cubical {
     /* Update begin_ if necessary */
     /* TODO: if this is being used to kill an entire subtree, not just a leaf, then
        this will not update begin_ properly. */
-    /* TODO: if both children of a node are erased, erase also that node */
+    /* BUG: size not updated properly, because when we move onto parents
+       it keeps decreasing the size erroneously */
+    /* debug */
+    if ( erase_me . node () -> left_ != NULL ||
+         erase_me . node () -> right_ != NULL ) 
+      std::cout << "Erasing a non-leaf node\n";
+    /* end debug */
     if ( erase_me == begin_ ) ++ begin_;
     /* Disconnect from parent */
     Node * node = erase_me . node_;
@@ -136,7 +142,6 @@ namespace Adaptive_Cubical {
       if ( parent -> left_ != parent -> right_ ) break;
       /* We will erase this node and move on to erase its parent */
       find_ [ node -> contents_ ] = end_;
-      -- size_;
       delete node;
       node = parent;
     } /* while */
@@ -244,23 +249,36 @@ namespace Adaptive_Cubical {
       AddTopCellToComplexFunctor ( Toplex::Complex & complex, const Toplex & toplex ) 
       : complex(complex), toplex(toplex) {}
       void operator () ( const Toplex::Top_Cell & top_cell ) {
+        //std::cout << "Main, entering with " << top_cell << "\n";
         /* Determine depth of cell */
         unsigned int depth = 0;
         Node * leaf = toplex . find ( top_cell ) . node ();
         Node * node = leaf;
+        unsigned int sub_depth = toplex . dimension () - node -> dimension_;
+        if ( sub_depth == toplex . dimension () ) {
+          sub_depth = 0;
+        } else {
+          //std::cout << "Unusual case.\n";
+        } /* if-else */
         while ( node -> parent_ != NULL ) {
           node = node -> parent_;
           if ( node -> dimension_ == 0 ) ++ depth;
         } /* while */
+        //std::cout << "depth = " << depth << "\n";
         /* Determine 'splitting' used for Add_Full_Cube in Miro Kramar's Adaptive Complex */
         std::vector < std::vector <bool> > splitting ( depth );
         std::vector<bool> subdivision_choice ( toplex . dimension () );
         node = leaf;
         int outer_index = depth;
         int inner_index = toplex . dimension ();
+        inner_index -= sub_depth;
+        //std::cout << "sub_depth = " << sub_depth << "\n";
         while ( 1 ) {
           -- inner_index;
           Node * parent = node -> parent_;
+          //std::cout << "parent = " << parent << "\n";
+          //std::cout << "inner_index = " << inner_index << "\n";
+          //std::cout << node -> dimension_ << "\n";
           ( parent -> left_ == node ) ? subdivision_choice [ inner_index ] = false : 
                                         subdivision_choice [ inner_index ] = true;
           if ( inner_index == 0 ) {
@@ -271,7 +289,21 @@ namespace Adaptive_Cubical {
           } /* if */
           node = parent;
         } /* while */
-        complex . Add_Full_Cube ( splitting );
+        unsigned int number_to_add = 1 << sub_depth;
+        std::vector<bool> & choice = splitting [ depth - 1 ];
+
+        //std::cout << "entering\n";
+        for ( unsigned int cube_index = 0; cube_index < number_to_add; ++ cube_index ) {
+          unsigned int inner_index = toplex . dimension () - 1;
+          for ( unsigned int bit_index = 1; bit_index < number_to_add; bit_index <<= 1 ) {
+            ( cube_index & bit_index ) ? choice [ inner_index ] = false:
+                                         choice [ inner_index ] = true;
+            -- inner_index;
+          } /* for */
+          //std::cout << "adding\n";
+          complex . Add_Full_Cube ( splitting );
+        } /* for */
+        //std::cout << "leaving\n";
       } /* operator () */
     };
     
@@ -286,6 +318,8 @@ namespace Adaptive_Cubical {
   
   Toplex::Complex Toplex::complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const {
     Complex return_value ( dimension_);
+    /* Warning: will fail if there are leafs which are not perfect cubes */
+    /* Now put the complex together */
     std::for_each ( begin (), end (), detail::AddTopCellToComplexFunctor ( return_value, *this ) );
     return_value . Finalize ();
     /* Now fill in the boxes */
@@ -318,12 +352,14 @@ namespace Adaptive_Cubical {
   Toplex::Subset Toplex::subdivide ( iterator cell_to_divide ) {
     Subset children;
     std::deque < std::pair < const_iterator, unsigned int > > work_deque;
-    work_deque . push_back ( std::pair < const_iterator, unsigned int > ( cell_to_divide, 0 ) );
+    work_deque . push_back ( std::pair < const_iterator, unsigned int > 
+                            (cell_to_divide, 
+                             cell_to_divide . node () -> dimension_ ) );
     while ( not work_deque . empty () ) {
       std::pair < const_iterator, unsigned int >  work_pair = work_deque . front ();
       work_deque . pop_front ();
-      work_pair . first . node_ -> dimension_ = work_pair . second;
       if ( work_pair . second < dimension_ ) {
+        work_pair . first . node_ -> dimension_ = work_pair . second;
         /* We must subdivide further */
         work_pair . first . node_ -> left_ = new Node;
         work_pair . first . node_ -> right_ = new Node;
@@ -339,16 +375,77 @@ namespace Adaptive_Cubical {
         find_ . push_back ( const_iterator ( work_pair . first . node_ -> right_ ) );
         /* Push the children onto the work_deque */
         work_deque . push_back ( std::pair < const_iterator, unsigned int > 
-                                 ( const_iterator ( work_pair . first . node_ -> left_ ), work_pair . second + 1 ) );
+                                 (const_iterator ( work_pair . first . node_ -> left_ ), 
+                                  work_pair . second + 1 ) );
         work_deque . push_back ( std::pair < const_iterator, unsigned int > 
-                                 ( const_iterator ( work_pair . first . node_ -> right_ ), work_pair . second + 1 ) );
+                                 (const_iterator ( work_pair . first . node_ -> right_ ), 
+                                  work_pair . second + 1 ) );
       } else {
+        work_pair . first . node_ -> dimension_ = 0;
         //std::cout << "subdivide: inserting " << work_pair . first . node_ -> contents_ << "\n";
         children . insert ( work_pair . first . node_ -> contents_ );
       } /* if-else */
     } /* while */
     return children;
   } /* Adaptive_Cubical::Toplex::subdivide */
+
+  namespace detail {
+    template < class FindMap >
+    bool coarsen_helper ( Node * node, Toplex::size_type & size_, FindMap & find_,
+                         Toplex::const_iterator & begin_, const Toplex::const_iterator & end_,
+                         std::set < Node * > & debug ) {
+      int number_of_children = 0;
+      if ( node -> left_ != NULL ) ++ number_of_children;
+      if ( node -> right_ != NULL ) ++ number_of_children;
+      if ( number_of_children == 0 ) {
+        /* Black */
+        return false;
+      } /* if */
+      if ( number_of_children == 1 ) /* Red node */ {
+        if ( node -> left_ != NULL ) coarsen_helper ( node -> left_, size_, find_, begin_, end_, debug );
+        if ( node -> right_ != NULL ) coarsen_helper ( node -> right_, size_, find_, begin_, end_, debug );
+        return true; /* red */
+      } /* if */
+      if ( number_of_children == 2 ) {
+        bool left_flag = coarsen_helper ( node -> left_, size_, find_, begin_, end_, debug ); 
+        bool right_flag = coarsen_helper ( node -> right_, size_, find_, begin_, end_, debug );
+        if ( left_flag || right_flag ) {
+          /* Red */ 
+          return true;
+        } else {
+          /* Black */
+          if ( Toplex::const_iterator ( node -> left_ ) == begin_ ) 
+            begin_ = Toplex::const_iterator ( node );
+          find_ [ node -> left_ -> contents_ ] = end_;
+          delete node -> left_;
+          node -> left_ = NULL;
+          find_ [ node -> right_ -> contents_ ] = end_;
+          delete node -> right_;
+          node -> right_ = NULL;
+          -- size_;
+          if ( debug . find ( node ) != debug . end () )
+            std::cout << "problem\n";
+          debug . insert ( node );
+          //std::cout << node -> contents_ << " " << size_ << "\n";
+          return false;
+        } /* if-else */
+      } /* if */
+
+      return false; //prevent compiler warning, never reached.
+    } /* coarsen_helper */
+  } /* namespace detail */
+  
+  void Toplex::coarsen ( void ) {
+    /* Any node which has precisely one child is called 'red'.
+       Any node with a red descendent is also red.
+       All other nodes will be called 'black'.
+       We want to prune the tree so that black nodes have no descendents */
+    std::set < Node * > debug;
+    detail::coarsen_helper ( root_, size_, find_, begin_, end_, debug );
+    std::cout << "leaf reduction = " << debug . size () << "\n";
+
+    std::cout << "number of removed nodes = " << debug . size () * 2 << "\n";
+  } /* Adaptive_Cubical::Toplex::coarsen */
 
   void Toplex::initialize ( const Geometric_Description & outer_bounds_of_toplex ) {
     if ( root_ != NULL ) clear ();
@@ -361,6 +458,10 @@ namespace Adaptive_Cubical {
     find_ . push_back ( begin_ );
   } /* Adaptive_Cubical::Toplex::initialize */
   
+  Geometric_Description Toplex::bounds ( void ) const {
+    return bounds_;
+  } /* Adaptive_Cubical::Toplex::bounds */
+
   Toplex::Toplex ( void ) {
     end_ = const_iterator ( NULL );
     begin_ = end_;

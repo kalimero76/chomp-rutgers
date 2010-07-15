@@ -108,8 +108,8 @@ namespace morse {
         } /* while */
         if ( king_begin == king_end ) break;
         const size_type & king_index = king_queue [ king_begin ];
-        size_type queen_index;
-        typename Cell_Complex::Ring coefficient;
+        size_type queen_index = 0; // init to prevent warning only
+        typename Cell_Complex::Ring coefficient ( 0 ); //init to prevent warning only
         /* Get the queen_index */ 
         cell_complex . boundary ( boundary, king_index );
         for ( typename Index_Chain::const_iterator index_iterator = boundary . begin ();
@@ -440,7 +440,8 @@ namespace morse {
   
   template < class Cell_Complex >
   typename Morse_Complex::Chain
-  psi_tower (const typename Cell_Complex::Chain & sink_me, 
+  psi_tower (const typename 
+             Cell_Complex::Chain & sink_me, 
              const std::list<Morse_Complex> & tower, 
              const Cell_Complex & complex ) {
     typedef std::vector < std::pair < typename Cell_Complex::size_type, 
