@@ -33,6 +33,10 @@ template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators_DMT ( const Cell_Complex & the_complex );
 
+template < class Cell_Complex >
+std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
+Homology_Generators ( const Cell_Complex & the_complex );
+
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/Homology.hpp"
 #endif

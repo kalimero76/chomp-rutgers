@@ -303,6 +303,13 @@ Homology_Generators_DMT ( Cell_Complex & complex ) {
   return return_value;
 } /* Homology_Generators_DMT */
 
+template < class Cell_Complex >
+std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
+Homology_Generators ( Cell_Complex & complex ) {
+  return Homology_Generators_DMT ( complex );
+}
+
+
 namespace Homology_detail {
   
   /* Solve AX = B. warning -- writes over A

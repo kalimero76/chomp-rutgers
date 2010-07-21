@@ -23,11 +23,8 @@ size_t hash_value ( const Adaptive_const_iterator & hash_me );
 class Adaptive_Tree;
 
 
-/* * * * * * * * * * * * * *
- * typedef Adaptive_Cell   *
- * * * * * * * * * * * * * */
 
-typedef Default_Cell Adaptive_Cell;
+
 
 
 namespace Adaptive_Complex_detail {
@@ -42,11 +39,6 @@ namespace Adaptive_Complex_detail {
     Cube_Cells ( unsigned int dimension );
     const bool read ( size_type name ) const;
     void write ( size_type name, bool value );
-    size_type next ( size_type name ) const;
-    size_type begin ( unsigned int dimension ) const;
-    size_type end ( unsigned int dimension ) const;
-    size_type begin ( void ) const;
-    size_type end ( void ) const;
   };
   
   struct Node {
@@ -54,26 +46,42 @@ namespace Adaptive_Complex_detail {
     size_type child_number;
     Node * parent;
     void * data;
+    Node ( void );
+    /* Node ( bool type, unsigned int dimension )
+     * If type = 0, it is node. 
+     *    We initialize data to point to a vector<Node *> of  size 2 ^ dimension
+     * If type = 1, it is a leaf.
+     *    We initialize data to point to a Cube_Cells struct 
+     */
+    Node ( bool type, unsigned int dimension );
+    /* Recursive Deconstructor */
+    ~Node ( void );
     /* Either Cube_Cells * or std::vector < Node * > * */
   };
   
-  struct Cell_Name {
+  Node * operator ++ ( Node * & node );
+  
+  struct Cell {
     Node * node;
-    size_type cell_code;
+    size_type code;
   };
   
-  struct Relation {
-    size_type child_number;  
-    size_type cell_code;
+  struct GeoCell {
+    Node * node;
+    size_type code;
   };
   
-  typedef std::list < Cell_Name > Division_History;
+  typedef std::list < GeoCell > Division_History;
   
-
-  std::list < std::list < Cell_Name > > aliases ( const Cell_Name & cell_name );
+  std::list < std::list < GeoCell > > aliases ( const GeoCell & cell );
 
 } /* namespace detail */
 
+/* * * * * * * * * * * * * *
+ * typedef Adaptive_Cell   *
+ * * * * * * * * * * * * * */
+
+typedef Adaptive_Complex_detail::Cell Adaptive_Cell;
 
 
 /* * * * * * * * * * * * * * * * *
@@ -82,25 +90,30 @@ namespace Adaptive_Complex_detail {
 
 class Adaptive_const_iterator {
 public:
+  /* Typedefs */
   typedef Adaptive_Complex complex_type;
   typedef Adaptive_Cell Cell;
   typedef Adaptive_const_iterator const_iterator;
+  /* Constructors */
   Adaptive_const_iterator ( void );
-  Adaptive_const_iterator ( const Cell_Name & my_cell );
-  Adaptive_const_iterator ( const Adaptive_Complex * const);
+  Adaptive_const_iterator ( const Adaptive_Complex * const container );
+  Adaptive_const_iterator ( const Adaptive_Complex * const container, const Cell & cell );
+  /* Iterator */
   Adaptive_const_iterator & operator ++ ( void );
+  const Adaptive_Cell & operator * ( void ) const;
+  /* Relations */
   bool operator != ( const Adaptive_const_iterator & ) const;
   bool operator == ( const Adaptive_const_iterator & ) const;
   bool operator < ( const Adaptive_const_iterator & right_hand_side ) const;
-  const Adaptive_Cell & operator * ( void ) const;
+  /* Cell Iterator */
   unsigned int dimension () const;
   const Adaptive_Complex & container () const;
 private:
   friend class Adaptive_Complex;
   friend size_t hash_value ( const Adaptive_const_iterator & hash_me );
-  const Adaptive_Complex * referral;
+  const Adaptive_Complex * container_;
   unsigned int dimension_;
-  Cell_Name cell_;
+  Cell cell_;
 };
 
 inline size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
@@ -174,21 +187,15 @@ public:
 	Adaptive_Complex ( const Adaptive_Complex &);
 	/** Deconstructor (deep deconstruction required) */
 	~Adaptive_Complex ( void );
-  double Coordinates_Of_Cell ( const Cell & input,  std::vector< double > & coordinates);
 
-	/* ways to make it */
-	/* Each entry of the first vector must be a vector with size tree_dimension
-	 * and consists of 0 and 1
-	 * 0 - take the left node
-	 * 1 - take the right node
-	 * this identifies a single cube
+	/* 
 	 */
-	bool Add_Full_Cube( std::vector < std::vector <bool> > splitting);
-	/* Function has to be called after all the cubes are added
-	 * Without colling the function the taces of the cubes won't be
-	 * inserted to the structure
+	bool Add_Full_Cube( std::vector < unsigned int > splitting);
+	
+  /* 
 	 */
 	void Finalize();
+
 private:
   friend class Adaptive_const_iterator;
   /* Cell Complex */
@@ -206,10 +213,17 @@ private:
   std::vector< int > boundary_count_;
   std::vector<size_type> king_count_;
   /* Adaptive Complex */
-  std::vector<Cell > & Find_Elementary_Cell( std::vector<Cell> & output, const Cell & input) const;
-	std::vector< Adaptive_Tree::Descend_Info > & Find_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, const Cell & input, bool to_all_neighbours ) const;
-	std::vector< Adaptive_Tree::Descend_Info > & Descend_To_Possible_Owners( std::vector< Adaptive_Tree::Descend_Info > & possible_owners, Adaptive_Tree::Descend_Info descend_info, int splitting_nodes, bool to_all_neighbours) const;
 	Node * root_;
+  std::vector < size_type > packing_code_;
+  std::vector < size_type > packing_code_begin_;
+  std::vector < size_type > geometric_code_;
+
+  size_type geometric_code ( const size_type pcode ) const;
+  size_type packing_code ( const size_type gcode ) const;
+  size_type packing_code_begin ( const unsigned int dimension ) const;
+  size_type packing_code_end ( const unsigned int dimension ) const;
+
+
 };
 
 #ifdef CHOMP_HEADER_ONLY_

@@ -19,6 +19,7 @@ typename Complex::Chain boundary ( const typename Complex::Chain & input, const 
   return return_value;
 } /* boundary */
 
+#if 0
 template < class Chain >
 Chain boundary ( const Chain & input ) {
   Chain return_value ( input . container () );
@@ -41,6 +42,7 @@ Chain coboundary ( const Chain & input ) {
   return return_value;
 } /* coboundary */
 
+#endif
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *
