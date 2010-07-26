@@ -76,10 +76,6 @@ void inspect_complex ( Cell_Complex & my_complex ) {
   std::cout << "Inspecting the complex!\n";
   std::cout << "The complex has dimension " << my_complex . dimension () << "\n";
   std::cout << "The complex has size " << my_complex . size () << "\n";
-  std::cout << "begins at " << * my_complex . begin () << "\n";
-  typename Cell_Complex::const_iterator it = my_complex . begin ();
-  ++ it;
-  std::cout << "next is " << * it << "\n";
   for ( typename Cell_Complex::const_iterator iter = my_complex . begin (); 
         iter != my_complex . end (); ++ iter ) {
     typename Cell_Complex::Chain my_chain = my_complex . boundary ( iter );

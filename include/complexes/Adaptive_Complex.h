@@ -12,6 +12,8 @@
 
 #include <vector>
 #include <map>
+#include <list>
+
 #include "boost/functional/hash.hpp"
 
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
@@ -53,27 +55,32 @@ namespace Adaptive_Complex_detail {
      * If type = 1, it is a leaf.
      *    We initialize data to point to a Cube_Cells struct 
      */
-    Node ( bool type, unsigned int dimension );
+    Node ( Node * parent, size_type child_number );
     /* Recursive Deconstructor */
     ~Node ( void );
     /* Either Cube_Cells * or std::vector < Node * > * */
   };
   
-  Node * operator ++ ( Node * & node );
+  Node * become_next_leaf ( Node * & node );
   
   struct Cell {
     Node * node;
     size_type code;
+    Cell ( void ) {}
+    Cell ( Node * node, size_type code ) : node(node), code(code) {}
   };
   
   struct GeoCell {
     Node * node;
     size_type code;
+    GeoCell ( void ) {}
+    GeoCell ( Node * node, size_type code ) : node(node), code(code) {}
+    GeoCell ( const Cell & cell, const Adaptive_Complex & complex );
   };
   
   typedef std::list < GeoCell > Division_History;
   
-  std::list < std::list < GeoCell > > aliases ( const GeoCell & cell );
+  std::list < std::list < GeoCell > > aliases ( const GeoCell & cell, const Adaptive_Complex & complex );
 
 } /* namespace detail */
 
@@ -82,7 +89,7 @@ namespace Adaptive_Complex_detail {
  * * * * * * * * * * * * * */
 
 typedef Adaptive_Complex_detail::Cell Adaptive_Cell;
-
+std::ostream & operator << ( std::ostream & output_stream, const Adaptive_Cell & print_me );
 
 /* * * * * * * * * * * * * * * * *
  * class Adaptive_const_iterator *
@@ -98,6 +105,8 @@ public:
   Adaptive_const_iterator ( void );
   Adaptive_const_iterator ( const Adaptive_Complex * const container );
   Adaptive_const_iterator ( const Adaptive_Complex * const container, const Cell & cell );
+  Adaptive_const_iterator ( const Adaptive_Complex * const container, const Adaptive_Complex_detail::GeoCell & cell );
+
   /* Iterator */
   Adaptive_const_iterator & operator ++ ( void );
   const Adaptive_Cell & operator * ( void ) const;
@@ -116,9 +125,10 @@ private:
   Cell cell_;
 };
 
+/* TODO: fix this hash function */
 inline size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
   boost::hash < unsigned long > hasher;
-  return hasher ( * reinterpret_cast < const unsigned long * > ( & hash_me . piece_iterator ) );
+  return hasher ( reinterpret_cast < const unsigned long > ( hash_me . cell_ . node ) );
 } /* hash_value */
 
 /* * * * * * * * * * * * * *
@@ -213,16 +223,19 @@ private:
   std::vector< int > boundary_count_;
   std::vector<size_type> king_count_;
   /* Adaptive Complex */
-	Node * root_;
+  Adaptive_Complex_detail::Node * root_;
   std::vector < size_type > packing_code_;
   std::vector < size_type > packing_code_begin_;
   std::vector < size_type > geometric_code_;
 
+
+public:
+  /* Implementation details made public for convenience */
   size_type geometric_code ( const size_type pcode ) const;
   size_type packing_code ( const size_type gcode ) const;
   size_type packing_code_begin ( const unsigned int dimension ) const;
   size_type packing_code_end ( const unsigned int dimension ) const;
-
+  size_type MASK;
 
 };
 

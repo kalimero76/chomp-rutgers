@@ -76,6 +76,23 @@ compute_results cubical_example (  int dimension, int width, float probability, 
   stop = clock ();
   std::cout << " Sweeping time = " << (float ) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
    */
+  /* Obtain Generators*/
+  utility::compute_example ( my_cubical_complex );
+  
+  std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
+  Homology_Generators ( my_cubical_complex );
+  
+  /* Print them out. */
+  for ( unsigned int dimension_index = 0; dimension_index < generators . size (); ++ dimension_index ) {
+    std::cout << "\nDimension " << dimension_index << "\n";
+    for ( unsigned int generator_index = 0; generator_index < generators [ dimension_index ] . size (); ++ generator_index ) {
+      if ( generators [ dimension_index ] [ generator_index ] . second == 0 ) 
+        std::cout << "  Betti generator: ";
+      else
+        std::cout << "  Torsion generator (" << generators [ dimension_index ] [ generator_index ] . second << "): ";
+      std::cout << generators [ dimension_index ] [ generator_index ] . first << "\n";
+    } /* for */
+  } /* for */
   return utility::compute_example ( my_cubical_complex );
 } /* cubical_example */
 

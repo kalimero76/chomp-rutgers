@@ -7,7 +7,7 @@
  *
  */
 
-#include "complexes/Adaptive_Complex.h"
+#include "complexes/Adaptive_Complex_Old.h"
 #include "algorithms/Morse_Theory.h"
 
 /*/////////////////////////////////////////////////////////////////////////////

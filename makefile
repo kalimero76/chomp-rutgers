@@ -22,8 +22,9 @@ all: library
 
 ARCHETYPE_OBJECTS := Chain_Archetype.o
 ALGORITHM_OBJECTS := 
-COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex.o
-TOPLEX_OBJECTS := Adaptive_Cubical_Toplex.o
+COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex_Old.o
+TOPLEX_OBJECTS := 
+# Adaptive_Cubical_Toplex.o
 
 LIBRARY_OBJECTS := $(patsubst %.o, build/archetypes/%.o, $(ARCHETYPE_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/algorithms/%.o, $(ALGORITHM_OBJECTS) )
@@ -33,7 +34,7 @@ LIBRARY_OBJECTS += $(patsubst %.o, build/toplexes/%.o, $(TOPLEX_OBJECTS) )
 library: $(LIBRARY_OBJECTS)
 	ar rcs lib/libchomp-rutgers.a $(LIBRARY_OBJECTS)
 
-$(BUILD_DIR)/%.o : source/%.cpp include/%.h include/%.hpp
+$(BUILD_DIR)/%.o : source/%.cpp include/%.h
 	$(CXX) $(CXXFLAGS) -c $< -o $@
 
 # Cleanup
