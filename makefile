@@ -22,7 +22,7 @@ all: library
 
 ARCHETYPE_OBJECTS := Chain_Archetype.o
 ALGORITHM_OBJECTS := 
-COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex_Old.o
+COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex.o
 TOPLEX_OBJECTS := 
 # Adaptive_Cubical_Toplex.o
 

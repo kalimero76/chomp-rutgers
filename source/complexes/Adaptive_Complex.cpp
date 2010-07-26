@@ -10,6 +10,8 @@
 #include "complexes/Adaptive_Complex.h"
 #include "algorithms/Morse_Theory.h"
 
+#include <stack>
+
 #include <boost/foreach.hpp>
 #include "boost/tuple/tuple.hpp"
 
