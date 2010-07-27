@@ -240,6 +240,29 @@ namespace Adaptive_Cubical {
     //std::cout << "returning.\n";
     return return_value;
   } /* Adaptive_Cubical::Toplex::geometry */
+
+  int Toplex::Cell_Depth( const Top_Cell ) const{
+	unsigned int depth = 0;
+	Node * leaf = toplex . find ( top_cell ) . node ();
+	Node * node = leaf;
+	while ( node -> parent_ != NULL ) {
+		node = node -> parent_;
+		if ( node -> dimension_ == 0 ) ++ depth;
+	} /* while */
+	return depth;
+  }
+  
+  unsigned int Toplex::Cell_Child_Number( const Top_Cell ) const{
+	int cell_index = 0;
+	Node * node = toplex . find ( top_cell ) . node ();
+	for( int i = toplex . dimension () - 1 ; i > 0 ; -- i ){
+		Node * parent = node -> parent_;
+		if ( parent -> right_ == node ) {
+			cell_index |= ( 1 << i );
+		}
+		node = parent;
+	}
+  }
   
   namespace detail {
     

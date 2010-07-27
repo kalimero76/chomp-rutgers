@@ -41,7 +41,7 @@ namespace Adaptive_Cubical {
   /* Typedefs */
   typedef unsigned int size_type; // for > 4E9 cubes, use unsigned long
   typedef size_type Top_Cell;
-  typedef float Real;
+  typedef double Real; //Canged from float to double by miro
 
   /* * * * * * * * * * * * * * * * * * * * * * * * * *
    * struct Adaptive_Cubical::Geometric_Description  *
@@ -132,6 +132,8 @@ namespace Adaptive_Cubical {
     Complex complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     Complex complex ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
+	int Cell_Depth( const Top_Cell ) const;
+	unsigned int Cell_Child_Number( const Top_Cell ) const;
     
     /* Adaptive Toplex */
     Subset subdivide ( iterator cell_to_divide );
