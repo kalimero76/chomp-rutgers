@@ -758,7 +758,7 @@ Adaptive_Complex::~Adaptive_Complex ( void ) {
 } /* endfunction */
 
 bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
-  std::cout << "Add_Full_Cube \n";
+  //std::cout << "Add_Full_Cube \n";
   using namespace Adaptive_Complex_detail;
   Node * node = root_;
   BOOST_FOREACH ( unsigned int child_number, splitting ) {
@@ -862,7 +862,7 @@ void Adaptive_Complex::Finalize ( void ) {
       int depth = 0;
       while ( ( temp = temp -> parent ) != root_ ) -- depth;      
       /* Insert leaf into list in proper position */
-	  std::cout << "Inserting leaf " << leaf << " into position_map at depth " << depth << "\n";
+	//  std::cout << "Inserting leaf " << leaf << " into position_map at depth " << depth << "\n";
 	  if ( position_map . lower_bound ( depth ) == position_map . end () ) {
         position_map [ depth ] = work_list . insert ( work_list . end (), leaf );
       } else {
