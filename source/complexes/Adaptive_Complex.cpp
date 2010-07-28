@@ -762,7 +762,7 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
   using namespace Adaptive_Complex_detail;
   Node * node = root_;
   BOOST_FOREACH ( unsigned int child_number, splitting ) {
-    std::cout << "  child_number = " << child_number << "\n";
+ //   std::cout << "  child_number = " << child_number << "\n";
     if ( node -> type == 1 ) {
       /* The node is a leaf. */ 
       /* The node should no longer be a leaf. */
