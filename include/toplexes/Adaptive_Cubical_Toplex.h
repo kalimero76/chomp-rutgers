@@ -132,8 +132,7 @@ namespace Adaptive_Cubical {
     Complex complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     Complex complex ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
-	int Cell_Depth( const Top_Cell ) const;
-	unsigned int Cell_Child_Number( const Top_Cell ) const;
+
     
     /* Adaptive Toplex */
     Subset subdivide ( iterator cell_to_divide );
@@ -144,6 +143,9 @@ namespace Adaptive_Cubical {
     Toplex ( void );
     Toplex ( const Geometric_Description & outer_bounds_of_toplex );
 
+    int Cell_Depth( const Top_Cell ) const;
+    unsigned int Cell_Child_Number( const Top_Cell ) const;
+    
   private:
     const_iterator begin_;
     const_iterator end_;

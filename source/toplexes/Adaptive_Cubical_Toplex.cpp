@@ -7,6 +7,7 @@
  *
  */
 
+#include <set>
 #include <deque>
 #include <algorithm>
 
@@ -241,28 +242,30 @@ namespace Adaptive_Cubical {
     return return_value;
   } /* Adaptive_Cubical::Toplex::geometry */
 
-  int Toplex::Cell_Depth( const Top_Cell ) const{
-	unsigned int depth = 0;
-	Node * leaf = toplex . find ( top_cell ) . node ();
-	Node * node = leaf;
-	while ( node -> parent_ != NULL ) {
-		node = node -> parent_;
-		if ( node -> dimension_ == 0 ) ++ depth;
-	} /* while */
-	return depth;
-  }
-  
-  unsigned int Toplex::Cell_Child_Number( const Top_Cell ) const{
-	int cell_index = 0;
-	Node * node = toplex . find ( top_cell ) . node ();
-	for( int i = toplex . dimension () - 1 ; i > 0 ; -- i ){
-		Node * parent = node -> parent_;
-		if ( parent -> right_ == node ) {
-			cell_index |= ( 1 << i );
-		}
-		node = parent;
-	}
-  }
+  int Toplex::Cell_Depth( const Top_Cell top_cell ) const{
+    unsigned int depth = 0;
+    Node * leaf = find ( top_cell ) . node ();
+    Node * node = leaf;
+    while ( node -> parent_ != NULL ) {
+      node = node -> parent_;
+      if ( node -> dimension_ == 0 ) ++ depth;
+    } /* while */
+    return depth;
+  }  /* Adaptive_Cubical::Toplex::Cell_Depth */
+
+  unsigned int Toplex::Cell_Child_Number( const Top_Cell top_cell ) const{
+    int cell_index = 0;
+    Node * node = find ( top_cell ) . node ();
+    for( int i = dimension () - 1 ; i > 0 ; -- i ){
+      Node * parent = node -> parent_;
+      if ( parent -> right_ == node ) {
+        cell_index |= ( 1 << i );
+      }
+      node = parent;
+    }
+    return cell_index;
+  }  /* Adaptive_Cubical::Toplex::Cell_Child_Number */
+
   
   namespace detail {
     
@@ -288,9 +291,9 @@ namespace Adaptive_Cubical {
           if ( node -> dimension_ == 0 ) ++ depth;
         } /* while */
         //std::cout << "depth = " << depth << "\n";
-        /* Determine 'splitting' used for Add_Full_Cube in Miro Kramar's Adaptive Complex */
-        std::vector < std::vector <bool> > splitting ( depth );
-        std::vector<bool> subdivision_choice ( toplex . dimension () );
+        /* Determine 'splitting' used for Add_Full_Cube in Adaptive Complex */
+        std::vector < unsigned int > splitting ( depth );
+        unsigned int subdivision_choice = 0;
         node = leaf;
         int outer_index = depth;
         int inner_index = toplex . dimension ();
@@ -302,25 +305,25 @@ namespace Adaptive_Cubical {
           //std::cout << "parent = " << parent << "\n";
           //std::cout << "inner_index = " << inner_index << "\n";
           //std::cout << node -> dimension_ << "\n";
-          ( parent -> left_ == node ) ? subdivision_choice [ inner_index ] = false : 
-                                        subdivision_choice [ inner_index ] = true;
+          if ( parent -> left_ != node ) subdivision_choice |= ( 1 << inner_index );
           if ( inner_index == 0 ) {
             -- outer_index;
             splitting [ outer_index ] = subdivision_choice;
+            subdivision_choice = 0;
             if ( outer_index == 0 ) break;
             inner_index = toplex . dimension ();
           } /* if */
           node = parent;
         } /* while */
         unsigned int number_to_add = 1 << sub_depth;
-        std::vector<bool> & choice = splitting [ depth - 1 ];
+        unsigned int & choice = splitting [ depth - 1 ];
 
         //std::cout << "entering\n";
         for ( unsigned int cube_index = 0; cube_index < number_to_add; ++ cube_index ) {
           unsigned int inner_index = toplex . dimension () - 1;
           for ( unsigned int bit_index = 1; bit_index < number_to_add; bit_index <<= 1 ) {
-            ( cube_index & bit_index ) ? choice [ inner_index ] = false:
-                                         choice [ inner_index ] = true;
+            ( cube_index & bit_index ) ? choice &= ( ( ~ 0 ) ^ ( 1 << inner_index ) ) /* clear inner_index bit */ :
+                                         choice |= ( 1 << inner_index ) /* set inner_index bit */;
             -- inner_index;
           } /* for */
           //std::cout << "adding\n";
