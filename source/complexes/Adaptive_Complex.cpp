@@ -758,11 +758,11 @@ Adaptive_Complex::~Adaptive_Complex ( void ) {
 } /* endfunction */
 
 bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
-  //std::cout << "Add_Full_Cube \n";
+  std::cout << "Add_Full_Cube \n";
   using namespace Adaptive_Complex_detail;
   Node * node = root_;
   BOOST_FOREACH ( unsigned int child_number, splitting ) {
-    //std::cout << "  child_number = " << child_number << "\n";
+    std::cout << "  child_number = " << child_number << "\n";
     if ( node -> type == 1 ) {
       /* The node is a leaf. */ 
       /* The node should no longer be a leaf. */
@@ -771,7 +771,7 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
         return false;
       } /* if */
       node -> type = 0; // Now it is a node.
-      node -> data = new std::vector<Node *> ( 1 << dimension_, NULL );
+      node -> data = new std::vector<Node *> ( 1 << dimension_, ( Node * ) NULL );
       unsigned int child_index = 0;
       //std::cout << " Giving children to node " << node << "\n";
       BOOST_FOREACH ( Node * & child, * reinterpret_cast < std::vector<Node *> * > ( node -> data ) ) {

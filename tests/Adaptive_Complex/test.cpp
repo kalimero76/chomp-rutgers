@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-#define CHOMP_HEADER_ONLY_
+//#define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
 #include "complexes/Adaptive_Complex.h"
 #include "algorithms/basic.h"
@@ -12,32 +12,81 @@
 int main (int argc, char * const argv[]) {
   
   Adaptive_Complex my_adaptive_complex ( 2 );
-  
+
+  /* 
+  3, 3
+  3, 2
+  3, 1
+  3, 0
+  2, 3
+  2, 2, 1
+  2, 2, 0
+  2, 1
+  2, 0
+  1, 3
+  1, 2
+  1, 1, 2
+  1, 1, 0
+  1, 0
+  0, 3
+  0, 2 
+  0, 1
+  */  
   {
-  std::vector < unsigned int > splitting ( 2 );
+  std::vector < unsigned int > splitting2 ( 2 );
+  std::vector < unsigned int > splitting3 ( 3 );
   
-  splitting [ 0 ] = 0; splitting [ 1 ] = 2;
-  my_adaptive_complex . Add_Full_Cube ( splitting );
+  splitting2 [ 0 ] = 3; splitting2 [ 1 ] = 3;
+  my_adaptive_complex . Add_Full_Cube ( splitting2 );
   
-  splitting [ 0 ] = 0; splitting [ 1 ] = 0;
-  my_adaptive_complex . Add_Full_Cube ( splitting );
+  splitting2 [ 0 ] = 3; splitting2 [ 1 ] = 2;
+  my_adaptive_complex . Add_Full_Cube ( splitting2 );
   
-  splitting [ 0 ] = 0; splitting [ 1 ] = 1;
-  my_adaptive_complex . Add_Full_Cube ( splitting );
+  splitting2 [ 0 ] = 3; splitting2 [ 1 ] = 1;
+  my_adaptive_complex . Add_Full_Cube ( splitting2 );
    
-  }
-  {
-  std::vector < unsigned int > splitting ( 1 );
-    splitting [ 0 ] = 2;
-    my_adaptive_complex . Add_Full_Cube ( splitting );
+  splitting2 [ 0 ] = 3; splitting2 [ 1 ] = 0;
+  my_adaptive_complex . Add_Full_Cube ( splitting2 );
+
+  splitting2 [ 0 ] = 2; splitting2 [ 1 ] = 3;
+  my_adaptive_complex . Add_Full_Cube ( splitting2 );
+
+  splitting3 [ 0 ] = 2; splitting3 [ 1 ] = 2; splitting3 [ 2 ] = 1;
+  my_adaptive_complex . Add_Full_Cube ( splitting3 );
+
+    splitting3 [ 0 ] = 2; splitting3 [ 1 ] = 2; splitting3 [ 2 ] = 0;
+    my_adaptive_complex . Add_Full_Cube ( splitting3 );
     
+    splitting2 [ 0 ] = 2; splitting2 [ 1 ] = 1;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
     
-    splitting [ 0 ] = 1;
-    my_adaptive_complex . Add_Full_Cube ( splitting );
+    splitting2 [ 0 ] = 2; splitting2 [ 1 ] = 0;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
     
-    splitting [ 0 ] = 3;
-    my_adaptive_complex . Add_Full_Cube ( splitting );
-     
+    splitting2 [ 0 ] = 1; splitting2 [ 1 ] = 3;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
+    splitting2 [ 0 ] = 1; splitting2 [ 1 ] = 2;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
+    splitting3 [ 0 ] = 1; splitting3 [ 1 ] = 1; splitting3 [ 2 ] = 2;
+    my_adaptive_complex . Add_Full_Cube ( splitting3 );
+    
+    splitting3 [ 0 ] = 1; splitting3 [ 1 ] = 1; splitting3 [ 2 ] = 0;
+    my_adaptive_complex . Add_Full_Cube ( splitting3 );
+    
+    splitting2 [ 0 ] = 1; splitting2 [ 1 ] = 0;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
+    splitting2 [ 0 ] = 0; splitting2 [ 1 ] = 3;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
+    splitting2 [ 0 ] = 0; splitting2 [ 1 ] = 2;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
+    splitting2 [ 0 ] = 0; splitting2 [ 1 ] = 1;
+    my_adaptive_complex . Add_Full_Cube ( splitting2 );
+    
   }
   
   my_adaptive_complex . Finalize ();
