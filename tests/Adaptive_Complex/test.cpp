@@ -4,7 +4,7 @@
 
 #include <iostream>
 
-//#define CHOMP_HEADER_ONLY_
+#define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
 #include "complexes/Adaptive_Complex.h"
 #include "algorithms/basic.h"

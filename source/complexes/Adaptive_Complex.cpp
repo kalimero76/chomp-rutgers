@@ -859,13 +859,16 @@ void Adaptive_Complex::Finalize ( void ) {
       if ( leaf -> data == NULL ) continue;
       /* Calculate the depth of the leaf */
       Node * temp = leaf;
-      unsigned int depth = 0;
+      int depth = 0;
       while ( ( temp = temp -> parent ) != root_ ) -- depth;      
       /* Insert leaf into list in proper position */
-      if ( position_map . lower_bound ( depth ) == position_map . end () ) {
+	  std::cout << "Inserting leaf " << leaf << " into position_map at depth " << depth << "\n";
+	  if ( position_map . lower_bound ( depth ) == position_map . end () ) {
         position_map [ depth ] = work_list . insert ( work_list . end (), leaf );
       } else {
-        position_map [ depth ] = work_list . insert ( position_map . lower_bound ( depth ) -> second, leaf );
+		std::list < Node * > :: iterator placement = work_list . insert ( position_map . lower_bound ( depth ) -> second, leaf );
+		position_map [ depth ] = placement;
+		/* Question: Why doesn't position_map [ depth ] = work_list ... work directly? */
       } /* if-else */
     } /* while */
   } /* scope */
