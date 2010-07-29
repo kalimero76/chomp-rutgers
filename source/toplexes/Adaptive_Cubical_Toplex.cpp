@@ -1,6 +1,6 @@
 /*
  *  Adaptive_Cubical_Toplex.cpp
- *  
+ *
  *
  *  Created by Shaun Harker on 5/26/10.
  *  Copyright 2010. All rights reserved.
@@ -14,25 +14,25 @@
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 
 namespace Adaptive_Cubical {
-  
+
   /* * * * * * * * * * * * * * * * * * * * * * * * * *
    * struct Adaptive_Cubical::Geometric_Description  *
    * * * * * * * * * * * * * * * * * * * * * * * * * */
   Geometric_Description::Geometric_Description ( void ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
-  
-  Geometric_Description::Geometric_Description ( unsigned int size ) 
+
+  Geometric_Description::Geometric_Description ( unsigned int size )
   : lower_bounds ( size ), upper_bounds ( size ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
 
-  Geometric_Description::Geometric_Description ( unsigned int size, const Real & value ) 
+  Geometric_Description::Geometric_Description ( unsigned int size, const Real & value )
   : lower_bounds ( size, value ), upper_bounds ( size, value ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
 
-  Geometric_Description::Geometric_Description ( unsigned int size, const Real & lower_value, const Real & upper_value ) 
+  Geometric_Description::Geometric_Description ( unsigned int size, const Real & lower_value, const Real & upper_value )
   : lower_bounds ( size, lower_value ), upper_bounds ( size, upper_value ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
-  
+
   bool Geometric_Description::intersects ( const Geometric_Description & other ) const {
     for ( unsigned int dimension_index = 0; dimension_index < lower_bounds . size (); ++ dimension_index ) {
       if ( upper_bounds [ dimension_index ] < other . lower_bounds [ dimension_index ] ||
@@ -42,7 +42,7 @@ namespace Adaptive_Cubical {
     } /* for */
     return true;
   } /* Adaptive_Cubical::Geometric_Description::intersects */
-  
+
   std::ostream & operator << ( std::ostream & output_stream, const Geometric_Description & print_me ) {
     for ( unsigned int dimension_index = 0; dimension_index < print_me . lower_bounds . size (); ++ dimension_index ) {
       output_stream << "[" << print_me . lower_bounds [ dimension_index ] << ", " << print_me . upper_bounds [ dimension_index ] << "]";
@@ -56,7 +56,7 @@ namespace Adaptive_Cubical {
    * * * * * * * * * * * * * * * * */
   Node::Node ( void ) : left_ ( NULL ), right_ ( NULL ) {
   } /* Adaptive_Cubical::Node::Node */
-  
+
   Node::~Node ( void ) {
     if ( left_ != NULL ) delete left_;
     if ( right_ != NULL ) delete right_;
@@ -67,10 +67,10 @@ namespace Adaptive_Cubical {
    * * * * * * * * * * * * * * * * * * * * * * * * */
   Toplex_const_iterator::Toplex_const_iterator ( void ) {
   } /* Adaptive_Cubical::Toplex_const_iterator::Toplex_const_iterator */
-  
+
   Toplex_const_iterator::Toplex_const_iterator ( Node * node ) : node_ ( node ) {
   } /* Adaptive_Cubical::Toplex_const_iterator::Toplex_const_iterator */
-  
+
   Toplex_const_iterator & Toplex_const_iterator::operator ++ ( void ) {
     /* Go up until either root is reached, or node is a left child of a parent possessing a right child as well */
     while (  node_ -> parent_ != NULL && ( node_ -> parent_ -> left_ != node_ || node_ -> parent_ -> right_ == NULL ) ) node_ = node_ -> parent_;
@@ -91,23 +91,23 @@ namespace Adaptive_Cubical {
     } /* while */
     return *this;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator ++ */
-  
+
   bool Toplex_const_iterator::operator != ( const Toplex_const_iterator & right_hand_side ) const {
     return node_ != right_hand_side . node_;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator != */
-  
+
   bool Toplex_const_iterator::operator == ( const Toplex_const_iterator & right_hand_side ) const {
     return node_ == right_hand_side . node_;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator == */
-  
+
   bool Toplex_const_iterator::operator < ( const Toplex_const_iterator & right_hand_side ) const {
-    return node_ < right_hand_side . node_; 
+    return node_ < right_hand_side . node_;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator < */
-  
+
   const Adaptive_Cubical::Top_Cell & Toplex_const_iterator::operator * ( void ) const {
     return node_ -> contents_;
   } /* Adaptive_Cubical::Toplex_const_iterator::operator * */
-  
+
   Node * Toplex_const_iterator::node ( void ) {
     return node_;
   } /* Adaptive_Cubical::Toplex_const_iterator::node */
@@ -123,7 +123,7 @@ namespace Adaptive_Cubical {
        it keeps decreasing the size erroneously */
     /* debug */
     if ( erase_me . node () -> left_ != NULL ||
-         erase_me . node () -> right_ != NULL ) 
+         erase_me . node () -> right_ != NULL )
       std::cout << "Erasing a non-leaf node\n";
     /* end debug */
     if ( erase_me == begin_ ) ++ begin_;
@@ -131,7 +131,7 @@ namespace Adaptive_Cubical {
     Node * node = erase_me . node_;
     while ( 1 ) {
       Node * parent = node -> parent_;
-      if ( parent == NULL ) break;  
+      if ( parent == NULL ) break;
       /* This is not the root: a parent exists. */
       if ( parent -> left_ == node ) {
         /* This is a left-child; disconnect accordingly. */
@@ -153,7 +153,7 @@ namespace Adaptive_Cubical {
     /* Deallocate the node */
     delete node;
   } /* Adaptive_Cubical::Toplex::erase */
-  
+
   void Toplex::clear ( void ) {
     size_ = 0;
     tree_size_ = 0;
@@ -161,23 +161,23 @@ namespace Adaptive_Cubical {
     begin_ = end_;
     if ( root_ != NULL ) delete root_;
   } /* Adaptive_Cubical::Toplex::clear */
-  
+
   Toplex::iterator Toplex::find ( const key_type & find_me ) const {
     return find_ [ find_me ];
   } /* Adaptive_Cubical::Toplex::find */
-  
+
   Toplex::iterator Toplex::begin ( void ) const {
     return begin_;
   } /* Adaptive_Cubical::Toplex::begin */
-  
+
   Toplex::iterator Toplex::end ( void ) const {
     return end_;
   } /* Adaptive_Cubical::Toplex::end */
-  
+
   Toplex::size_type Toplex::size ( void ) const {
     return size_;
   } /* Adaptive_Cubical::Toplex::size */
-  
+
   unsigned int Toplex::dimension ( void ) const {
     return dimension_;
   } /* Adaptive_Cubical::Toplex::dimension */
@@ -209,7 +209,7 @@ namespace Adaptive_Cubical {
     } /* while */
     return cover_set;
   } /* Adaptive_Cubical::Toplex::cover */
-  
+
   Toplex::Geometric_Description Toplex::geometry ( const const_iterator & cell_iterator ) const {
     Geometric_Description return_value ( dimension_, Real ( 0 ) );
     //std::cout << "geometry of " << cell_iterator . node_ << " (" << cell_iterator . node_ -> contents_ << ")\n";
@@ -256,23 +256,23 @@ namespace Adaptive_Cubical {
   unsigned int Toplex::Cell_Child_Number( const Top_Cell top_cell ) const{
     int cell_index = 0;
     Node * node = find ( top_cell ) . node ();
-    for( int i = dimension () - 1 ; i > 0 ; -- i ){
+    for( int i = dimension () - 1 ; i > -1 ; -- i ){
       Node * parent = node -> parent_;
       if ( parent -> right_ == node ) {
-        cell_index |= ( 1 << i );
+    	  cell_index |= ( 1 << i );
       }
       node = parent;
     }
     return cell_index;
   }  /* Adaptive_Cubical::Toplex::Cell_Child_Number */
 
-  
+
   namespace detail {
-    
+
     struct AddTopCellToComplexFunctor {
       Toplex::Complex & complex;
       const Toplex & toplex;
-      AddTopCellToComplexFunctor ( Toplex::Complex & complex, const Toplex & toplex ) 
+      AddTopCellToComplexFunctor ( Toplex::Complex & complex, const Toplex & toplex )
       : complex(complex), toplex(toplex) {}
       void operator () ( const Toplex::Top_Cell & top_cell ) {
         //std::cout << "Main, entering with " << top_cell << "\n";
@@ -332,16 +332,16 @@ namespace Adaptive_Cubical {
         //std::cout << "leaving\n";
       } /* operator () */
     };
-    
+
   } /* namespace detail */
-  
+
   Toplex::Complex Toplex::complex ( void ) const {
     Complex return_value ( dimension_);
     std::for_each ( begin (), end (), detail::AddTopCellToComplexFunctor ( return_value, *this ) );
     return_value . Finalize ();
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
-  
+
   Toplex::Complex Toplex::complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const {
     Complex return_value ( dimension_);
     /* Warning: will fail if there are leafs which are not perfect cubes */
@@ -357,7 +357,7 @@ namespace Adaptive_Cubical {
     } /* for */
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
-  
+
   Toplex::Complex Toplex::complex ( const const_iterator & cell_iterator ) const {
     Complex return_value ( dimension_);
     detail::AddTopCellToComplexFunctor my_functor ( return_value, *this );
@@ -365,21 +365,21 @@ namespace Adaptive_Cubical {
     return_value . Finalize ();
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
-  
+
   Toplex::Complex Toplex::complex ( const Subset & subset_of_toplex ) const {
     Complex return_value ( dimension_);
-    std::for_each ( subset_of_toplex . begin (), 
-               subset_of_toplex . end (), 
+    std::for_each ( subset_of_toplex . begin (),
+               subset_of_toplex . end (),
                detail::AddTopCellToComplexFunctor ( return_value, *this ) );
     return_value . Finalize ();
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
-  
+
   Toplex::Subset Toplex::subdivide ( iterator cell_to_divide ) {
     Subset children;
     std::deque < std::pair < const_iterator, unsigned int > > work_deque;
-    work_deque . push_back ( std::pair < const_iterator, unsigned int > 
-                            (cell_to_divide, 
+    work_deque . push_back ( std::pair < const_iterator, unsigned int >
+                            (cell_to_divide,
                              cell_to_divide . node () -> dimension_ ) );
     while ( not work_deque . empty () ) {
       std::pair < const_iterator, unsigned int >  work_pair = work_deque . front ();
@@ -400,11 +400,11 @@ namespace Adaptive_Cubical {
         work_pair . first . node_ -> right_ -> parent_ = work_pair . first . node_;
         find_ . push_back ( const_iterator ( work_pair . first . node_ -> right_ ) );
         /* Push the children onto the work_deque */
-        work_deque . push_back ( std::pair < const_iterator, unsigned int > 
-                                 (const_iterator ( work_pair . first . node_ -> left_ ), 
+        work_deque . push_back ( std::pair < const_iterator, unsigned int >
+                                 (const_iterator ( work_pair . first . node_ -> left_ ),
                                   work_pair . second + 1 ) );
-        work_deque . push_back ( std::pair < const_iterator, unsigned int > 
-                                 (const_iterator ( work_pair . first . node_ -> right_ ), 
+        work_deque . push_back ( std::pair < const_iterator, unsigned int >
+                                 (const_iterator ( work_pair . first . node_ -> right_ ),
                                   work_pair . second + 1 ) );
       } else {
         work_pair . first . node_ -> dimension_ = 0;
@@ -433,14 +433,14 @@ namespace Adaptive_Cubical {
         return true; /* red */
       } /* if */
       if ( number_of_children == 2 ) {
-        bool left_flag = coarsen_helper ( node -> left_, size_, find_, begin_, end_, debug ); 
+        bool left_flag = coarsen_helper ( node -> left_, size_, find_, begin_, end_, debug );
         bool right_flag = coarsen_helper ( node -> right_, size_, find_, begin_, end_, debug );
         if ( left_flag || right_flag ) {
-          /* Red */ 
+          /* Red */
           return true;
         } else {
           /* Black */
-          if ( Toplex::const_iterator ( node -> left_ ) == begin_ ) 
+          if ( Toplex::const_iterator ( node -> left_ ) == begin_ )
             begin_ = Toplex::const_iterator ( node );
           find_ [ node -> left_ -> contents_ ] = end_;
           delete node -> left_;
@@ -460,7 +460,7 @@ namespace Adaptive_Cubical {
       return false; //prevent compiler warning, never reached.
     } /* coarsen_helper */
   } /* namespace detail */
-  
+
   void Toplex::coarsen ( void ) {
     /* Any node which has precisely one child is called 'red'.
        Any node with a red descendent is also red.
@@ -483,7 +483,7 @@ namespace Adaptive_Cubical {
     begin_ = const_iterator ( root_ );
     find_ . push_back ( begin_ );
   } /* Adaptive_Cubical::Toplex::initialize */
-  
+
   Geometric_Description Toplex::bounds ( void ) const {
     return bounds_;
   } /* Adaptive_Cubical::Toplex::bounds */
@@ -503,7 +503,7 @@ namespace Adaptive_Cubical {
     size_ = 0;
     tree_size_ = 0;
     root_ = NULL;
-    dimension_ = 0;   
+    dimension_ = 0;
     initialize ( outer_bounds_of_toplex );
   } /* Adaptive_Cubical::Toplex::Toplex */
 
