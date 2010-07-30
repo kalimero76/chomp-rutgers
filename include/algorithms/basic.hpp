@@ -113,6 +113,11 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	/* Create Morse Complex */
 	std::cout << "  Using morse theory to reduce ... \n";
 	total_time_start = start_clock = clock ();
+  
+  //Morse_Complex my_morse_complex;
+  //my_complex . index ();
+  //my_complex . decompose ();
+  //morse::reduction ( my_morse_complex, my_complex );
   Morse_Complex my_morse_complex = morse::deep_reduction ( my_complex );
 	std::cout << " ... morse reduction completed. \n";
 	stop_clock = clock (); 

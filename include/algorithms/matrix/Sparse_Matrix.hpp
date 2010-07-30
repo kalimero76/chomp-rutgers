@@ -134,7 +134,8 @@ void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > 
 		typename Cell_Complex::Chain boundary_chain = complex . boundary ( group_iterator );
 		/* We loop through the terms in the boundary we have found. */
 		for ( typename Cell_Complex::Chain::iterator chain_iterator = boundary_chain . begin (); 
-		chain_iterator != boundary_chain . end (); ++ chain_iterator ) 
+         chain_iterator != boundary_chain . end (); ++ chain_iterator ) {
 			output_matrix . set_entry ( complex . index ( chain_iterator -> first )  , group_index, chain_iterator -> second ); 
+    } /* for */
   } /* for */
 } /* Sparse_Matrix_Boundary_Map */

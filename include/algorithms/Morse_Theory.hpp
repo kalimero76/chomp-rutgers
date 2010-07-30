@@ -560,43 +560,44 @@ namespace morse {
       } /* for */
     } /* for */
     reduced_complex . generate_coboundary_information (); /* TODO. consider this */
-    /* Should I index? */
+    /* Should I index? (Yes, otherwise SNF functions fail) */
+    reduced_complex . index ();
   } /* morse::reduction */
   
   template < class Cell_Complex > std::list<Morse_Complex> 
   reduction_tower ( Cell_Complex & complex ) {
     typedef typename Cell_Complex::size_type size_type;
-    clock_t start, stop;
+    //clock_t start, stop;
     size_type size = complex . size ();
-    std::cout << " Size = " << size << "\n";
+    //std::cout << " Size = " << size << "\n";
     std::list<Morse_Complex> tower;
-    std::cout << "Decomposing given complex... ";
-    start = clock ();
+    //std::cout << "Decomposing given complex... ";
+    //start = clock ();
     complex . decompose ();
-    stop = clock ();
-    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
-    std::cout << "Reducing given complex... \n ";
-    start = clock ();
+    //stop = clock ();
+    //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    //std::cout << "Reducing given complex... \n ";
+    //start = clock ();
     tower . push_back ( Morse_Complex () );
-    std::cout << "Calling morse::reduction... \n";
+    //std::cout << "Calling morse::reduction... \n";
     morse::reduction ( tower . back (), complex );
-    stop = clock ();
-    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    //stop = clock ();
+    //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
     while ( tower . back () . size () < size ) {
       size = tower . back () . size ();
-      std::cout << " Size = " << size << "\n";
+      //std::cout << " Size = " << size << "\n";
       Morse_Complex & last_complex = tower . back ();
-      std::cout << "Decomposing... ";
-      start = clock ();
+      //std::cout << "Decomposing... ";
+      //start = clock ();
       last_complex . decompose ();
-      stop = clock ();
-      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
-      std::cout << "Reducing... ";
-      start = clock ();
+      //stop = clock ();
+      //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      //std::cout << "Reducing... ";
+      //start = clock ();
       tower . push_back ( Morse_Complex () );
       morse::reduction ( tower . back (), last_complex );
-      stop = clock ();
-      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      //stop = clock ();
+      //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
     }; /* while */
     tower . back () . index ();
     return tower;
@@ -605,35 +606,35 @@ namespace morse {
   template < class Cell_Complex > Morse_Complex
   deep_reduction ( Cell_Complex & complex ) {
     typedef typename Cell_Complex::size_type size_type;
-    clock_t start, stop;
+    //clock_t start, stop;
     size_type size = complex . size ();
-    std::cout << " Size = " << size << "\n";
-    std::cout << "Decomposing given complex... ";
-    start = clock ();
+    //std::cout << " Size = " << size << "\n";
+    //std::cout << "Decomposing given complex... ";
+    //start = clock ();
     complex . decompose ();
-    stop = clock ();
-    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
-    std::cout << "Reducing given complex... ";
-    start = clock ();
+    //stop = clock ();
+    //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    //std::cout << "Reducing given complex... ";
+    //start = clock ();
     Morse_Complex * reduced = new Morse_Complex;
     morse::reduction ( *reduced, complex );
-    stop = clock ();
+    //stop = clock ();
     complex . clear ();
-    std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+    //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
     while ( reduced -> size () < size ) {
       size = reduced -> size ();
-      std::cout << " Size = " << size << "\n";
-      std::cout << "Decomposing... ";
-      start = clock ();
+      //std::cout << " Size = " << size << "\n";
+      //std::cout << "Decomposing... ";
+      //start = clock ();
       reduced -> decompose ();
-      stop = clock ();
-      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
-      std::cout << "Reducing... ";
-      start = clock ();
+      //stop = clock ();
+      //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      //std::cout << "Reducing... ";
+      //start = clock ();
       Morse_Complex * next = new Morse_Complex;
       morse::reduction ( *next, *reduced );
-      stop = clock ();
-      std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
+      //stop = clock ();
+      //std::cout << (float) (stop-start)/(float) CLOCKS_PER_SEC << "\n";
       delete reduced;
       reduced = next;
     }; /* while */

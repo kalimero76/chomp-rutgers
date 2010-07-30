@@ -315,8 +315,6 @@ Abstract_Complex<Cell_Type>::Abstract_Complex ( const Abstract_Complex & copy_me
   dimension_ = copy_me . dimension_;
   size_ = copy_me . size_;
   total_size_ = copy_me . total_size_;
-  boundary_ = copy_me . boundary_;
-  coboundary_ = copy_me . coboundary_;
   index_begin_ = copy_me . index_begin_;
   connection_ = copy_me . connection_;
   king_count_ = copy_me . king_count_;
@@ -332,13 +330,33 @@ Abstract_Complex<Cell_Type>::Abstract_Complex ( const Abstract_Complex & copy_me
     lookup_ . resize ( total_size_ + 1 );
     const_iterator copy_iterator = copy_me . begin ();
     for ( const_iterator cell_iterator = begin (); cell_iterator != end (); ++ cell_iterator, ++ copy_iterator ) { 
-      size_type cell_index = index_ [ copy_iterator ];
+      size_type cell_index = copy_me . index ( copy_iterator );
       index_ [ cell_iterator ] = cell_index;
       lookup_ [ cell_index ] = cell_iterator;
     } /* for */
     index_ [ end_ ] = total_size_;
     lookup_ [ total_size_ ] = end_;
   } /* if */
+  /* Copy the Boundary and Coboundary Information */
+  for ( const_iterator cell_iterator = begin (); cell_iterator != end (); ++ cell_iterator ) {
+    /* Copy Boundary Chain */ {
+      Chain source_chain = copy_me . boundary_ . find ( * cell_iterator ) -> second;
+      Chain target_chain;
+      for ( typename Chain::const_iterator copy_term = source_chain . begin (); copy_term != source_chain . end (); ++ copy_term ) {
+        target_chain . insert ( std::make_pair ( find ( * copy_term -> first ), copy_term -> second ) );
+      } /* for */
+      boundary_ [ * cell_iterator ] = target_chain;
+    } /* scope */
+    /* Copy Coboundary Chain */ { 
+      Chain source_chain = copy_me . coboundary_ . find ( * cell_iterator ) -> second;
+      Chain target_chain;
+      for ( typename Chain::const_iterator copy_term = source_chain . begin (); copy_term != source_chain . end (); ++ copy_term ) {
+        target_chain . insert ( std::make_pair ( find ( * copy_term -> first ), copy_term -> second ) );
+      } /* for */
+      coboundary_ [ * cell_iterator ] = target_chain;
+    } /* scope */
+  } /* for */
+  
 } /* Abstract_Complex<Cell_Type>::Abstract_Complex */
 
 template < class Cell_Type >

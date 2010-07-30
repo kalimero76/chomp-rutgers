@@ -49,6 +49,16 @@ void Homology ( std::vector<int> & Betti_output, std::vector<int> & minimal_numb
 		 * and store the answer in smith_form_results [ dimension_index ]      */
 		Smith_Normal_Form ( smith_form_results [ dimension_index ], matrix ); }
 	
+  //DEBUG
+  //for ( unsigned int dimension_index = 0; dimension_index <= the_complex . dimension (); dimension_index ++ ) {
+	//	for ( unsigned int index = 0; index < smith_form_results [ dimension_index ] . size (); index ++ ) {
+  //		if ( smith_form_results [ dimension_index ] [ index ] . first != 0 ) {/* Thus, specialized ring classes should overload != */
+	//			std::cout << "(" << dimension_index << "; " << index << ": " << 
+  //      smith_form_results [ dimension_index ] [ index ] . first << ", " << smith_form_results [ dimension_index ] [ index ] . second << ")\n"; 
+  //    }
+  //  }
+  //}
+  
 	/* Step 2
 	 *		Use SNF calculation to produce homology groups
 	 */
