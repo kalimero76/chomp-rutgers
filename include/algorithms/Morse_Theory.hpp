@@ -149,7 +149,7 @@ namespace morse {
       //std::cout << "ACE ROUTINE \n";      
       while ( cells_remaining && king_begin == king_end ) {
         /* Pick an Ace. */
-        while ( number_of_boundaries [ ace_index ] != 0 ) ++ ace_index;
+        while ( number_of_boundaries [ ace_index ] != 0 ) ++ ace_index;        
         /* Assign Decomposition Information */
         //std::cout << "A: " << ace_index << "\n";
         data [ ace_index ] = 1;     

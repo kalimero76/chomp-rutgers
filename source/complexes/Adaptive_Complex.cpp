@@ -333,6 +333,9 @@ Adaptive_const_iterator::Adaptive_const_iterator( const Adaptive_Complex * const
   dimension_ = Adaptive_Complex_detail::get_dimension ( container -> geometric_code ( cell . code ) >> container -> dimension () );
 } /* Adaptive_const_iterator::Adaptive_const_iterator */
 
+Adaptive_const_iterator::Adaptive_const_iterator( const Adaptive_Complex * const container, const Cell & cell, const unsigned int dimension ) : container_(container), cell_(cell), dimension_(dimension) { 
+} /* Adaptive_const_iterator::Adaptive_const_iterator */
+
 Adaptive_const_iterator::Adaptive_const_iterator( const Adaptive_Complex * const container, const Adaptive_Complex_detail::GeoCell & cell ) : container_(container) { 
   cell_ . node = cell . node;
   cell_ . code = container_ -> packing_code ( cell . code );
@@ -487,32 +490,39 @@ Adaptive_Complex::Chain Adaptive_Complex::boundary ( const Adaptive_const_iterat
 	/*Go thru all cells which are one dimension lower than input*/
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
     GeoCell cell ( *input, *this );
+    //if ( dimension_index == 0 ) std::cout << "Trying to find the boundary of (" << cell . code << ", " << cell . node << ")\n";
     if ( ( ( cell . code >> ( dimension_ + dimension_index ) ) & 1 ) == 1  ) { 
       /* The dimension is not reduced. */
       GeoCell lower_cell = cell;
       /* Produce Left Cell */
       lower_cell . code = cell . code & ( ~ ( 1 << ( dimension_ + dimension_index ) ) ) & ( ~ ( 1 << dimension_index ) );
+      //std::cout << "   Produced left code " << lower_cell . code << "\n";
       /* Process Left Cell */ {
         std::list < std::list < GeoCell > > left_boundary_aliases = aliases ( lower_cell, *this );
         /*Process the chain*/
         BOOST_FOREACH ( std::list < GeoCell > & alias, left_boundary_aliases ) {
           BOOST_FOREACH ( GeoCell & alias_cell, alias ) {
             if ( alias_cell . node -> data != NULL && reinterpret_cast < Cube_Cells * > ( alias_cell . node -> data ) 
-                 -> read ( packing_code ( alias_cell . code ) ) )
+                -> read ( packing_code ( alias_cell . code ) ) ) {
               output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, alias_cell ), - coincidence_index ) );
+              //std::cout << "       inserting (" << alias_cell . code << ", " << alias_cell . node << ", " << packing_code ( alias_cell . code ) << ")\n";
+            }
           } /* BOOST_FOREACH */
         } /* BOOST_FOREACH */
       } /* Left Cell */
       /* Produce Right Cell */
       lower_cell . code = lower_cell . code | ( 1 << dimension_index );
+      //std::cout << "   Produced right code " << lower_cell . code << "\n";
       /* Process Right Cell */ {
         std::list < std::list < GeoCell > > right_boundary_aliases = aliases ( lower_cell, *this );
         /*Process the chain*/
         BOOST_FOREACH ( std::list < GeoCell > & alias, right_boundary_aliases ) {
           BOOST_FOREACH ( GeoCell & alias_cell, alias ) {
             if ( alias_cell . node -> data != NULL && reinterpret_cast < Cube_Cells * > ( alias_cell . node -> data ) 
-                 -> read ( packing_code ( alias_cell . code ) ) )
+                -> read ( packing_code ( alias_cell . code ) ) ) {
               output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, alias_cell ), coincidence_index ) );
+              //std::cout << "       inserting (" << alias_cell . code << ", " << alias_cell . node << ", " << packing_code ( alias_cell . code ) << ")\n";
+            }
           } /* BOOST_FOREACH */
         } /* BOOST_FOREACH */
 			} /* Right Cell */
@@ -634,6 +644,7 @@ void Adaptive_Complex::boundary ( std::vector < size_type > & output, const size
 
 void Adaptive_Complex::coboundary ( std::vector < size_type > & output, const size_type cell_index ) const {
   output . clear ();
+  //std::cout << "cbd : cell_index = " << cell_index << " / " << total_size_ << "\n";
   Chain coboundary_chain =  coboundary ( lookup_ [ cell_index ] );
   for_each ( coboundary_chain . begin (), coboundary_chain . end (), push_functor ( *this, output ) );
 } /* Adaptive_Complex::coboundary */
@@ -762,7 +773,11 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
   using namespace Adaptive_Complex_detail;
   Node * node = root_;
   BOOST_FOREACH ( unsigned int child_number, splitting ) {
+<<<<<<< .mine
+    //std::cout << "  child_number = " << child_number << "\n";
+=======
  //   std::cout << "  child_number = " << child_number << "\n";
+>>>>>>> .r66
     if ( node -> type == 1 ) {
       /* The node is a leaf. */ 
       /* The node should no longer be a leaf. */
@@ -791,6 +806,9 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
 namespace Adaptive_Complex_detail {
 
   void finalize_helper ( const GeoCell & input, const Adaptive_Complex & complex ) {
+    static unsigned int count = 0;
+    count ++;
+    //if ( count % 1000 == 0 ) std::cout << count << "\n";
     //std::cout << "\n### finalize_helper : " << input . node << " " << input . code << "\n";
     /* Add the cell unless there is a conflict */
     std::list < std::list < GeoCell > > cell_aliases = aliases ( input, complex );
@@ -802,13 +820,21 @@ namespace Adaptive_Complex_detail {
     bool conflict = false;
     BOOST_FOREACH ( std::list < GeoCell > & alias, cell_aliases ) {
       /* Check if any of the Cell's in this alias are "on" */
+      if ( alias . size () > 1 ) {
+        conflict = true;
+      } else {
+        if ( alias . begin () -> node -> data != NULL && reinterpret_cast < Cube_Cells * > ( alias . begin () -> node -> data ) 
+          -> read ( complex . packing_code ( alias . begin () -> code ) ) ) 
+          return;
+      } /* if-else */
+      /*
       BOOST_FOREACH ( GeoCell & cell, alias ) {
         if ( cell . node -> data != NULL && reinterpret_cast < Cube_Cells * > ( cell . node -> data ) 
             -> read ( complex . packing_code ( cell . code ) ) ) {
           conflict = true;
           break;
-        } /* if */
-      } /* BOOST_FOREACH */
+        } */ /* if */
+      //} /* BOOST_FOREACH */
       if ( conflict == true ) {
         BOOST_FOREACH ( GeoCell & cell, alias ) {
           if ( cell . node -> data != NULL && reinterpret_cast < Cube_Cells * > ( cell . node -> data ) 
@@ -883,7 +909,7 @@ void Adaptive_Complex::Finalize ( void ) {
   size_type end_code = 1;
   for ( unsigned int dim = 0; dim < dimension_; ++ dim ) end_code *= 3;
   Cell end_cell ( root_, end_code );
-  end_ = const_iterator ( this, end_cell );
+  end_ = const_iterator ( this, end_cell, dimension_ + 1 );
   /* Initialize begin_ */
   Node * leaf = root_;
   become_next_leaf ( leaf );
