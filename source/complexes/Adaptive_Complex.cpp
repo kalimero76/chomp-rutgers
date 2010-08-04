@@ -264,6 +264,7 @@ namespace Adaptive_Complex_detail {
       BOOST_FOREACH ( Node * child, * reinterpret_cast < std::vector < Node * > * > ( data ) ) {
         delete child;
       } /* BOOST_FOREACH */
+      delete reinterpret_cast < std::vector < Node * > * > ( data );
     } else {
       if ( data != NULL ) delete reinterpret_cast < Cube_Cells * > ( data );
     } /* if-else */
@@ -593,6 +594,8 @@ Adaptive_Complex::size_type Adaptive_Complex::index_begin ( unsigned int dimensi
 } /* Adaptive_Complex::index_begin */
 
 Adaptive_Complex::size_type Adaptive_Complex::index_end ( unsigned int dimension ) const {
+  std::cout << "*  dimension = " << dimension << "\n";  
+  std::cout << "   index_begin_ . size () = " << index_begin_ . size () << "\n";
   return index_begin_ [ dimension + 1 ];
 } /* Adaptive_Complex::index_end */
 

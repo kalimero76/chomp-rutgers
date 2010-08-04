@@ -142,7 +142,7 @@ namespace Adaptive_Cubical {
     void initialize ( const Geometric_Description & outer_bounds_of_toplex );
     Toplex ( void );
     Toplex ( const Geometric_Description & outer_bounds_of_toplex );
-
+    ~Toplex ( void );
     unsigned int Cell_Depth( const Top_Cell ) const;
     unsigned int Cell_Child_Number( const Top_Cell ) const;
     

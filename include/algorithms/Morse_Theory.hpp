@@ -172,8 +172,11 @@ namespace morse {
       const size_type start_index = cell_complex . index_begin ( dimension_index );
       const size_type stop_index = cell_complex . index_end ( dimension_index );
       size_type ace_index = stop_index - king_count [ dimension_index ] - 1;
-      const size_type king_offset = cell_complex . index_end ( dimension_index + 1 ) + 1;
-      const size_type queen_offset = start_index - 2;
+      size_type king_offset, queen_offset;
+      if ( dimension_index < cell_complex . dimension () ) {
+        king_offset = cell_complex . index_end ( dimension_index + 1 ) + 1;
+        queen_offset = start_index - 2;
+      } /* if */
       for ( size_type cell_index = start_index; cell_index < stop_index; ++ cell_index ) {
         switch ( data [ cell_index ] ) {
           case 0: /* King */ break;
@@ -639,7 +642,9 @@ namespace morse {
       reduced = next;
     }; /* while */
     reduced -> index ();
-    return *reduced;
+    Morse_Complex return_value = *reduced;
+    delete reduced;
+    return return_value;
   };
   
 } /* namespace morse */

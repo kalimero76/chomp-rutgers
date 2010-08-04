@@ -24,11 +24,6 @@ class Adaptive_const_iterator;
 size_t hash_value ( const Adaptive_const_iterator & hash_me );
 class Adaptive_Tree;
 
-
-
-
-
-
 namespace Adaptive_Complex_detail {
   
   typedef unsigned int size_type;
@@ -105,7 +100,7 @@ public:
   Adaptive_const_iterator ( void );
   Adaptive_const_iterator ( const Adaptive_Complex * const container );
   Adaptive_const_iterator ( const Adaptive_Complex * const container, const Cell & cell );
-  Adaptive_const_iterator::Adaptive_const_iterator( const Adaptive_Complex * const container, const Cell & cell, const unsigned int dimension );
+  Adaptive_const_iterator ( const Adaptive_Complex * const container, const Cell & cell, const unsigned int dimension );
   Adaptive_const_iterator ( const Adaptive_Complex * const container, const Adaptive_Complex_detail::GeoCell & cell );
 
   /* Iterator */

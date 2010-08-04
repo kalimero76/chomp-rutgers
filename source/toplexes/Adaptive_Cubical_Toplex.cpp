@@ -54,7 +54,7 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * *
    * struct Adaptive_Cubical::Node *
    * * * * * * * * * * * * * * * * */
-  Node::Node ( void ) : left_ ( NULL ), right_ ( NULL ) {
+  Node::Node ( void ) : left_ ( NULL ), right_ ( NULL ), parent_ ( NULL ), contents_ ( 0 ), dimension_ ( 0 ) {
   } /* Adaptive_Cubical::Node::Node */
 
   Node::~Node ( void ) {
@@ -497,6 +497,7 @@ namespace Adaptive_Cubical {
     dimension_ = 0;
   } /* Adaptive_Cubical::Toplex::Toplex */
 
+
   Toplex::Toplex ( const Geometric_Description & outer_bounds_of_toplex ) {
     end_ = const_iterator ( NULL );
     begin_ = end_;
@@ -507,5 +508,8 @@ namespace Adaptive_Cubical {
     initialize ( outer_bounds_of_toplex );
   } /* Adaptive_Cubical::Toplex::Toplex */
 
+  Toplex::~Toplex ( void ) {
+    if ( root_ != NULL ) delete root_;
+  } /* Adaptive_Cubical::Toplex::~Toplex */
 
 } /* namespace Adaptive_Cubical */
