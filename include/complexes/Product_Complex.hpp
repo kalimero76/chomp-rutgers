@@ -19,8 +19,8 @@ Product_Cell ( void ) {
 
 template < class First_Cell_Complex, class Second_Cell_Complex >
 Product_Cell < First_Cell_Complex, Second_Cell_Complex > ::
-Product_Cell ( const typename First_Cell_Complex::Cell & first, 
-              const typename Second_Cell_Complex::Cell & second ) 
+Product_Cell ( const typename First_Cell_Complex::const_iterator & first, 
+              const typename Second_Cell_Complex::const_iterator & second ) 
 : first_(first), second_(second), dimension_(first . dimension () + second . dimension () ) {
 } /* Product_Cell<>::Product_Cell */
 
@@ -63,9 +63,9 @@ template < class First_Cell_Complex, class Second_Cell_Complex >
 typename Product_Complex<First_Cell_Complex, Second_Cell_Complex>::const_iterator 
 Product_Complex<First_Cell_Complex, Second_Cell_Complex>::
 find ( const Cell & find_me ) const {
-  typename First_Cell_Complex::const_iterator first_iterator = first_factor -> find ( find_me . first_ );
-  typename Second_Cell_Complex::const_iterator second_iterator = second_factor -> find (find_me . second_ );
-  return const_iterator ( this, first_iterator, second_iterator );
+  //typename First_Cell_Complex::const_iterator first_iterator = first_factor -> find ( find_me . first_ );
+  //typename Second_Cell_Complex::const_iterator second_iterator = second_factor -> find (find_me . second_ );
+  return const_iterator ( this, find_me . first_, find_me . second_ ); // first_iterator, second_iterator );
 } /* Product_Complex<>::find */
 
 template < class First_Cell_Complex, class Second_Cell_Complex >

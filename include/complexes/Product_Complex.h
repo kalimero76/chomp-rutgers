@@ -40,8 +40,8 @@ public:
   typedef Second_Cell_Complex_Template Second_Cell_Complex;
   typedef Product_Complex<First_Cell_Complex, Second_Cell_Complex> complex_type;
   Product_Cell ( void );
-  Product_Cell ( const typename First_Cell_Complex::Cell & first_cell, 
-                const typename Second_Cell_Complex::Cell & second_cell );
+  Product_Cell ( const typename First_Cell_Complex::const_iterator & first_cell, 
+                const typename Second_Cell_Complex::const_iterator & second_cell );
 	bool operator < ( const Product_Cell & right_hand_side ) const;
 	bool operator == ( const Product_Cell & right_hand_side ) const;
 	bool operator != ( const Product_Cell & right_hand_side ) const;
@@ -49,8 +49,8 @@ public:
 private:
   friend std::ostream & operator << <>( std::ostream & output_stream, const Product_Cell & print_me );
   friend class Product_Complex < First_Cell_Complex, Second_Cell_Complex >;
-  typename First_Cell_Complex::Cell first_;
-  typename Second_Cell_Complex::Cell second_;
+  typename First_Cell_Complex::const_iterator first_;
+  typename Second_Cell_Complex::const_iterator second_;
   unsigned int dimension_;
 };
 

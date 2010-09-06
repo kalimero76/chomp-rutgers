@@ -53,7 +53,7 @@ Graph_Complex<Toplex>::Graph_Complex ( const Toplex & X, const Toplex & Y, const
             X_iterator != sub_X . end (); ++ X_iterator ) {
         for ( typename Subcomplex::const_iterator Y_iterator = sub_Y . begin ();
               Y_iterator != sub_Y . end (); ++ Y_iterator ) {
-          typename Product_Type::Cell insert_me ( * * X_iterator, * * Y_iterator );
+          typename Product_Type::Cell insert_me ( * X_iterator, * Y_iterator );
           typename Product_Type::const_iterator insert_iterator = product_ -> find ( insert_me );
           insert ( insert_iterator );
           //std::cout << "     inserting cell " << insert_me << "\n";
