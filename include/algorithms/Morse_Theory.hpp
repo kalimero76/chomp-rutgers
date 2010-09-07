@@ -272,6 +272,7 @@ namespace morse {
                                        typename Cell_Complex::Ring > > & lift_me, 
        const Cell_Complex & complex, const Morse_Complex & morse_complex ) {
     /* phi = beta o i */
+    //std::cout << "phi begin \n";
     /* First we include, and calculate the boundary of the inclusion */
     typedef typename Cell_Complex::size_type size_type;
     typedef std::vector < std::pair < typename Cell_Complex::size_type, 
@@ -307,6 +308,7 @@ namespace morse {
       const size_type king_index = complex . mate ( queen_index, dimension );
       complex . boundary ( boundaries, king_index );
       /* Determine the factor */
+      //std::cout << "connection for queen " << queen_index << " = " << complex . connection ( queen_index ) << "\n";
       const typename Cell_Complex::Ring factor = 
       - queen_term -> second / complex . connection ( queen_index );
       /* Add the king term to the answer chain */
@@ -324,6 +326,7 @@ namespace morse {
         work_chain += value;
       } /* for */
     } /* while */
+    //std::cout << "phi complete \n";
     return answer_chain;
   } /* morse::phi */
   

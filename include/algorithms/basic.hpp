@@ -7,6 +7,9 @@
  *
  */
 
+#include "boost/foreach.hpp"
+#include <typeinfo>
+
 template < class Complex >
 typename Complex::Chain boundary ( const typename Complex::Chain & input, const Complex & complex ) {
   typename Complex::Chain return_value;
@@ -18,6 +21,18 @@ typename Complex::Chain boundary ( const typename Complex::Chain & input, const 
   } /* for */
   return return_value;
 } /* boundary */
+
+template < class Complex >
+typename Complex::Chain coboundary ( const typename Complex::Chain & input, const Complex & complex ) {
+  typename Complex::Chain return_value;
+  for ( typename Complex::Chain::const_iterator term_iterator = input . begin (); 
+       term_iterator != input . end (); ++ term_iterator ) {
+    typename Complex::Chain summand = complex . coboundary ( term_iterator -> first );
+    summand *= term_iterator -> second;
+    return_value += summand;
+  } /* for */
+  return return_value;
+} /* coboundary */
 
 #if 0
 template < class Chain >
@@ -43,6 +58,36 @@ Chain coboundary ( const Chain & input ) {
 } /* coboundary */
 
 #endif
+
+template < class Cell_Complex > 
+void verify_complex ( Cell_Complex & complex ) {
+  std::cout << "Verifying complex of type " << typeid ( complex ) . name () << "\n";
+  std::cout << "Size = " << complex . size () << ", Dimension = " << complex . dimension () << "\n";
+  
+  for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
+    typename Cell_Complex::Chain my_boundary = complex . boundary ( it );
+    typename Cell_Complex::Chain my_double_boundary = boundary ( my_boundary, complex );
+    if ( not my_double_boundary . empty () ) std::cout << "Problem Detected: Not a complex (bd^2 \neq 0).\n";
+    typedef std::pair < typename Cell_Complex::const_iterator, long > term_type;
+    BOOST_FOREACH ( term_type term, my_boundary ) {
+      typename Cell_Complex::Chain my_coboundary = complex . coboundary ( term . first );
+      if ( my_coboundary . find ( it ) == my_coboundary . end () || my_coboundary . find ( it ) -> second != term . second ) 
+        std::cout << " Problem detected: coefficient mismatch, cbd of bd.\n";
+      
+    } /* BOOST_FOREACH */
+  } /* for */
+  for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
+    typename Cell_Complex::Chain my_coboundary = complex . coboundary ( it );
+    typename Cell_Complex::Chain my_double_coboundary = coboundary ( my_coboundary, complex );
+    if ( not my_double_coboundary . empty () ) std::cout << "Problem Detected: Not a complex (cbd^2 \neq 0).\n";
+    typedef std::pair < typename Cell_Complex::const_iterator, long > term_type;
+    BOOST_FOREACH ( term_type term, my_coboundary ) {
+      typename Cell_Complex::Chain my_boundary = complex . boundary ( term . first );
+      if ( my_boundary . find ( it ) == my_boundary . end () || my_boundary . find ( it ) -> second != term . second )
+        std::cout << " Problem detected: coefficient mismatch, bd of cbd.\n";
+    } /* BOOST_FOREACH */
+  } /* for */
+}
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *

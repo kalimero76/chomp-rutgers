@@ -16,6 +16,10 @@ template < class Complex >
 typename Complex::Chain 
 boundary ( const typename Complex::Chain & input, const Complex & complex );
 
+template < class Complex >
+typename Complex::Chain 
+coboundary ( const typename Complex::Chain & input, const Complex & complex );
+
 template < class Chain >
 Chain boundary ( const Chain & input );
 
@@ -45,6 +49,8 @@ Chain & operator -= ( Chain & left_hand_side, const typename Chain::value_type &
 template < class Chain >
 Chain & operator *= ( Chain & left_hand_side, const typename Chain::mapped_type & right_hand_side );
 */
+
+template < class Cell_Complex > void verify_complex ( Cell_Complex & my_complex );
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *

@@ -11,6 +11,7 @@
 #include <vector>   /* For vector<...> */
 #include <utility>  /* For pair<...> */
 
+#include "algorithms/basic.h" /* for verify_complex.h */
 #include "algorithms/matrix/Smith_Normal_Form.h" /* For Smith_Normal_Form(...) */
 #include "algorithms/matrix/Sparse_Matrix.h" /* For Sparse_Matrix<...> */
 #include "algorithms/matrix/Dense_Matrix.h"
@@ -284,6 +285,7 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators_DMT ( Cell_Complex & complex ) {
+  /* DEBUG */ verify_complex ( complex );
   std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
     return_value;
   /* Perform Successive Morse Reductions to complex */
