@@ -285,7 +285,6 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators_DMT ( Cell_Complex & complex ) {
-  /* DEBUG */ verify_complex ( complex );
   std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
     return_value;
   /* Perform Successive Morse Reductions to complex */

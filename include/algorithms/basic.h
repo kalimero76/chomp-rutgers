@@ -51,6 +51,7 @@ Chain & operator *= ( Chain & left_hand_side, const typename Chain::mapped_type 
 */
 
 template < class Cell_Complex > void verify_complex ( Cell_Complex & my_complex );
+template < class Cell_Complex > void verify_decomposition ( Cell_Complex & my_complex );
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *

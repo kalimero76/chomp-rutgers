@@ -63,8 +63,11 @@ template < class Cell_Complex >
 void verify_complex ( Cell_Complex & complex ) {
   std::cout << "Verifying complex of type " << typeid ( complex ) . name () << "\n";
   std::cout << "Size = " << complex . size () << ", Dimension = " << complex . dimension () << "\n";
-  
+  unsigned int count = 0;
   for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
+    count ++;
+    if ( count % 1000 == 0 ) std::cout << ".";
+    if ( count % 10000 == 0 ) std::cout << count << "\n";
     typename Cell_Complex::Chain my_boundary = complex . boundary ( it );
     typename Cell_Complex::Chain my_double_boundary = boundary ( my_boundary, complex );
     if ( not my_double_boundary . empty () ) std::cout << "Problem Detected: Not a complex (bd^2 \neq 0).\n";
@@ -77,6 +80,9 @@ void verify_complex ( Cell_Complex & complex ) {
     } /* BOOST_FOREACH */
   } /* for */
   for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
+    count ++;
+    if ( count % 1000 == 0 ) std::cout << ".";
+    if ( count % 10000 == 0 ) std::cout << count << "\n";
     typename Cell_Complex::Chain my_coboundary = complex . coboundary ( it );
     typename Cell_Complex::Chain my_double_coboundary = coboundary ( my_coboundary, complex );
     if ( not my_double_coboundary . empty () ) std::cout << "Problem Detected: Not a complex (cbd^2 \neq 0).\n";
@@ -87,7 +93,37 @@ void verify_complex ( Cell_Complex & complex ) {
         std::cout << " Problem detected: coefficient mismatch, bd of cbd.\n";
     } /* BOOST_FOREACH */
   } /* for */
-}
+} /* verify_complex */
+
+template < class Cell_Complex > 
+void verify_decomposition ( Cell_Complex & complex ) {
+  std::cout << "Testing Decomposition of complex.";
+  unsigned int count = 0;
+  for ( typename Cell_Complex::const_iterator it = complex . begin (); 
+       it != complex . end (); ++ it ) {
+    count ++;
+    if ( count % 1000 == 0 ) std::cout << ".";
+    if ( count % 10000 == 0 ) std::cout << count << "\n";
+    typename Cell_Complex::size_type index = complex . index ( it );
+    if ( complex . lookup ( index ) != it ) std::cout << "Indexing problem.\n";
+    char cell_type = complex . type ( index, it . dimension () );
+    if ( cell_type == 0 /* Queen */ ) {
+      typename Cell_Complex::size_type mate_index = complex . mate ( index, it . dimension () );
+      if ( complex . type ( mate_index, it . dimension () + 1 ) != 2 ) std::cout << "Mate problem.\n";
+      typename Cell_Complex::Chain king_boundary = 
+        complex . boundary ( complex . lookup ( mate_index ) );
+      typedef std::pair < typename Cell_Complex::const_iterator, long > term_type;
+      BOOST_FOREACH ( term_type term, king_boundary ) {
+        if ( complex . type ( complex . index ( term . first ), it . dimension () ) == 0 ) {
+          if ( complex . index ( term . first ) > index ) std::cout << "Acyclicity problem.\n";
+        } /* if */
+        if ( term . first == it && term . second != complex . connection ( index ) )
+          std::cout << "Connection problem.\n";
+      } /* boost_foreach */
+    } /* if */
+  } /* for */
+  std::cout << "Decomposition test is over.\n";
+} /* verify_decomposition */
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *

@@ -280,6 +280,14 @@ namespace morse {
     Index_Chain answer_chain;
     Morse_Chain<typename Cell_Complex::size_type> work_chain;
     Index_Chain boundaries;
+    
+    /* Set "bd_dimension" to be the dimension of work chain (one less than dimension of answer */
+    unsigned int bd_dimension = morse_complex . lookup ( lift_me . begin () -> first ) . dimension () - 1;
+    
+    /* This for loop will push the include the aces into the parent complex,
+       storing these in "answer_chain". The boundaries of each ace (with appropriate)
+       factor are summed together into "work_chain". */
+
     for (typename Index_Chain::const_iterator term_iterator = lift_me . begin ();
          term_iterator != lift_me . end (); ++ term_iterator ) {
       std::pair < typename Cell_Complex::size_type, typename Cell_Complex::Ring > value 
@@ -289,26 +297,28 @@ namespace morse {
       complex . boundary ( boundaries, value . first );
       for ( typename Index_Chain::const_iterator bd_term_iterator = boundaries . begin ();
            bd_term_iterator != boundaries . end (); ++ bd_term_iterator ) {
-        work_chain += 
-          std::make_pair ( bd_term_iterator -> first, 
-                           value . second * bd_term_iterator -> second);
+        typename Index_Chain::value_type bd_value = * bd_term_iterator;
+        if ( bd_value . first >= complex . ace_begin ( bd_dimension ) ) {
+          /* It's a King or Ace */ 
+          continue;
+        } /* if */
+        bd_value . second *= value . second;
+        /* It's a Queen. */
+        work_chain += bd_value;
       } /* for */
     } /* for */
    
     if ( work_chain . empty () ) return answer_chain;
-    
-    unsigned int dimension = complex . lookup ( work_chain
-                                               . begin () -> first ) . dimension ();
+
 
     // Now we apply beta
     /* Main loop */
     while ( not work_chain . empty () ) {
       const typename Morse_Chain<size_type>::iterator queen_term = work_chain . begin ();
       const size_type & queen_index = queen_term -> first;
-      const size_type king_index = complex . mate ( queen_index, dimension );
+      const size_type king_index = complex . mate ( queen_index, bd_dimension );
       complex . boundary ( boundaries, king_index );
       /* Determine the factor */
-      //std::cout << "connection for queen " << queen_index << " = " << complex . connection ( queen_index ) << "\n";
       const typename Cell_Complex::Ring factor = 
       - queen_term -> second / complex . connection ( queen_index );
       /* Add the king term to the answer chain */
@@ -317,7 +327,7 @@ namespace morse {
       for ( typename Index_Chain::const_iterator term_iterator = boundaries . begin ();
            term_iterator != boundaries . end (); ++ term_iterator ) {
         typename Index_Chain::value_type value = * term_iterator;
-        if ( value . first >= complex . ace_begin ( dimension ) ) {
+        if ( value . first >= complex . ace_begin ( bd_dimension ) ) {
           /* It's a King or Ace */ 
           continue;
         } /* if */
