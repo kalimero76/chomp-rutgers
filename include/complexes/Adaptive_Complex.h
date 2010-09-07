@@ -10,6 +10,8 @@
 #ifndef CHOMP_ADAPTIVE_COMPLEX_
 #define CHOMP_ADAPTIVE_COMPLEX_
 
+#include <cstddef> //for ptrdiff_t
+
 #include <vector>
 #include <map>
 #include <list>
@@ -125,7 +127,7 @@ private:
 /* TODO: fix this hash function */
 inline size_t hash_value ( const Adaptive_const_iterator & hash_me ) {
   boost::hash < unsigned long > hasher;
-  return hasher ( reinterpret_cast < const unsigned long > ( hash_me . cell_ . node ) );
+  return hasher ( reinterpret_cast < const ptrdiff_t > ( hash_me . cell_ . node ) );
 } /* hash_value */
 
 /* * * * * * * * * * * * * *

@@ -173,6 +173,7 @@ namespace morse {
       const size_type stop_index = cell_complex . index_end ( dimension_index );
       size_type ace_index = stop_index - king_count [ dimension_index ] - 1;
       size_type king_offset, queen_offset;
+      king_offset = queen_offset = 0; // Suppresses warning, no effect
       if ( dimension_index < cell_complex . dimension () ) {
         king_offset = cell_complex . index_end ( dimension_index + 1 ) + 1;
         queen_offset = start_index - 2;

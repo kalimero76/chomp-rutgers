@@ -119,7 +119,7 @@ int main ( int argc, char * argv [] ) {
   std::cout << "Creating directed graph.\n";
   LeslieMap f( 40, 8 );
   
-  for ( int i = 0; i < 10; ++ i ) {
+  for ( int i = 0; i < 4; ++ i ) {
     std::cout << "toplex size = " << my_toplex . size () << "\n";
     
     if ( i % 7 == 6 ) {
