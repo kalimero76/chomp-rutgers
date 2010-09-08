@@ -33,6 +33,10 @@ namespace Adaptive_Cubical {
   : lower_bounds ( size, lower_value ), upper_bounds ( size, upper_value ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
 
+  Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value )
+  : lower_bounds ( lower_values ), upper_bounds ( upper_values ) {
+  } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
+  
   bool Geometric_Description::intersects ( const Geometric_Description & other ) const {
     for ( unsigned int dimension_index = 0; dimension_index < lower_bounds . size (); ++ dimension_index ) {
       if ( upper_bounds [ dimension_index ] < other . lower_bounds [ dimension_index ] ||

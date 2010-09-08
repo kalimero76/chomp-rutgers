@@ -56,6 +56,8 @@ namespace Adaptive_Cubical {
     Geometric_Description ( unsigned int size );
     Geometric_Description ( unsigned int size, const Real & value );
     Geometric_Description ( unsigned int size, const Real & lower_value, const Real & upper_value );
+    Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value );
+
     bool intersects ( const Geometric_Description & other ) const;
   };
   
