@@ -14,6 +14,7 @@
 #include <vector>
 #include <map>
 #include <iterator>
+#include "boost/foreach.hpp"
 
 #define GCC_VERSION (__GNUC__ * 10000 \
 + __GNUC_MINOR__ * 100 \
@@ -47,9 +48,10 @@ namespace Adaptive_Cubical {
   typedef double Real; //Canged from float to double by miro
 
   /* * * * * * * * * * * * * * * * * * * * * * * * * *
-   * struct Adaptive_Cubical::Geometric_Description  *
+   * class Adaptive_Cubical::Geometric_Description  *
    * * * * * * * * * * * * * * * * * * * * * * * * * */
-  struct Geometric_Description {
+  class Geometric_Description {
+  public:
     std::vector < Real > lower_bounds;
     std::vector < Real > upper_bounds;
     Geometric_Description ( void );
@@ -59,6 +61,31 @@ namespace Adaptive_Cubical {
     Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value );
 
     bool intersects ( const Geometric_Description & other ) const;
+  private: 
+    friend class boost::serialization::access; 
+    template<class Archive>
+    void save(Archive & ar, const unsigned int version) const
+    {
+      ar & lower_bounds . size ();
+      BOOST_FOREACH ( Real x, lower_bounds ) ar & x;
+      BOOST_FOREACH ( Real x, upper_bounds ) ar & x;
+    }
+    template<class Archive>
+    void load(Archive & ar, const unsigned int version)
+    {
+      unsigned int size;
+      ar & size;
+      lower_bounds . resize ( size );
+      upper_bounds . resize ( size );
+      for ( unsigned int index = 0; index < size; ++ index ) {
+        ar & lower_bounds [ index ];
+      } /* for */
+      for ( unsigned int index = 0; index < size; ++ index ) {
+        ar & upper_bounds [ index ];
+      } /* for */
+      
+    }
+    BOOST_SERIALIZATION_SPLIT_MEMBER()
   };
   
   std::ostream & operator << ( std::ostream & output_stream, const Geometric_Description & print_me );

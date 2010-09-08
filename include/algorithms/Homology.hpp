@@ -529,7 +529,7 @@ Conley_Index_t::Conley_Index_t ( void ) {}
 template < class Toplex, class Combinatorial_Map > void
 Conley_Index ( Conley_Index_t * output,
               const Toplex & toplex, 
-              const Toplex::Subset & subset,
+              const typename Toplex::Subset & subset,
               /* const */ Combinatorial_Map & map ) {
   return;
 } /* void Conley_Index(...) */
