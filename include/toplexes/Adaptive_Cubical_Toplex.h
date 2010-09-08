@@ -15,6 +15,7 @@
 #include <map>
 #include <iterator>
 #include "boost/foreach.hpp"
+#include <boost/serialization/serialization.hpp>
 
 #define GCC_VERSION (__GNUC__ * 10000 \
 + __GNUC_MINOR__ * 100 \
