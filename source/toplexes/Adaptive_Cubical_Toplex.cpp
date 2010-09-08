@@ -33,7 +33,7 @@ namespace Adaptive_Cubical {
   : lower_bounds ( size, lower_value ), upper_bounds ( size, upper_value ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
 
-  Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value )
+  Geometric_Description::Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value )
   : lower_bounds ( lower_values ), upper_bounds ( upper_values ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
   
