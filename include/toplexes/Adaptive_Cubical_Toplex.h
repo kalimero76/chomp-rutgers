@@ -16,6 +16,7 @@
 #include <iterator>
 #include "boost/foreach.hpp"
 #include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_member.hpp>
 
 #define GCC_VERSION (__GNUC__ * 10000 \
 + __GNUC_MINOR__ * 100 \
@@ -67,7 +68,8 @@ namespace Adaptive_Cubical {
     template<class Archive>
     void save(Archive & ar, const unsigned int version) const
     {
-      ar & lower_bounds . size ();
+      unsigned int size = lower_bounds . size ();
+      ar & size;
       BOOST_FOREACH ( Real x, lower_bounds ) ar & x;
       BOOST_FOREACH ( Real x, upper_bounds ) ar & x;
     }
