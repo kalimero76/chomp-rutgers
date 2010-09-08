@@ -521,3 +521,15 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
   } /* for */
 } /* void Map_Homology(...) */
 #endif
+
+/* CONLEY INDEX */
+
+Conley_Index_t::Conley_Index_t ( void ) {}
+
+template < class Toplex, class Combinatorial_Map > void
+Conley_Index ( Conley_Index_t * output,
+              const Toplex & toplex, 
+              const Toplex::Subset & subset,
+              /* const */ Combinatorial_Map & map ) {
+  return;
+} /* void Conley_Index(...) */

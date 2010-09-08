@@ -37,6 +37,23 @@ template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators ( const Cell_Complex & the_complex );
 
+/* Conley Index */
+// Later separate this into a distinct file
+
+class Conley_Index_t {
+public:
+  Conley_Index_t ( void );
+};
+
+/* Compute the Conley Index of a "subset" of a "toplex", with the
+   combinatorial map "map" */
+template < class Toplex, class Combinatorial_Map > void
+Conley_Index ( Conley_Index_t * output,
+               const Toplex & toplex, 
+               const Toplex::Subset & subset,
+               /* const */ Combinatorial_Map & map );
+
+
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/Homology.hpp"
 #endif
