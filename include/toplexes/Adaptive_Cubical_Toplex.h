@@ -31,6 +31,9 @@ namespace std { using namespace __gnu_cxx; }
 
 #include "complexes/Adaptive_Complex.h"
 
+template < class Set >
+Set intersect ( const Set & A, const Set & B );
+
 namespace Adaptive_Cubical {
   /* Forward Declarations */
   struct Geometric_Description;
@@ -75,7 +78,7 @@ namespace Adaptive_Cubical {
    * class Adaptive_Cubical::Toplex_Subset *
    * * * * * * * * * * * * * * * * * * * * */
   typedef std::unordered_set < Adaptive_Cubical::Top_Cell > Toplex_Subset;
-  
+    
   /* * * * * * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_const_iterator  *
    * * * * * * * * * * * * * * * * * * * * * * * * */
