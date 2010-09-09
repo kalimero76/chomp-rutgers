@@ -39,10 +39,22 @@ Homology_Generators ( const Cell_Complex & the_complex );
 
 /* Conley Index */
 // Later separate this into a distinct file
+#include <boost/serialization/serialization.hpp>
 
 class Conley_Index_t {
 public:
   Conley_Index_t ( void );
+private:
+  /// Some dummy information, unused at the moment.
+  int info;
+  
+  friend class boost::serialization::access;
+  
+  /// The serialization method.
+  template < class Archive >
+  void serialize ( Archive & ar , const unsigned int version ) {
+    ar & info;
+  }
 };
 
 /* Compute the Conley Index of a "subset" of a "toplex", with the
