@@ -28,7 +28,7 @@ all: library
 #Cell_Complex_Archetype.o
 
 ARCHETYPE_OBJECTS := Chain_Archetype.o
-ALGORITHM_OBJECTS := 
+ALGORITHM_OBJECTS := Homology.o
 COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex.o
 TOPLEX_OBJECTS := Adaptive_Cubical_Toplex.o
 
