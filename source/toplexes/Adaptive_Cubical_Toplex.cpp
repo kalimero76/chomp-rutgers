@@ -423,6 +423,19 @@ namespace Adaptive_Cubical {
     return children;
   } /* Adaptive_Cubical::Toplex::subdivide */
 
+  Subset subdivide ( Top_Cell cell_to_divide ) {
+    return subdivide ( find ( cell_to_divide ) );
+  } /* Adaptive_Cubical::Toplex::subdivide */
+  
+  Subset subdivide ( const Subset & subset_to_divide ) {
+    Subset result;
+    BOOST_FOREACH ( Top_Cell cell_to_divide, subset_to_divide ) {
+      Subset subresult = subdivide ( cell_to_divide );
+      result . insert ( subresult . begin (), subresult . end () );
+    } /* boost_foreach */
+    return result;
+  } /* Adaptive_Cubical::Toplex::subdivide */  
+  
   namespace detail {
     template < class FindMap >
     bool coarsen_helper ( Node * node, Toplex::size_type & size_, FindMap & find_,

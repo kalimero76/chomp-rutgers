@@ -173,6 +173,9 @@ namespace Adaptive_Cubical {
     
     /* Adaptive Toplex */
     Subset subdivide ( iterator cell_to_divide );
+    Subset subdivide ( Top_Cell cell_to_divide );
+    Subset subdivide ( const Subset & subset_to_divide );
+
     void coarsen ( void );
     /* Adaptive Cubical Toplex */
     Geometric_Description bounds ( void ) const;
