@@ -3,11 +3,18 @@
 # written by Shaun Harker
 
 # CAPD LOCATION
-CAPD_PATH := ../capd
-BUILD_DIR := ./build
 
+HOMEDIR := ../
+CAPDDIR := $(HOMEDIR)/capd
+CHOMPDIR := $(HOMEDIR)/chomp-rutgers
+BOOSTDIR := $(HOMEDIR)/boost_1_42_0
+LIBDIR = -L$(BOOSTDIR)/stage/lib/ -L$(CHOMPDIR)/lib/
+LIBS = $(LIBDIR) -lboost_serialization -lchomp-rutgers
 CXX := g++
-CXXFLAGS := -O3 -m64 -Wall -I./include/ -I$(CAPD_PATH)/include/
+CXXFLAGS := -O3 -m64 -Wall -I./include/ -I$(CAPDDIR)/include -I$(CHOMPDIR)/include -Wno-deprecated -I$(BOOSTDIR) 
+
+
+BUILD_DIR := ./build
 
 # -m64 means we want to use 64 bit code
 # -O3 tells the compiler to try to use its most advanced optimizations
