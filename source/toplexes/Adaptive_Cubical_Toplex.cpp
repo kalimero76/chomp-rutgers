@@ -423,11 +423,11 @@ namespace Adaptive_Cubical {
     return children;
   } /* Adaptive_Cubical::Toplex::subdivide */
 
-  Subset subdivide ( Top_Cell cell_to_divide ) {
+  Toplex::Subset Toplex::subdivide ( Top_Cell cell_to_divide ) {
     return subdivide ( find ( cell_to_divide ) );
   } /* Adaptive_Cubical::Toplex::subdivide */
   
-  Subset subdivide ( const Subset & subset_to_divide ) {
+  Toplex::Subset Toplex::subdivide ( const Subset & subset_to_divide ) {
     Subset result;
     BOOST_FOREACH ( Top_Cell cell_to_divide, subset_to_divide ) {
       Subset subresult = subdivide ( cell_to_divide );
