@@ -10,6 +10,9 @@
 
 #include "algorithms/Homology.h"
 
+/* Conley Index */
+Conley_Index_t::Conley_Index_t ( void ) {}
+
 #if 0
 #ifndef CHOMP_HEADER_ONLY_
 /* Explicit Template Instantiations */
