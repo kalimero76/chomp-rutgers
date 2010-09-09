@@ -187,7 +187,7 @@ namespace Adaptive_Cubical {
   } /* Adaptive_Cubical::Toplex::dimension */
 
   Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region ) const {
-    /* Todo: optimize geometric checks, it is inefficient to call geometry at every level */
+    /* TODO: optimize geometric checks, it is inefficient to call geometry at every level */
     Subset cover_set;
     std::deque < const_iterator > work_deque;
     work_deque . push_back ( const_iterator ( root_ ) );
@@ -213,6 +213,12 @@ namespace Adaptive_Cubical {
     } /* while */
     return cover_set;
   } /* Adaptive_Cubical::Toplex::cover */
+
+  // TODO: this could be improved
+  Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region, const Subset & subset ) const {
+    return intersect ( cover ( geometric_region ), subset );
+  } /* Adaptive_Cubical::Toplex::cover */
+
 
   Toplex::Geometric_Description Toplex::geometry ( const const_iterator & cell_iterator ) const {
     Geometric_Description return_value ( dimension_, Real ( 0 ) );

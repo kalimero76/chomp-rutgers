@@ -162,6 +162,8 @@ namespace Adaptive_Cubical {
     /* Toplex */
     unsigned int dimension ( void ) const;
     Subset cover ( const Geometric_Description & geometric_region ) const;
+    Subset cover ( const Geometric_Description & geometric_region, 
+                   const Subset & subset ) const;
     Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
     Geometric_Description geometry ( const Top_Cell & cell ) const;
 
