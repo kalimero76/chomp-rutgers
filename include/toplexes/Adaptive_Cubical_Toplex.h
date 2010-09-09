@@ -163,6 +163,8 @@ namespace Adaptive_Cubical {
     unsigned int dimension ( void ) const;
     Subset cover ( const Geometric_Description & geometric_region ) const;
     Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
+    Geometric_Description geometry ( const Top_Cell & cell ) const;
+
     Complex complex ( void ) const;
     Complex complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     Complex complex ( const const_iterator & cell_iterator ) const;

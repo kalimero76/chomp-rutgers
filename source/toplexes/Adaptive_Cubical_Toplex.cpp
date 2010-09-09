@@ -246,6 +246,10 @@ namespace Adaptive_Cubical {
     return return_value;
   } /* Adaptive_Cubical::Toplex::geometry */
 
+  Toplex::Geometric_Description Toplex::geometry ( const Top_Cell & cell  ) const {
+    return geometry ( find ( cell ) );
+  } /* Adaptive_Cubical::Toplex::geometry */
+
   unsigned int Toplex::Cell_Depth( const Top_Cell top_cell ) const{
     unsigned int depth = 0;
     Node * leaf = find ( top_cell ) . node ();
