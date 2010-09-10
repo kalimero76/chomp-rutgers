@@ -10,6 +10,7 @@
 #include <set>
 #include <deque>
 #include <algorithm>
+#include "boost/foreach.hpp"
 
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 
@@ -540,3 +541,27 @@ namespace Adaptive_Cubical {
   } /* Adaptive_Cubical::Toplex::~Toplex */
 
 } /* namespace Adaptive_Cubical */
+
+bool Check_if_Intersect (const Adaptive_Cubical::Geometric_Description & A, 
+                         const Adaptive_Cubical::Geometric_Description & B ) {
+  for ( unsigned int dim = 0; dim < A . size (); ++ dim ) {
+    if (A . lower_bounds [ dim ] > B . upper_bounds [ dim ] ||
+        A . upper_bounds [ dim ] < B . lower_bounds [ dim ] ) return false;
+  }
+  return true;
+} /* Check_if_Intersect */
+
+/// Check of Subset AS of Toplex A intersects Subset BS of Toplex B
+bool Check_if_Intersect (const Adaptive_Cubical::Toplex & A, 
+                         const Adaptive_Cubical::Toplex::Subset & AS, 
+                         const Adaptive_Cubical::Toplex & B, 
+                         const Adaptive_Cubical::Toplex::Subset & BS ) {
+  using namespace Adaptive_Cubical;
+  BOOST_FOREACH ( Top_Cell A_cell, AS ) {
+    BOOST_FOREACH ( Top_Cell B_cell, BS ) {
+      if ( Check_if_Intersect ( A . geometry ( A_cell ), B . geometry ( B_cell ) ) )
+        return true;
+    } /* foreach */
+  } /* foreach */
+  return false;
+} /* Check_if_Intersect */
