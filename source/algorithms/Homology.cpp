@@ -11,7 +11,13 @@
 #include "algorithms/Homology.h"
 
 /* Conley Index */
-Conley_Index_t::Conley_Index_t ( void ) {}
+Conley_Index_t::Conley_Index_t ( void ) {
+  undefined_flag = true;
+} /* Conley_Index_t::Conley_Index_t */
+
+Conley_Index_t::undefined ( void ) {
+  return undefined_flag;
+} /* Conley_Index_t::undefined */
 
 #if 0
 #ifndef CHOMP_HEADER_ONLY_

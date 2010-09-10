@@ -43,11 +43,12 @@ Homology_Generators ( const Cell_Complex & the_complex );
 
 class Conley_Index_t {
 public:
+  bool undefined ( void );
   Conley_Index_t ( void );
 private:
   /// Some dummy information, unused at the moment.
   int info;
-  
+  bool undefined_flag;
   friend class boost::serialization::access;
   
   /// The serialization method.
