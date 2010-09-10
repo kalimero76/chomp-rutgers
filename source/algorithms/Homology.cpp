@@ -15,7 +15,7 @@ Conley_Index_t::Conley_Index_t ( void ) {
   undefined_flag = true;
 } /* Conley_Index_t::Conley_Index_t */
 
-Conley_Index_t::undefined ( void ) {
+bool Conley_Index_t::undefined ( void ) {
   return undefined_flag;
 } /* Conley_Index_t::undefined */
 
