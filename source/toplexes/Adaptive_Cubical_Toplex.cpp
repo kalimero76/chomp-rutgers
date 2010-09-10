@@ -544,7 +544,7 @@ namespace Adaptive_Cubical {
 
 bool Check_if_Intersect (const Adaptive_Cubical::Geometric_Description & A, 
                          const Adaptive_Cubical::Geometric_Description & B ) {
-  for ( unsigned int dim = 0; dim < A . size (); ++ dim ) {
+  for ( unsigned int dim = 0; dim < A . lower_bounds . size (); ++ dim ) {
     if (A . lower_bounds [ dim ] > B . upper_bounds [ dim ] ||
         A . upper_bounds [ dim ] < B . lower_bounds [ dim ] ) return false;
   }
