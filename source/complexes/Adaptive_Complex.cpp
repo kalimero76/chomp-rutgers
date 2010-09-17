@@ -98,7 +98,7 @@ namespace Adaptive_Complex_detail {
       second_iterator = first_iterator;
       ++ second_iterator;
       
-      //std::cout << " alias_descent work loop: primary = (" << first_iterator -> node << ", " << first_iterator -> code << ")  relative = (" << relative_state . node << ", " << relative_state . code << ")\n";
+	  //std::cout << " alias_descent work loop: primary = (" << first_iterator -> node << ", " << first_iterator -> code << ")  relative = (" << relative_state . node << ", " << relative_state . code << ")\n";
       /* What if we cannot subdivide the primary state? */
       if ( second_iterator == history . rend () ) {
         //std::cout << "   cannot subdivide the primary state (calling splitting_helper) \n";
@@ -161,8 +161,8 @@ namespace Adaptive_Complex_detail {
         //std::cout << " a2 = " << a2 << " and s1 = " << s1 << "\n";
         //std::cout << " choice  = " << choice << " and diff = " << diff  << " and fixed = " << (unsigned int ) ( fixed & complex . MASK ) << "\n";
         unsigned int bit = 1;
-        while ( bit < complex . MASK ) {
-          if ( diff & bit ) {
+        while ( bit <= complex . MASK ) { /* Changed from < to <= by Miro on 9/8/2010 */
+		  if ( diff & bit ) {
             /* b1_i != b2_i */
             if ( choice & 1 ) {
               bit_choice |= bit;
@@ -173,7 +173,7 @@ namespace Adaptive_Complex_detail {
             choice >>= 1;
           } /* if */
           bit <<= 1;
-        } /* for */
+        } /* while */ 
         d2 = bit_choice | ( ( ~ diff ) & fixed );
         s2 = bit_choice2 | ( ( ~ diff ) & s1 );
         //std::cout << " bit_choice = " << bit_choice << " and bit_choice2 = " << bit_choice2 << "\n";
@@ -202,7 +202,7 @@ namespace Adaptive_Complex_detail {
     alias . push_back ( initial_cell );
     return_value . push_back ( alias );
     //std::cout << "outputting (" << initial_cell . node << ", " << initial_cell . code << ") \n";
-
+	
     Division_History history;
     /* Climb until reach root or geometry is enclosed */
     GeoCell cell = initial_cell;
@@ -219,6 +219,7 @@ namespace Adaptive_Complex_detail {
       unsigned int dimension = get_dimension ( b );
       if ( dimension > old_dimension ) {
         /* Start a Descending Thread */
+		//std::cout << "Decending dimension is " << dimension << "\n";
         alias_descent_helper ( return_value, history, complex );
       } /* if */
       old_dimension = dimension;
@@ -233,7 +234,7 @@ namespace Adaptive_Complex_detail {
       cell . code = ( b << complex . dimension () ) | c;
       
     } /* while */
-    return return_value;
+	    return return_value;
   } /* Adaptive_Complex_detail::aliases */
 
   
@@ -820,11 +821,12 @@ namespace Adaptive_Complex_detail {
     BOOST_FOREACH ( std::list < GeoCell > & alias, cell_aliases ) {
       /* Check if any of the Cell's in this alias are "on" */
       if ( alias . size () > 1 ) {
-        conflict = true;
+			conflict = true;
       } else {
-        if ( alias . begin () -> node -> data != NULL && reinterpret_cast < Cube_Cells * > ( alias . begin () -> node -> data ) 
-          -> read ( complex . packing_code ( alias . begin () -> code ) ) ) 
-          return;
+			if ( alias . begin () -> node -> data != NULL && reinterpret_cast < Cube_Cells * > ( alias . begin () -> node -> data ) 
+			-> read ( complex . packing_code ( alias . begin () -> code ) ) ) {
+				return;
+		  }
       } /* if-else */
       /*
       BOOST_FOREACH ( GeoCell & cell, alias ) {
@@ -835,6 +837,7 @@ namespace Adaptive_Complex_detail {
         } */ /* if */
       //} /* BOOST_FOREACH */
       if ( conflict == true ) {
+		//std::cout << "Conflict\n";
         BOOST_FOREACH ( GeoCell & cell, alias ) {
           if ( cell . node -> data != NULL && reinterpret_cast < Cube_Cells * > ( cell . node -> data ) 
               -> read ( complex . packing_code ( cell . code ) ) ) continue;
@@ -887,7 +890,7 @@ void Adaptive_Complex::Finalize ( void ) {
       int depth = 0;
       while ( ( temp = temp -> parent ) != root_ ) -- depth;      
       /* Insert leaf into list in proper position */
-	//  std::cout << "Inserting leaf " << leaf << " into position_map at depth " << depth << "\n";
+	  //std::cout << "Inserting leaf " << leaf << " into position_map at depth " << depth << "\n";
 	  if ( position_map . lower_bound ( depth ) == position_map . end () ) {
         position_map [ depth ] = work_list . insert ( work_list . end (), leaf );
       } else {
