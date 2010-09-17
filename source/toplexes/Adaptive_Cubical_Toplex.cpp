@@ -136,7 +136,11 @@ namespace Adaptive_Cubical {
     Node * node = erase_me . node_;
     while ( 1 ) {
       Node * parent = node -> parent_;
-      if ( parent == NULL ) break;
+      if ( parent == NULL ) {
+        /* We are emptying the toplex -- the root is gone! */
+        root_ = NULL;
+        break;
+      }
       /* This is not the root: a parent exists. */
       if ( parent -> left_ == node ) {
         /* This is a left-child; disconnect accordingly. */
