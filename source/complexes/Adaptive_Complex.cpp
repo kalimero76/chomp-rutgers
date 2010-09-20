@@ -806,8 +806,8 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
 namespace Adaptive_Complex_detail {
 
   void finalize_helper ( const GeoCell & input, const Adaptive_Complex & complex ) {
-    static unsigned int count = 0;
-    count ++;
+    //static unsigned int count = 0;
+    //count ++;
     //if ( count % 1000 == 0 ) std::cout << count << "\n";
     //std::cout << "\n### finalize_helper : " << input . node << " " << input . code << "\n";
     /* Add the cell unless there is a conflict */
