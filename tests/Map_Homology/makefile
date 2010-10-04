@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -O3 -m64 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I../../../conley-morse-database/include/ -I./ -ggdb
+CXXFLAGS := -O3 -m32 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I../../../conley-morse-database/include/ -I./ -ggdb
 
 CXX_STANDALONE := $(CXX) $(CXXFLAGS)
 

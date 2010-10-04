@@ -21,8 +21,17 @@ template < class Geometric_Complex_Template >
 void Homology (  std::vector<int> & Betti_output, std::vector<int> & minimal_number_of_generators_output, const Geometric_Complex_Template & the_complex );
 
 /* Compute the homology of maps */
-template < class Toplex, class Map >
-void Map_Homology ( const Toplex & X, const Toplex & Y, const Map & f );
+template < class Toplex, class Geometric_Map >
+void Map_Homology ( const Toplex & X, const Toplex & Y, const Geometric_Map & f );
+
+/* Compute relative homology of a map*/
+template < class Toplex, class Combinatorial_Map >
+void /* TODO */ Relative_Map_Homology (const Toplex & toplex, 
+                                       const typename Toplex::Subset X, 
+                                       const typename Toplex::Subset A,
+                                       const typename Toplex::Subset Y, 
+                                       const typename Toplex::Subset B,
+                                       const Combinatorial_Map & F );
 
 /* Print out the homology generators... TODO: return the homology generators */
 template < class Cell_Complex >

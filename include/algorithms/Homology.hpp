@@ -522,12 +522,212 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
 } /* void Map_Homology(...) */
 #endif
 
+#if 0
+/* Given a single toplex, with subsets X, A, Y, B, and a combinatorial map F : X -> Y which restricts
+   to F : A -> B, compute the relative homology of F. */
+template < class Toplex, class Combinatorial_Map >
+void /* TODO */ Relative_Map_Homology (const Toplex & toplex, 
+                                       const typename Toplex::Subset X, 
+                                       const typename Toplex::Subset A,
+                                       const typename Toplex::Subset Y, 
+                                       const typename Toplex::Subset B,
+                                       const Combinatorial_Map & F ) {
+  /* Method.
+   1. Construct the Relative Graph G
+     Definition of relative graph now follows: Define F_A : A -> B as the restriction of F to A.
+     The graph of F_A is a regular subcomplex of the graph of F. 
+     We define the relative graph as Gr(G) = Gr(F) \ Gr(F_A)
+   2. Lift the Homology Generators of (X, A) to cycles in G and Project these cycles to (Y, B)
+   3. Construct Morse Tower for (Y, B) and send the cycles via psi down the morse tower
+   4. Compute the generators of M_N(Y, B)
+   5. Express the cycles in terms of the codomain generators.
+  */
+  typedef typename Toplex::Relative_Complex Complex;
+  typedef Relative_Graph_Complex < Toplex > Graph;
+  
+  /* Produce the graph complex */
+  clock_t start, stop;
+  start = clock ();
+  Graph graph ( toplex, X, A, Y, B, F );
+  stop = clock ();
+  
+  std::cout << "Graph Complex generated.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  // DEBUG
+  start = clock ();
+  std::cout << "Computing Graph Generators...\n";
+  
+  /* Find the homology generators of the domain */
+  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
+    domain_generators = Homology_Generators_DMT ( graph . domain () );
+
+  /* Lift the homology generators from the domain to the graph and project them to the codomain */
+  std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > codomain_cycles ( domain_generators . size () );
+  for ( unsigned int dimension_index = 0; dimension_index < domain_generators . size (); ++ dimension_index ) {
+    codomain_cycles [ dimension_index ] . resize ( domain_generators [ dimension_index ] . size () );
+    for ( unsigned int generator_index = 0; generator_index < domain_generators [ dimension_index ] . size (); ++ generator_index ) {
+      codomain_cycles [ dimension_index ] [ generator_index ] = 
+      std::make_pair ( graph . projectToCodomain ( graph . cycleLift ( domain_generators [ dimension_index ] [ generator_index ] . first ) ),
+                       domain_generators [ dimension_index ] [ generator_index ] . second );
+    } /* for */
+  } /* for */
+
+
+  stop = clock ();
+  std::cout << "Generators projected to codomain.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  /* Get the morse reduction of the codomain */
+  std::list<Morse_Complex> codomain_tower = morse::reduction_tower ( graph . codomain () );
+  
+  //DEBUG
+  start = clock ();
+  std::cout << "Homology generators of morse reduced codomain...\n";
+  /* Find the homology generators in the morse reduction of the codomain */
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
+  codomain_generators = Homology_Generators_SNF ( codomain_tower . back (), true );
+  
+  //DEBUG
+  stop = clock ();
+  for ( unsigned int a = 0; a < codomain_generators . size (); ++ a ) std::cout << 
+    codomain_generators [ a ] . size () << " ";
+  std::cout << "Codomain generators computed.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+
+  
+  /* Project the codomain cycles to the morse-reduced codomain */
+  start = clock ();
+  std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
+  reduced_cycles ( graph_generators . size () );
+  for ( unsigned int dimension_index = 0; 
+       dimension_index < graph_generators . size (); 
+       ++ dimension_index ) {
+    reduced_cycles [ dimension_index ] . resize ( graph_generators [ dimension_index ] . size () );
+    for ( unsigned int generator_index = 0; 
+         generator_index < graph_generators [ dimension_index ]. size (); 
+         ++ generator_index ) {
+      reduced_cycles [ dimension_index ] [ generator_index ] . first = 
+      morse::psi_tower (codomain_cycles [ dimension_index ] [ generator_index ] . first,
+                        codomain_tower, graph . codomain () );
+      reduced_cycles [ dimension_index ] [ generator_index ] . second = 
+      codomain_cycles [ dimension_index ] [ generator_index ] . second;
+      
+    } /* for */
+  } /* for */
+  stop = clock ();
+  std::cout << "Generators projected to codomain.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  /* Write the reduced cycles in terms of the reduced codomain generators. */
+  
+  start = clock ();
+  /* Re-express reduced_cycles in basis given by codomain_generators */
+  /* Need to index the cells of the codomain */
+  typedef typename Dense<typename Complex::Ring>::Matrix Matrix;
+  for (unsigned int dimension_index = 0; 
+       dimension_index < codomain_generators . size (); 
+       ++ dimension_index ) {
+    unsigned int trivial_count = 0;
+    for (unsigned int codomain_generator_index = 0; 
+         codomain_generator_index < codomain_generators [ dimension_index ] . size ();
+         ++ codomain_generator_index ) {
+      if (codomain_generators [ dimension_index ] [ codomain_generator_index ] . second == 1 ) {
+        ++ trivial_count;
+      } /* if */
+    } /* for */
+    /* Create cycle matrix */
+    Matrix matC = chains_to_matrix < Morse_Complex > (reduced_cycles [ dimension_index ], 
+                                                      dimension_index, 
+                                                      codomain_tower . back () );
+    Matrix matG = chains_to_matrix < Morse_Complex > (codomain_generators [ dimension_index ], 
+                                                      dimension_index, 
+                                                      codomain_tower . back () );
+    std::cout << "Dimension " << dimension_index << ": \n";
+    //std::cout << matC << "\n";
+    //std::cout << matG << "\n";
+    /* Solve for matX:  matG * matX = matC */
+    Matrix matX = Homology_detail::matrix_solve ( matG, matC );
+    MatrixSlice<Matrix> output_slice ( matX, 1, matX . numberOfRows () - trivial_count, 1, matX . numberOfColumns () );
+    Matrix output ( output_slice );
+    //std::cout << matX << "\n";
+    //std::cout << trivial_count << "\n";
+    std::cout << output << "\n";
+  } /* for */
+  
+  stop = clock ();
+  std::cout << "Algebra complete.\n";
+  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  
+  
+  /* Return algebraic information */
+  return /* TODO */;
+  
+} /* Relative_Map_Homology */
+
+#endif
+
 /* CONLEY INDEX */
 
-template < class Toplex, class Combinatorial_Map > void
+template < class Toplex, class Map > void
 Conley_Index ( Conley_Index_t * output,
               const Toplex & toplex, 
-              const typename Toplex::Subset & subset,
-              /* const */ Combinatorial_Map & map ) {
+              const typename Toplex::Subset & S,
+              /* const */ Map & f ) {
+  /* Method.
+  1. Let F be the combinatorial map on "toplex" that "f" induces
+  2. Generate a combinatorial index pair (X, A)
+     A combinatorial index pair satisfies the following:
+      a) F(X\A) \subset X
+      b) F(A) \cap X \subset A
+     Since S is a Path-SCC (Combinatorial Morse set) in "toplex" with respect to F,
+     the following is a combinatorial index pair:
+     X = S \cup F(S), A = F(S) \ S.
+     proof: We show (a). Observe that X \ A = S, so F(X\A) = F(S) \subset X trivially. Hence (a). 
+            We show (b). First we make the following observation from the definition of Path-SCC:
+            Since S is a combinatorial Morse set, (t \in F(S) and s \in F(t) \cap S) implies t \in S.
+            Suppose t \in A, s \in F(t), and s \in X. We show s \in A. Assume, to the contrary, that s \notin A.
+            Then s \in X \ A = S. We then have t \in A \subset F(S), and s \in F(t) \cap S. Thus t \in S, by
+            the observation. Yet t \in A \cap S = \emptyset is impossible! Hence (b).
+   
+  3. Generate the restricted combinatorial map G : (X, A) -> (X, A) via the formula
+     G = F\vert_A \cap A
+     That is, for each x \in X, define G(x) := F(x) \cap A.
+     A theorem gives us F_* = G_*.
+  4. Return the Relative Homology G_* of G
+  */
+  
+  typedef typename Toplex::Top_Cell Cell;
+  typedef typename Toplex::Subset Subset;
+  typedef std::map < Cell, Subset > Combinatorial_Map;
+  
+  Subset X;
+  Subset A;
+  Combinatorial_Map G;
+  
+  /* Construct X */
+  BOOST_FOREACH ( Cell cell, S ) {
+    X . insert ( cell );
+    Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
+    X . insert ( Image );
+    G [ cell ] = Image; // cache these values for G rather than having to compute them later
+  } /* boost_foreach */
+  
+  /* Construct A */
+  A = X;
+  BOOST_FOREACH ( Cell cell, S ) {
+    A . erase ( cell );
+  } /* boost_foreach */ 
+  
+  /* Restrict G to (X, A) */
+  BOOST_FOREACH ( Cell cell, A ) {
+    Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
+    G [ cell ] = intersect ( A, Image );
+  } /* boost_foreach */  
+  
+  Relative_Map_Homology ( toplex, X, A, X, A, G );
+  
   return;
 } /* void Conley_Index(...) */
