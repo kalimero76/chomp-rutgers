@@ -12,8 +12,15 @@ Relative_Graph_Complex::Relative_Graph_Complex (const Toplex & T,
                                                 const typename Toplex::Subset Y,
                                                 const typename Toplex::Subset B,
                                                 const Combinatorial_Map & F ) : toplex_(T) {
-  domain_ = toplex_ . relative_complex ( X, A );
-  codomain_ = toplex_ . relative_complex ( Y, B );
+  full_domain_ = toplex_ . complex ( X, X_boxes_ );
+  full_codomain_ = toplex_ . complex ( Y, Y_boxes_ );
+  /* For each cell in the "full_domain_" we record which top cells are involved in
+     the combinatorial map calculation */
+  neighbors_ = /* ... */
+  /* Calculate the domain complex (X, A) */
+  domain_ = /* ... */
+  /* Calculate the codomain complex (Y, B) */
+  codomain_ = /* ... */
 } /* Relative_Graph_Complex<Toplex>::Relative_Graph_Complex */
 
 Relative_Graph_Complex<Toplex>::~Relative_Graph_Complex ( void ) {
@@ -33,21 +40,25 @@ Chain Relative_Graph_Complex<Toplex>::cycleLift ( const Relative_Chain & lift_me
       2) projects to "lift_me"
    */
   
-  typedef std::pair < FactorCell, long > FiberChainTerm;
+  typedef Relative_Chain::value_type RelativeChainTerm;
   
   /* Initialize "answer" to a Chain that projects to "lift_me",
      and compute its boundary as well. */
   Chain answer;
   Chain answer_boundary;
   
-  BOOST_FOREACH ( FactorCell domain_cell, lift_me ) {
+  BOOST_FOREACH ( RelativeChainTerm lift_term, lift_me ) {
+    Relative_Cell domain_cell = * lift_term . first;
     Relative_Complex fiber = makeFiber ( domain_cell );
     Relative_Chain fiber_chain;
-    fiber_chain . insert ( fiber . begin () );
+    Relative_Complex::const_iterator choice_iterator = fiber . begin ();
+    fiber_chain . insert ( RelativeChainTerm ( choice_iterator, lift_term . second ) );
     answer [ domain_cell ] = fiber_chain;
-    Relative_Chain domain_boundary = domain () . total_boundary ( domain_cell );
-    BOOST_FOREACH ( FiberChainTerm term, domain_boundary ) {
-      answer_boundary [ term . first ] += term . second * fiber_chain;
+    Relative_Chain domain_boundary;
+    total_domain_ . boundary ( domain_boundary, domain_cell . name () );
+    Relative_Complex::Ring coefficient = term . second * lift_term . second;
+    BOOST_FOREACH ( RelativeChainTerm term, domain_boundary ) {
+      answer_boundary [ term . first ] . insert ( RelativeChainTerm ( choice_iterator, coefficient ) );
     } /* boost_foreach */
   } /* boost_foreach */
   

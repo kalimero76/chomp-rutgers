@@ -25,13 +25,14 @@ template < class Toplex >
 class Relative_Graph_Complex 
 {
 public:
-  typedef typename Toplex::Complex::const_iterator FactorCell;
-  typedef std::map < FactorCell, long > FactorChain;
-  typedef std::pair<FactorCell, FactorCell> Cell;
-  typedef std::map<FactorCell, FactorChain > Chain;
+  typedef typename Toplex::Complex FactorComplex;
   
-  typedef Subcomplex < typename Toplex::Complex > Relative_Complex;
-  typedef Relative_Complex::Chain Relative_Chain;
+  typedef Subcomplex < FactorComplex > Relative_Complex;
+  typedef typename Relative_Complex::Cell Relative_Cell;
+  typedef typename Relative_Complex::Chain Relative_Chain;
+
+  typedef std::pair < Relative_Cell, Relative_Cell > Cell;
+  typedef std::map < Relative_Cell, Relative_Chain > Chain;
 
   template < Combinatorial_Map >
   Relative_Graph_Complex (const Toplex & T, 
