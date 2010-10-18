@@ -31,6 +31,9 @@ public:
   typedef typename Relative_Complex::Cell Relative_Cell;
   typedef typename Relative_Complex::Chain Relative_Chain;
 
+  typedef typename FactorComplex::Cell FactorCell;
+  typedef typename FactorComplex::Chain FactorChain;
+
   typedef std::pair < Relative_Cell, Relative_Cell > Cell;
   typedef std::map < Relative_Cell, Relative_Chain > Chain;
 
@@ -56,6 +59,8 @@ private:
   Relative_Complex codomain_;
   Relative_Complex makeFiber ( const FactorCell & domain_cell );
 
+  std::map < typename Toplex::Top_Cell, typename FactorComplex::const_iterator > X_boxes_, Y_boxes_;
+  std::map < typename FactorComplex::const_iterator, typename Toplex::Top_Cell > X_boxes_inv_;
 };
 
 #ifndef CHOMP_LIBRARY_ONLY_

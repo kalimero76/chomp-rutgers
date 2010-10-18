@@ -64,14 +64,39 @@ public:
   Chain boundary ( const const_iterator & input ) const;
   Chain coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
+  
+  // BEGIN TODO
+  /* Index Complex */
+  void index ( void );
+  size_type index_begin ( unsigned int dimension ) const;
+  size_type index_end ( unsigned int dimension ) const;
+  size_type index ( const const_iterator & lookup ) const;
+  size_type & index ( const const_iterator & lookup );
+  std::vector < const_iterator > & lookup ( void );
+  const const_iterator & lookup ( size_type index ) const;
+  const_iterator & lookup ( size_type index );
+  std::vector < int > count_all_boundaries ( void ) const;
+  void boundary ( std::vector < size_type > & output, const size_type index ) const;
+  void coboundary ( std::vector < size_type > & output, const size_type index ) const;
+  void boundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  void coboundary ( std::vector < std::pair <size_type, Ring > > & output, const size_type input ) const;
+  /* Decomposable Complex */
+  void decompose ( void );
+  char type ( size_type index, unsigned int dimension ) const;
+  size_type mate ( size_type queen_index, unsigned int dimension ) const;
+  const Ring & connection ( size_type queen_index ) const;
+  Ring & connection ( size_type queen_index );  
+  size_type ace_begin ( unsigned int dimension ) const;
+  size_type ace_end ( unsigned int dimension ) const;  
+  // END TODO
+  
   /* Subcomplex */
   Subcomplex ( const Cell_Complex & super_complex ); 
   Chain project ( const typename Cell_Complex::Chain & project_me ) const;
+  Chain project ( const Chain & project_me ) const;
   typename Cell_Complex::const_iterator include ( const const_iterator & include_me ) const;
   typename Cell_Complex::Chain include ( const Chain & include_me ) const;
-  std::pair < unsigned long, Ring > mate ( const unsigned long mate_me ) const;
-  bool bitmap ( unsigned long address ) const;
-  void erase ( unsigned long address );
+
 
 protected:
   friend class Subcomplex_const_iterator<Cell_Complex>;
