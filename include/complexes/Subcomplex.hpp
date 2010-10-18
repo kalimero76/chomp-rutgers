@@ -114,6 +114,186 @@ unsigned int Subcomplex<Cell_Complex>::dimension ( void ) const {
   return dimension_;
 } /* Subcomplex<>::dimension */
 
+
+/* Index Complex */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+index ( void ) {
+  lookup_ . resize ( size () + 1 );
+  connection_ . resize ( size (), 0 );
+  size_type cell_index = 0;
+  for ( const_iterator cell_iterator = begin (); cell_iterator != end (); ++ cell_iterator, ++ cell_index ) {
+    index_ [ cell_iterator ] = cell_index;
+    lookup_ [ cell_index ] = cell_iterator;
+  } /* for */
+  index_ [ end_ ] = total_size_;
+  lookup_ [ total_size_ ] = end_;
+  index_begin_ . resize ( dimension_ + 2, 0 );
+  size_type sum = 0;
+  for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
+    sum += size_ [ dimension_index ];
+    index_begin_ [ dimension_index + 1 ] = sum;
+  } /* for */
+} /* Subcomplex<Cell_Complex>::index */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+index_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ]; 
+} /* Subcomplex<Cell_Complex>::index_begin */ 
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+index_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ];
+} /* Subcomplex<Cell_Complex>::index_end */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+index ( const const_iterator & lookup ) const {
+  return index_ . find ( lookup ) -> second;
+} /* Subcomplex<Cell_Complex>::index */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type & 
+Subcomplex<Cell_Complex>::
+index ( const const_iterator & lookup ) {
+  return index_ [ lookup ];
+} /* Subcomplex<Cell_Complex>::index */
+
+template < class Cell_Complex >
+std::vector < Subcomplex_const_iterator<Cell_Complex> > & 
+Subcomplex<Cell_Complex>::
+lookup ( void ) {
+  return lookup_;
+} /* Subcomplex<Cell_Complex>::lookup */
+
+template < class Cell_Complex >
+const Subcomplex_const_iterator<Cell_Complex> & 
+Subcomplex<Cell_Complex>::
+lookup ( size_type index ) const {
+  return lookup_ [ index ];
+} /* Subcomplex<Cell_Complex>::lookup */
+
+template < class Cell_Complex >
+Subcomplex_const_iterator<Cell_Complex> & 
+Subcomplex<Cell_Complex>::
+lookup ( size_type index ) {
+  return lookup_ [ index ];
+} /* Subcomplex<Cell_Complex>::lookup */
+
+template < class Cell_Complex >
+std::vector < int > 
+Subcomplex<Cell_Complex>::
+count_all_boundaries ( void ) const {
+  std::vector < int > number_of_boundaries ( total_size_ );
+  for ( const_iterator cell_iterator = begin (); cell_iterator != end_; ++ cell_iterator )
+    number_of_boundaries [ index ( cell_iterator ) ] = boundary ( cell_iterator ) . size ();
+  return number_of_boundaries;
+} /* Subcomplex<Cell_Complex>::count_all_boundaries */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+boundary ( std::vector < size_type > & output, const size_type input ) const {
+  output . clear ();
+  Chain boundary_chain = boundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = boundary_chain . begin (); 
+       term_iterator != boundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( index ( term_iterator -> first ) );
+  } /* for */
+} /* Subcomplex<Cell_Complex>::boundary */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+coboundary ( std::vector < size_type > & output, const size_type input ) const {
+  output . clear ();
+  Chain coboundary_chain = coboundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = coboundary_chain . begin (); 
+       term_iterator != coboundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( index ( term_iterator -> first ) );
+  } /* for */
+} /* Subcomplex<Cell_Complex>::coboundary */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+boundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type input ) const {
+  output . clear ();
+  Chain boundary_chain = boundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = boundary_chain . begin (); 
+       term_iterator != boundary_chain. end (); ++ term_iterator ) {
+    output . push_back ( std::pair < size_type, Ring > ( index ( term_iterator -> first ), 
+                                                        term_iterator -> second ) );
+  } /* for */
+} /* Subcomplex<Cell_Complex>::boundary */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+coboundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type input ) const {
+  output . clear ();
+  Chain coboundary_chain = coboundary ( lookup_ [ input ] );
+  for ( typename Chain::const_iterator term_iterator = coboundary_chain . begin (); 
+       term_iterator != coboundary_chain . end (); ++ term_iterator ) {
+    output . push_back ( std::pair < size_type, Ring > ( index ( term_iterator -> first ), 
+                                                        term_iterator -> second ) );
+  } /* for */
+} /* Subcomplex<Cell_Complex>::coboundary */
+
+/* Decomposable Complex */
+
+template < class Cell_Complex >
+void Subcomplex<Cell_Complex>::
+decompose ( void ) {
+  index (); 
+  king_count_ = morse::decompose ( *this );
+} /*  Subcomplex<Cell_Complex>::decompose */
+
+template < class Cell_Complex >
+char Subcomplex<Cell_Complex>::
+type ( size_type index, unsigned int dimension ) const {
+  if ( index < index_begin_ [ dimension ] + king_count_ [ dimension + 1 ] ) return 0; /* QUEEN */
+  if ( index < index_begin_ [ dimension + 1 ] - king_count_ [ dimension ] ) return 1; /* ACE */
+  return 2; /* KING */
+} /* Subcomplex<Cell_Complex>::type */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+mate ( size_type queen_index, unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + index_begin_ [ dimension + 2 ] - queen_index - 1;
+} /* Subcomplex<Cell_Complex>::mate */
+
+template < class Cell_Complex >
+const typename Subcomplex<Cell_Complex>::Ring & 
+Subcomplex<Cell_Complex>::
+connection ( size_type queen_index ) const {
+  return connection_ [ queen_index ];
+} /* Subcomplex<Cell_Complex>::connection */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::Ring & 
+Subcomplex<Cell_Complex>::
+connection ( size_type queen_index ) {
+  return connection_ [ queen_index ];
+} /* Subcomplex<Cell_Complex>::connection */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+ace_begin ( unsigned int dimension ) const {
+  return index_begin_ [ dimension ] + king_count_ [ dimension + 1 ];
+} /* Subcomplex<Cell_Complex>::ace_begin */
+
+template < class Cell_Complex >
+typename Subcomplex<Cell_Complex>::size_type 
+Subcomplex<Cell_Complex>::
+ace_end ( unsigned int dimension ) const {
+  return index_begin_ [ dimension + 1 ] - king_count_ [ dimension ];
+} /* Subcomplex<Cell_Complex>::ace_end */
+
 template < class Cell_Complex > 
 Subcomplex<Cell_Complex>::
 Subcomplex ( const Cell_Complex & super_complex ) : super_complex_(super_complex) {
@@ -138,11 +318,25 @@ typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( con
   Chain return_value ( *this );
   //unsigned int dimension = project_me . dimension (); TODO make this work instead of calling dimension on all the terms
   for ( typename Cell_Complex::Chain::const_iterator chain_term = project_me . begin (); chain_term != project_me . end (); ++ chain_term ) {
-    unsigned long indx =  super_complex_ . index ( chain_term -> first );
+    unsigned long indx = super_complex_ . index ( chain_term -> first );
     if ( bitmap_ [ indx ] ) return_value += 
       typename Chain::Chain_Term ( Subcomplex_const_iterator<Cell_Complex> ( this, indx, 
                                                                chain_term -> first . dimension () ), 
                                    chain_term -> second );
+  } /* for */
+  return return_value;
+} /* Subcomplex<>::project */
+
+template < class Cell_Complex > 
+typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( const Chain & project_me ) const {
+  Chain return_value ( *this );
+  //unsigned int dimension = project_me . dimension (); TODO make this work instead of calling dimension on all the terms
+  for ( typename Chain::const_iterator chain_term = project_me . begin (); chain_term != project_me . end (); ++ chain_term ) {
+    unsigned long indx = * chain_term -> first;
+    if ( bitmap_ [ indx ] ) return_value += 
+      typename Chain::Chain_Term ( Subcomplex_const_iterator<Cell_Complex> ( this, indx, 
+                                                                            chain_term -> first . dimension () ), 
+                                  chain_term -> second );
   } /* for */
   return return_value;
 } /* Subcomplex<>::project */
@@ -160,33 +354,6 @@ typename Cell_Complex::Chain Subcomplex<Cell_Complex>::include ( const Chain & i
       ( super_complex_ . lookup ( chain_term -> first . data_ ), chain_term -> second );
   return return_value;
 } /* Subcomplex<>::include */
-
-template < class Cell_Complex > 
-std::pair < unsigned long, typename Cell_Complex::Ring > 
-Subcomplex<Cell_Complex>::mate ( const unsigned long mate_me ) const {
-  typename Cell_Complex::Chain boundary_chain = super_complex_ . boundary 
-    ( super_complex_ . lookup ( mate_me ) );
-  /* Loop through terms until one is found */
-  for ( typename Cell_Complex::Chain::const_iterator term_iterator = boundary_chain . begin ();
-       term_iterator != boundary_chain . end (); ++ term_iterator ) {
-    unsigned long cell_index;
-    if ( bitmap_ [ cell_index = super_complex_ . index ( term_iterator -> first ) ] ) {
-      return std::pair < unsigned long, Ring > ( cell_index, term_iterator -> second );
-    } /* if */
-  } /* for */
-  std::cout << "Subcomplex<>::mate. Fatal error; there were no boundaries.\n";
-  return std::pair < unsigned long, Ring > ();
-} /* Subcomplex<>::mate */
-
-template < class Cell_Complex > 
-bool Subcomplex<Cell_Complex>::bitmap ( unsigned long address ) const {
-  return bitmap_ [ address ];
-} /* Subcomplex<>::bitmap */
-
-template < class Cell_Complex > 
-void Subcomplex<Cell_Complex>::erase ( unsigned long address ) {
-  bitmap_ [ address ] = false;
-} /* Subcomplex<>::bitmap */
 
 /* * * * * * * * * * * * * * * * * * * *
  * Subcomplex_const_iterator definitions  *

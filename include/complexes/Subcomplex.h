@@ -64,8 +64,6 @@ public:
   Chain boundary ( const const_iterator & input ) const;
   Chain coboundary ( const const_iterator & input ) const;
   unsigned int dimension ( void ) const;
-  
-  // BEGIN TODO
   /* Index Complex */
   void index ( void );
   size_type index_begin ( unsigned int dimension ) const;
@@ -88,7 +86,6 @@ public:
   Ring & connection ( size_type queen_index );  
   size_type ace_begin ( unsigned int dimension ) const;
   size_type ace_end ( unsigned int dimension ) const;  
-  // END TODO
   
   /* Subcomplex */
   Subcomplex ( const Cell_Complex & super_complex ); 
@@ -100,13 +97,24 @@ public:
 
 protected:
   friend class Subcomplex_const_iterator<Cell_Complex>;
-  size_type bitmap_size_;
-  std::vector < bool > bitmap_;
+  /* Cell Complex */
   std::vector<const_iterator> begin_;
   const_iterator end_;
   std::vector<size_type> size_;
   unsigned long total_size_;
   unsigned int dimension_;
+  /* Index Complex */
+  std::map < const_iterator, size_type > index_;
+  std::vector < const_iterator > lookup_;
+  std::vector < size_type > index_begin_;
+  /* Decomposable Complex */
+  std::vector<Ring> connection_;
+  std::vector< int > boundary_count_;
+  bool boundary_count_available_;
+  std::vector<size_type> king_count_;
+  /* Subcomplex */
+  size_type bitmap_size_;
+  std::vector < bool > bitmap_;
   const Cell_Complex & super_complex_;
 };
 
