@@ -15,7 +15,6 @@
 
 #include "algorithms/basic.h"
 #include "algorithms/Morse_Theory.h"
-#include "complexes/Subcomplex.h"
 
 template < class size_type >
 Morse_Chain<size_type> & operator += ( Morse_Chain<size_type> & output, 
