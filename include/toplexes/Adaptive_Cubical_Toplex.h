@@ -61,7 +61,7 @@ namespace Adaptive_Cubical {
     Geometric_Description ( unsigned int size, const Real & value );
     Geometric_Description ( unsigned int size, const Real & lower_value, const Real & upper_value );
     Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_value );
-
+    bool intersects ( const Geometric_Description & other, const Real tol ) const;
     bool intersects ( const Geometric_Description & other ) const;
   private: 
     friend class boost::serialization::access; 
@@ -215,6 +215,7 @@ namespace Adaptive_Cubical {
     Node * root_;
     Geometric_Description bounds_;
     unsigned int dimension_;
+    mutable Real tolerance;
   };
   
 } /* namespace Adaptive_Cubical */
