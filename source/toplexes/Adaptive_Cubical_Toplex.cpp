@@ -14,6 +14,9 @@
 
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 
+//debug
+#include "algorithms/basic.h"
+
 namespace Adaptive_Cubical {
 
   /* * * * * * * * * * * * * * * * * * * * * * * * * *
@@ -67,6 +70,15 @@ namespace Adaptive_Cubical {
     if ( right_ != NULL ) delete right_;
   } /* Adaptive_Cubical::Node::~Node */
 
+  /* * * * * * * * * * * * * * * * * * * * *
+   * class Adaptive_Cubical::Toplex_Subset *
+   * * * * * * * * * * * * * * * * * * * * */
+  void Toplex_Subset::insert ( const Toplex_Subset & insert_me ) {
+    BOOST_FOREACH ( const Top_Cell & cell, insert_me ) {
+      insert ( cell );
+    } /* boost_foreach */
+  } /* Toplex_Subset::insert */
+  
   /* * * * * * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_const_iterator  *
    * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -288,10 +300,12 @@ namespace Adaptive_Cubical {
 
   namespace detail {
 
+    // deprecating
     struct AddTopCellToComplexFunctor {
       Toplex::Complex & complex;
       const Toplex & toplex;
-      AddTopCellToComplexFunctor ( Toplex::Complex & complex, const Toplex & toplex )
+      AddTopCellToComplexFunctor ( Toplex::Complex & complex, 
+                                   const Toplex & toplex )
       : complex(complex), toplex(toplex) {}
       void operator () ( const Toplex::Top_Cell & top_cell ) {
         //std::cout << "Main, entering with " << top_cell << "\n";
@@ -352,6 +366,52 @@ namespace Adaptive_Cubical {
       } /* operator () */
     };
 
+    struct AddTopCell {
+      std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes;
+      Toplex::Complex & complex;
+      const Toplex & toplex;
+      AddTopCell ( std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes,
+                   Toplex::Complex & complex, 
+                   const Toplex & toplex )
+      : boxes(boxes), complex(complex), toplex(toplex) {}
+      void operator () ( const Toplex::Top_Cell & top_cell ) {
+        //std::cout << "Main, entering with " << top_cell << "\n";
+        /* Determine depth of cell */
+        unsigned int depth = 0;
+        Node * leaf = toplex . find ( top_cell ) . node ();
+        Node * node = leaf;
+        while ( node -> parent_ != NULL ) {
+          node = node -> parent_;
+          if ( node -> dimension_ == 0 ) ++ depth;
+        } /* while */
+        //std::cout << "depth = " << depth << "\n";
+        /* Determine 'splitting' used for Add_Full_Cube in Adaptive Complex */
+        std::vector < unsigned int > splitting ( depth );
+        unsigned int subdivision_choice = 0;
+        node = leaf;
+        int outer_index = depth;
+        int inner_index = toplex . dimension ();
+        while ( 1 ) {
+          -- inner_index;
+          Node * parent = node -> parent_;
+          //std::cout << "parent = " << parent << "\n";
+          //std::cout << "inner_index = " << inner_index << "\n";
+          //std::cout << node -> dimension_ << "\n";
+          if ( parent -> left_ != node ) subdivision_choice |= ( 1 << inner_index );
+          if ( inner_index == 0 ) {
+            -- outer_index;
+            splitting [ outer_index ] = subdivision_choice;
+            subdivision_choice = 0;
+            if ( outer_index == 0 ) break;
+            inner_index = toplex . dimension ();
+          } /* if */
+          node = parent;
+        } /* while */
+        boxes [ top_cell ] = complex . Add_Full_Cube ( splitting );
+        
+      } /* operator () */
+    };
+    
   } /* namespace detail */
 
   Toplex::Complex Toplex::complex ( void ) const {
@@ -394,6 +454,19 @@ namespace Adaptive_Cubical {
     return return_value;
   } /* Adaptive_Cubical::Toplex::complex */
 
+  void Toplex::complex ( Toplex::Complex * & return_value,
+                                    const Subset & subset_of_toplex, 
+                                    std::map < Top_Cell, Complex::const_iterator > & boxes ) const {
+    return_value = new Complex ( dimension_);
+    /* Warning: will fail if there are leafs which are not perfect cubes */
+    /* Warning: assumes iteration pattern through top cells of both complex and toplex are same */
+    /* Now put the complex together */
+    std::for_each ( subset_of_toplex . begin (), 
+                    subset_of_toplex . end (), 
+                    detail::AddTopCell ( boxes, *return_value, *this ) );
+    return_value -> Finalize ();
+  } /* Adaptive_Cubical::Toplex::complex */
+  
   Toplex::Subset Toplex::subdivide ( iterator cell_to_divide ) {
     Subset children;
     std::deque < std::pair < const_iterator, unsigned int > > work_deque;
@@ -446,6 +519,10 @@ namespace Adaptive_Cubical {
     } /* boost_foreach */
     return result;
   } /* Adaptive_Cubical::Toplex::subdivide */  
+
+  Toplex::Subset Toplex::subdivide ( void ) {
+    return subdivide ( cover ( bounds () ) );
+  } /* Adaptive_Cubical::Toplex::subdivide */ 
   
   namespace detail {
     template < class FindMap >

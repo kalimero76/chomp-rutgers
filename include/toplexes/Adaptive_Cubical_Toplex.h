@@ -109,8 +109,12 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_Subset *
    * * * * * * * * * * * * * * * * * * * * */
-  typedef std::unordered_set < Adaptive_Cubical::Top_Cell > Toplex_Subset;
-    
+  class Toplex_Subset : public std::unordered_set < Adaptive_Cubical::Top_Cell > {
+  public:
+    using std::unordered_set < Adaptive_Cubical::Top_Cell >::insert;
+    void insert ( const Toplex_Subset & insert_me );
+  };
+  
   /* * * * * * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_const_iterator  *
    * * * * * * * * * * * * * * * * * * * * * * * * */
@@ -161,9 +165,17 @@ namespace Adaptive_Cubical {
     size_type size ( void ) const;
     /* Toplex */
     unsigned int dimension ( void ) const;
+    
+    /// Subset cover ( const Geometric_Description & geometric_region, 
+    /// Return the top cells in toplex which intersect "geometric_region"
     Subset cover ( const Geometric_Description & geometric_region ) const;
+    
+    /// Subset cover ( const Geometric_Description & geometric_region, 
+    ///                const Subset & subset )
+    /// Return the top cells in subset which intersect "geometric_region"
     Subset cover ( const Geometric_Description & geometric_region, 
                    const Subset & subset ) const;
+    
     Geometric_Description geometry ( const const_iterator & cell_iterator ) const;
     Geometric_Description geometry ( const Top_Cell & cell ) const;
 
@@ -171,13 +183,19 @@ namespace Adaptive_Cubical {
     Complex complex ( std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     Complex complex ( const const_iterator & cell_iterator ) const;
     Complex complex ( const Subset & subset_of_toplex ) const;
+    void complex ( Complex * & return_value, 
+                   const Subset & subset_of_toplex, 
+                   std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
 
     
     /* Adaptive Toplex */
     Subset subdivide ( iterator cell_to_divide );
     Subset subdivide ( Top_Cell cell_to_divide );
     Subset subdivide ( const Subset & subset_to_divide );
-
+    /// subdivide ( void )
+    ///  subdivides everything
+    Subset subdivide ( void );
+    
     void coarsen ( void );
     /* Adaptive Cubical Toplex */
     Geometric_Description bounds ( void ) const;

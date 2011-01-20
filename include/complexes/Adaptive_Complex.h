@@ -197,10 +197,16 @@ public:
 	/** Deconstructor (deep deconstruction required) */
 	~Adaptive_Complex ( void );
 
-	/* 
+	/* Add_Full_Cube
+   Adds a top cell and its geometric closure. Returns an iterator to the top dimensional
+   cell.
 	 */
-	bool Add_Full_Cube( std::vector < unsigned int > splitting);
+	const_iterator Add_Full_Cube( std::vector < unsigned int > splitting);
 	
+  /* Full_Cube
+     Given a "splitting vector", return a const_iterator to the associated
+     top cell (warning: assumes it exists for iterator to be valid)*/
+  const_iterator Full_Cube( std::vector < unsigned int > splitting);
   /* 
 	 */
 	void Finalize();
@@ -226,7 +232,8 @@ private:
   std::vector < size_type > packing_code_;
   std::vector < size_type > packing_code_begin_;
   std::vector < size_type > geometric_code_;
-
+  
+  void operator = ( const Adaptive_Complex & right_hand_side ); //disallow;
 
 public:
   /* Implementation details made public for convenience */

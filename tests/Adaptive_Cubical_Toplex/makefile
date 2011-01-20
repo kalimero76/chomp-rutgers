@@ -1,5 +1,5 @@
 CXX := g++
-CXXFLAGS := -O0 -g -m32 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I./ -L../../lib/
+CXXFLAGS := -O0 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I./ -L../../lib/ -ggdb
 
 CXX_STANDALONE := $(CXX) $(CXXFLAGS) #-lchomp-rutgers
 

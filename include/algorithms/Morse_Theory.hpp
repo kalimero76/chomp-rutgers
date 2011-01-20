@@ -15,6 +15,7 @@
 
 #include "algorithms/basic.h"
 #include "algorithms/Morse_Theory.h"
+#include "algorithms/matrix/Dense_Matrix.h"
 
 template < class size_type >
 Morse_Chain<size_type> & operator += ( Morse_Chain<size_type> & output, 
@@ -197,6 +198,69 @@ namespace morse {
     cell_complex . lookup () . swap ( new_lookup );
     return king_count;
   } /* morse::decompose */
+  
+  
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  preboundary ( typename Cell_Complex::Chain & boundary_chain, const Cell_Complex & complex ) {
+    // warning, assumes preboundary actually exists
+    if ( boundary_chain . empty () ) return boundary_chain; // Trivial Case
+    /* Algebraic Method */
+    // Declarations
+    typedef typename Cell_Complex::size_type size_type;
+    typedef typename Dense<typename Cell_Complex::Ring>::Matrix Matrix;
+    Matrix boundary_map_matrix;
+    unsigned int dimension_index = boundary_chain . begin () -> first . dimension ();
+		// Produce Matrix Boundary Map
+    Dense_Matrix_Boundary_Map ( boundary_map_matrix, complex, dimension_index + 1 );
+    // Produce matrix to represent column vector version of "boundary_chain" 
+    size_type offset = complex . index_begin ( dimension_index );
+    //std::cout << "offset = " << offset << "\n";
+    //std::cout << "dimension_index = " << dimension_index << "\n";
+    //std::cout << "size = " << complex . size ( dimension_index ) << "\n";
+    Matrix boundary_chain_matrix ( complex . size ( dimension_index ), 1 );
+    //std::cout << boundary_chain << "\n";
+    //verify_complex ( complex );
+    BOOST_FOREACH ( typename Cell_Complex::Chain::value_type & term, boundary_chain ) {
+      //std::cout << "writing to boundary chain matrix at ( " << 
+      // 1 + complex . index ( term . first ) - offset << " , 1 )\n";
+      boundary_chain_matrix ( 1 + complex . index ( term . first ) - offset, 1 + 0 ) = term . second;
+    } /* boost_foreach */
+    
+    if ( boundary_map_matrix . numberOfColumns () == 0 ) {
+      /* Assume that boundary_chain = 0, then, so return it as it is the answer, which is 0 */
+      std::cout << "Error, as far as i know this shouldn't happen.\n";
+      exit ( -1 );
+      return boundary_chain;
+    }
+    
+    // Otherwise, we should be able to compute it.
+    Matrix preboundary_matrix = matrix_solve ( boundary_map_matrix, boundary_chain_matrix );
+    
+    typename Cell_Complex::Chain return_value;
+    offset = complex . index_begin ( dimension_index + 1 );
+    for ( unsigned int index = complex . index_begin ( dimension_index + 1 );
+         index < complex . index_end ( dimension_index + 1 ); 
+         ++ index ) {
+      return_value += std::make_pair ( complex . lookup ( index ), 
+                                       preboundary_matrix ( 1 + index - offset, 1 + 0 ) );
+    } /* for */
+    //std::cout << "preboundary returning with " << return_value << "\n";
+    //DEBUG
+    /*
+    typename Cell_Complex::Chain check = boundary ( return_value, complex );
+    check *= -1;
+    check += boundary_chain;
+    if ( not check . empty () ) { 
+      std::cout << "No preboundary exists for " << boundary_chain << 
+                   ", failed with check = " << check << "\n";
+    } else {
+      std::cout << " bd ( " << return_value << " ) = " << boundary ( return_value, complex ) << " = " << boundary_chain << "\n";
+    }
+     */
+    
+    /* Return */
+    return return_value;
+  } /* morse::preboundary */
   
 #if 0
   template < class Cell_Complex > typename Cell_Complex::Chain 

@@ -97,7 +97,7 @@ std::pair<Cubical_Complex::iterator, bool> Cubical_Complex::insert ( const value
     ++ total_size_;
     /* Update begin_ */
     iterator next = cell_iterator;
-    ++ next;
+    ++ next; // PROBLEM: This is unbearably slow. TODO
     //while
     while ( begin_ [ dimension ] == next ) {
       begin_ [ dimension ] = cell_iterator;

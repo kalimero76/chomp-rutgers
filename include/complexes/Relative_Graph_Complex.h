@@ -7,8 +7,8 @@
  *
  */
 
-#ifndef CHOMP_GRAPH_COMPLEX_
-#define CHOMP_GRAPH_COMPLEX_
+#ifndef CHOMP_RELATIVE_GRAPH_COMPLEX_
+#define CHOMP_RELATIVE_GRAPH_COMPLEX_
 
 #include "complexes/Subcomplex.h"
 #include "complexes/Product_Complex.h"
@@ -21,12 +21,13 @@
  * class Relative_Graph_Complex  *
  * * * * * * * * * * * * * * * * */
 
-template < class Toplex >
+template < class Toplex, class Combinatorial_Map >
 class Relative_Graph_Complex 
 {
 public:
   typedef typename Toplex::Complex FactorComplex;
-  
+  typedef typename Toplex::size_type size_type;
+  typedef typename FactorComplex::Ring Ring;
   typedef Subcomplex < FactorComplex > Relative_Complex;
   typedef typename Relative_Complex::Cell Relative_Cell;
   typedef typename Relative_Complex::Chain Relative_Chain;
@@ -37,7 +38,6 @@ public:
   typedef std::pair < Relative_Cell, Relative_Cell > Cell;
   typedef std::map < Relative_Cell, Relative_Chain > Chain;
 
-  template < Combinatorial_Map >
   Relative_Graph_Complex (const Toplex & T, 
                           const typename Toplex::Subset X,
                           const typename Toplex::Subset A,
@@ -53,11 +53,17 @@ public:
   Relative_Chain projectToDomain ( const Chain & project_me );
   Relative_Chain projectToCodomain ( const Chain & project_me );
 
+  void printChain ( const Chain & print_me );
+  
 private:
   const Toplex & toplex_;
+  typename Toplex::Subset A_;
   Relative_Complex domain_;
   Relative_Complex codomain_;
-  Relative_Complex makeFiber ( const FactorCell & domain_cell );
+  FactorComplex * full_domain_;
+  FactorComplex * full_codomain_;
+  const Combinatorial_Map & F_;
+  void makeFiber ( Relative_Complex & fiber, const Relative_Cell & domain_cell );
 
   std::map < typename Toplex::Top_Cell, typename FactorComplex::const_iterator > X_boxes_, Y_boxes_;
   std::map < typename FactorComplex::const_iterator, typename Toplex::Top_Cell > X_boxes_inv_;
@@ -68,7 +74,7 @@ private:
 #endif
 
 #ifdef CHOMP_HEADER_ONLY_
-#include "complexes/Relative_Graph_Complex.cpp"
+//#include "complexes/Relative_Graph_Complex.cpp"
 #endif
 
 #endif

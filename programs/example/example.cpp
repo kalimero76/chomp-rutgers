@@ -77,9 +77,9 @@ compute_results cubical_example (  int dimension, int width, float probability, 
   std::cout << " Sweeping time = " << (float ) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
    */
   /* Obtain Generators*/
-  utility::compute_example ( my_cubical_complex );
-  
-  std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
+  //utility::compute_example ( my_cubical_complex );
+#if 0
+   std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
   Homology_Generators ( my_cubical_complex );
   
   /* Print them out. */
@@ -93,6 +93,7 @@ compute_results cubical_example (  int dimension, int width, float probability, 
       std::cout << generators [ dimension_index ] [ generator_index ] . first << "\n";
     } /* for */
   } /* for */
+#endif
   return utility::compute_example ( my_cubical_complex );
 } /* cubical_example */
 

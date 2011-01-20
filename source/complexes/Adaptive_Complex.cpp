@@ -595,8 +595,8 @@ Adaptive_Complex::size_type Adaptive_Complex::index_begin ( unsigned int dimensi
 } /* Adaptive_Complex::index_begin */
 
 Adaptive_Complex::size_type Adaptive_Complex::index_end ( unsigned int dimension ) const {
-  std::cout << "*  dimension = " << dimension << "\n";  
-  std::cout << "   index_begin_ . size () = " << index_begin_ . size () << "\n";
+  //std::cout << "*  dimension = " << dimension << "\n";  
+  //std::cout << "   index_begin_ . size () = " << index_begin_ . size () << "\n";
   return index_begin_ [ dimension + 1 ];
 } /* Adaptive_Complex::index_end */
 
@@ -765,6 +765,7 @@ Adaptive_Complex::Adaptive_Complex ( unsigned int complex_dimension ) : dimensio
 /* Copy Constructor */
 Adaptive_Complex::Adaptive_Complex ( const Adaptive_Complex & copy_me) {
   /* TODO */
+  std::cout << "WARNING -- calling unimplemented copy constructor, expect a crash\n";
 }
 /* Destructor */
 
@@ -772,7 +773,7 @@ Adaptive_Complex::~Adaptive_Complex ( void ) {
   if ( root_ != NULL ) delete root_;
 } /* endfunction */
 
-bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
+Adaptive_Complex::const_iterator Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
   //std::cout << "Add_Full_Cube \n";
   using namespace Adaptive_Complex_detail;
   Node * node = root_;
@@ -782,8 +783,8 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
       /* The node is a leaf. */ 
       /* The node should no longer be a leaf. */
       if ( node -> data != NULL ) {
-        //std::cout << "Warning, Adaptive_Complex::Add_Full_Cube being misused, returning without effect \n";
-        return false;
+        std::cout << "Warning, Adaptive_Complex::Add_Full_Cube being misused, returning without effect \n";
+        return end ();
       } /* if */
       node -> type = 0; // Now it is a node.
       node -> data = new std::vector<Node *> ( 1 << dimension_, ( Node * ) NULL );
@@ -800,8 +801,23 @@ bool Adaptive_Complex::Add_Full_Cube ( std::vector < unsigned int > splitting) {
     node = reinterpret_cast < std::vector<Node *> * > ( node -> data ) -> operator [] ( child_number );
   } /* BOOST_FOREACH */
   node -> data = new Adaptive_Complex_detail::Cube_Cells ( dimension_ );
-  return true;
+  GeoCell top_cell ( node, MASK << dimension_ );
+  return const_iterator ( this, top_cell );
 } /* Adaptive_Complex::Add_Full_Cube */
+
+Adaptive_Complex::const_iterator Adaptive_Complex::Full_Cube ( std::vector < unsigned int > splitting) {
+  using namespace Adaptive_Complex_detail;
+  Node * node = root_;
+  BOOST_FOREACH ( unsigned int child_number, splitting ) {
+    if ( node -> type == 1 ) {
+      /* The node is a leaf. */ 
+      return end ();
+    } /* if */
+    node = reinterpret_cast < std::vector<Node *> * > ( node -> data ) -> operator [] ( child_number );
+  } /* BOOST_FOREACH */
+  GeoCell top_cell ( node, MASK << dimension_ );
+  return const_iterator ( this, top_cell );
+} /* Adaptive_Complex::Full_Cube */
 
 namespace Adaptive_Complex_detail {
 
@@ -937,6 +953,7 @@ void Adaptive_Complex::Finalize ( void ) {
     begin_ [ dimension ] = end_;
   } /* while */
   begin_ [ dimension_ + 1 ] = end_;
+  index ();
 } /* Adaptive_Complex::Finalize */
 
 Adaptive_Complex::size_type Adaptive_Complex::geometric_code ( const size_type pcode ) const {

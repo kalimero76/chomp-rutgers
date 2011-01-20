@@ -15,7 +15,7 @@ using namespace Adaptive_Cubical;
 
 void subdivide_toplex ( Toplex & my_toplex ) {
   /* subdivide every top cell */ /* only for [0,1]^n */
-  Geometric_Description bounds ( 2, Real ( 0 ), Real ( 1 ) );
+  Geometric_Description bounds ( 2, Real ( -1 ), Real ( 1 ) );
   Toplex_Subset my_subset = my_toplex . cover ( bounds );
   for ( Toplex_Subset::const_iterator it = my_subset . begin (); it != my_subset . end (); ++ it )
     my_toplex . subdivide ( my_toplex . find ( *it ) );
@@ -55,7 +55,26 @@ void inspect_subset ( const Toplex & my_toplex, const Toplex_Subset & my_subset 
     std::cout << "top cell " << * it << " has geometry " << my_toplex . geometry ( my_toplex . find ( *it ) ) << "\n";
 } /* inspect_toplex */
 
+
+void debugging_example ( void ) {
+  Geometric_Description bounds ( 2, Real ( -1 ), Real ( 1 ) );
+  Toplex T ( bounds );
+  subdivide_toplex ( T );
+  subdivide_toplex ( T );
+  subdivide_toplex ( T );
+  Geometric_Description region ( 2, Real ( -0.2 ), Real ( .2 ) );
+  region . lower_bounds [ 1 ] = -0.7;
+  region . upper_bounds [ 1 ] = 0.7;
+  Toplex::Subset S = T . cover ( region );
+  Adaptive_Complex my_adaptive_complex = T . complex ( S );
+  my_adaptive_complex . index ();
+  verify_complex ( my_adaptive_complex );
+  std::cout << "Check.\n";
+}
+
 int main (int argc, char * const argv[]) {
+  
+  debugging_example ();
   /* Initialize Toplex */
   //std::cout << "\nInitializing:\n";
   int D = 3;

@@ -183,9 +183,8 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
 	first_t = 0;
 	for ( unsigned int dimension_index = 0; dimension_index <= complex . dimension (); ++ dimension_index ) {
 		/* Compute the SNF of the new boundary matrix, d_{dimension_index} */
-		std::vector < typename Cell_Complex::const_iterator > translation_table;
     Matrix boundary_matrix;
-		Dense_Matrix_Boundary_Map ( boundary_matrix, translation_table, complex, dimension_index + 1 );
+		Dense_Matrix_Boundary_Map ( boundary_matrix, complex, dimension_index + 1 );
     
     if ( dimension_index < complex . dimension () )
       capd::matrixAlgorithms::smithForm( boundary_matrix, second_Q, second_Qinv, second_R, second_Rinv, second_s, second_t);
@@ -233,17 +232,20 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
     } /* if-else */
     
 		using namespace capd::vectalg;
+    typedef typename Cell_Complex::size_type size_type;
     
-		/* Insert the betti generators */
+    /* Insert the betti generators */
     //std::cout << "The betti number is " << betti_number << ".\n";
 		for ( unsigned int betti_index = 0; betti_index < betti_number; ++ betti_index ) {
 			generators [ betti_index ] . second = 0;
 			typename Cell_Complex::Chain & generator_chain = generators [ betti_index ] . first;
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = betti_generators_matrix . column ( betti_index );
-      unsigned long index = 0;
+      size_type index = complex . index_begin ( dimension_index );
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
-           entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
+            entry != generator_vector . end (); ++ entry ) {
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( complex . lookup ( index ), *entry );
+        ++ index;
+      } /* for */
       //std::cout << "Betti Chain: " << generator_chain << "\n";
 		}
     
@@ -253,11 +255,13 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
 			generators [ betti_number + torsion_index ] . second = boundary_matrix ( second_s + torsion_index + 1, second_s + torsion_index + 1);
 			typename Cell_Complex::Chain & generator_chain = generators [ betti_number + torsion_index ] . first;
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = second_Q . column ( second_s + torsion_index );
-			unsigned long index = 0;
+			size_type index = complex . index_begin ( dimension_index );
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
-           entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-      //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
+           entry != generator_vector . end (); ++ entry ) {
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( complex . lookup ( index ), *entry );
+        ++ index;
+      } /* for */
+      //std::cout << "Torsion Chain: (order = " << generator_chain << "\n";
 		}
     
     /* Insert the trivial generators */
@@ -266,11 +270,13 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
 			generators [ betti_number + torsion_number + trivial_index ] . second = 1;
 			typename Cell_Complex::Chain & generator_chain = generators [  betti_number + torsion_number + trivial_index  ] . first;
 			ColumnVector < typename Cell_Complex::Ring, 0> generator_vector = second_Q . column ( trivial_index );
-			unsigned long index = 0;
+			size_type index = complex . index_begin ( dimension_index );
 			for ( typename ColumnVector < typename Cell_Complex::Ring, 0> :: iterator entry = generator_vector . begin (); 
-           entry != generator_vector . end (); ++ entry ) 
-				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( translation_table [ ++index ], *entry );
-      //std::cout << "Torsion Chain: (order = " << generators [ betti_number + torsion_index ] . second  << ") " << generator_chain << "\n";
+           entry != generator_vector . end (); ++ entry )  {
+				generator_chain += std::pair < typename Cell_Complex::const_iterator, typename Cell_Complex::Ring > ( complex . lookup ( index ), *entry );
+        ++ index;
+      }
+      //std::cout << "Trivial Chain: (order = " << generator_chain << "\n";
 		} /* for */
     
 		/* Store second_* into first_* */
@@ -288,14 +294,14 @@ Homology_Generators_DMT ( Cell_Complex & complex ) {
   std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
     return_value;
   /* Perform Successive Morse Reductions to complex */
-  std::cout << "Homology_Generators_DMT: calling reduction_tower \n";
+  //std::cout << "Homology_Generators_DMT: calling reduction_tower \n";
   std::list<Morse_Complex> morse_tower = morse::reduction_tower ( complex ); 
   /* Get the Homology Generators on the deepest level */
-  std::cout << "Homology_Generators_DMT: calling SNF \n";
+  //std::cout << "Homology_Generators_DMT: calling SNF \n";
   std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
     deep_generators = Homology_Generators_SNF ( morse_tower . back (), false );
   /* Lift the Homology Generators to the top level */
-  std::cout << "Homology_Generators_DMT: lifting generators \n";
+  //std::cout << "Homology_Generators_DMT: lifting generators \n";
   return_value . resize ( complex . dimension () + 1 );
   for (unsigned int dimension_index = 0; 
        dimension_index <= complex . dimension ();
@@ -522,7 +528,9 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
 } /* void Map_Homology(...) */
 #endif
 
-#if 0
+
+#include "complexes/Relative_Graph_Complex.h"
+
 /* Given a single toplex, with subsets X, A, Y, B, and a combinatorial map F : X -> Y which restricts
    to F : A -> B, compute the relative homology of F. */
 template < class Toplex, class Combinatorial_Map >
@@ -542,21 +550,30 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
    4. Compute the generators of M_N(Y, B)
    5. Express the cycles in terms of the codomain generators.
   */
-  typedef typename Toplex::Relative_Complex Complex;
-  typedef Relative_Graph_Complex < Toplex > Graph;
+  typedef typename Relative_Graph_Complex < Toplex, Combinatorial_Map >::Relative_Complex Complex;
+  typedef Relative_Graph_Complex < Toplex, Combinatorial_Map > Graph;
   
   /* Produce the graph complex */
+  //std::cout << "RMH: Generating Graph Complex...\n";
   clock_t start, stop;
   start = clock ();
   Graph graph ( toplex, X, A, Y, B, F );
-  stop = clock ();
+  //stop = clock ();
   
-  std::cout << "Graph Complex generated.\n";
-  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  //std::cout << "Graph Complex generated.\n";
+  //std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  
+  //DEBUG
+  /*
+  std::cout << "Inspecting (X, A) complex...\n";
+  utility::inspect_complex ( graph . domain () );
+  std::cout << "Complex inspected.\n";
+  */
   
   // DEBUG
-  start = clock ();
-  std::cout << "Computing Graph Generators...\n";
+  //start = clock ();
+  //std::cout << "Computing Domain Generators, lifting to Graph, and projecting to Codomain.\n";
   
   /* Find the homology generators of the domain */
   std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > 
@@ -566,47 +583,56 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   std::vector < std::vector < std::pair < typename Complex::Chain, unsigned int > > > codomain_cycles ( domain_generators . size () );
   for ( unsigned int dimension_index = 0; dimension_index < domain_generators . size (); ++ dimension_index ) {
     codomain_cycles [ dimension_index ] . resize ( domain_generators [ dimension_index ] . size () );
+    //std::cout << " dimension_index = " << dimension_index << "\n";
     for ( unsigned int generator_index = 0; generator_index < domain_generators [ dimension_index ] . size (); ++ generator_index ) {
       codomain_cycles [ dimension_index ] [ generator_index ] = 
       std::make_pair ( graph . projectToCodomain ( graph . cycleLift ( domain_generators [ dimension_index ] [ generator_index ] . first ) ),
                        domain_generators [ dimension_index ] [ generator_index ] . second );
+      //std::cout << "  generator_index = " << generator_index << "\n";
+      //std::cout << "   Lifting the domain-cycle " << domain_generators [ dimension_index ] [ generator_index ] . first << "\n";
+      
+      //std::cout << "   Projecting the graph-cycle "; 
+      //graph . printChain ( graph . cycleLift ( domain_generators [ dimension_index ] [ generator_index ] . first ) );
+      //std::cout << "\n";
+      //std::cout << "   Storing codomain-cycle " << codomain_cycles [ dimension_index ] [ generator_index ] . first << "\n";
+      
     } /* for */
   } /* for */
 
 
-  stop = clock ();
-  std::cout << "Generators projected to codomain.\n";
-  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  //stop = clock ();
+  //std::cout << "Generators projected to codomain.\n";
+  //std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
   
   /* Get the morse reduction of the codomain */
   std::list<Morse_Complex> codomain_tower = morse::reduction_tower ( graph . codomain () );
   
   //DEBUG
-  start = clock ();
-  std::cout << "Homology generators of morse reduced codomain...\n";
+  //start = clock ();
+  //std::cout << "Homology generators of morse reduced codomain...\n";
   /* Find the homology generators in the morse reduction of the codomain */
   std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
   codomain_generators = Homology_Generators_SNF ( codomain_tower . back (), true );
   
   //DEBUG
-  stop = clock ();
-  for ( unsigned int a = 0; a < codomain_generators . size (); ++ a ) std::cout << 
-    codomain_generators [ a ] . size () << " ";
-  std::cout << "Codomain generators computed.\n";
-  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  //stop = clock ();
+  //for ( unsigned int a = 0; a < codomain_generators . size (); ++ a ) std::cout << 
+  //  codomain_generators [ a ] . size () << " ";
+  //std::cout << "Codomain generators computed.\n";
+  //std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
   
 
   
   /* Project the codomain cycles to the morse-reduced codomain */
   start = clock ();
   std::vector < std::vector < std::pair < typename Morse_Complex::Chain, unsigned int > > > 
-  reduced_cycles ( graph_generators . size () );
+  reduced_cycles ( codomain_cycles . size () );
   for ( unsigned int dimension_index = 0; 
-       dimension_index < graph_generators . size (); 
+       dimension_index < codomain_cycles . size (); 
        ++ dimension_index ) {
-    reduced_cycles [ dimension_index ] . resize ( graph_generators [ dimension_index ] . size () );
+    reduced_cycles [ dimension_index ] . resize ( codomain_cycles [ dimension_index ] . size () );
     for ( unsigned int generator_index = 0; 
-         generator_index < graph_generators [ dimension_index ]. size (); 
+         generator_index < codomain_cycles [ dimension_index ]. size (); 
          ++ generator_index ) {
       reduced_cycles [ dimension_index ] [ generator_index ] . first = 
       morse::psi_tower (codomain_cycles [ dimension_index ] [ generator_index ] . first,
@@ -616,13 +642,13 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
       
     } /* for */
   } /* for */
-  stop = clock ();
-  std::cout << "Generators projected to codomain.\n";
-  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  //stop = clock ();
+  //std::cout << "Generators projected to codomain.\n";
+  //std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
   
   /* Write the reduced cycles in terms of the reduced codomain generators. */
   
-  start = clock ();
+  //start = clock ();
   /* Re-express reduced_cycles in basis given by codomain_generators */
   /* Need to index the cells of the codomain */
   typedef typename Dense<typename Complex::Ring>::Matrix Matrix;
@@ -657,8 +683,8 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   } /* for */
   
   stop = clock ();
-  std::cout << "Algebra complete.\n";
-  std::cout << "Elapsed time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
+  //std::cout << "Algebra complete.\n";
+  std::cout << "Relative Homology time = " << (float) ( stop - start ) / (float) CLOCKS_PER_SEC << "\n";
   
   
   
@@ -666,8 +692,6 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   return /* TODO */;
   
 } /* Relative_Map_Homology */
-
-#endif
 
 /* CONLEY INDEX */
 
@@ -713,6 +737,13 @@ Conley_Index ( Conley_Index_t * output,
     Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
     X . insert ( Image );
     G [ cell ] = Image; // cache these values for G rather than having to compute them later
+    /*
+    std::cout << "G [ " << cell << "] = ";
+    BOOST_FOREACH ( Cell image_cell, Image ) {
+      std::cout << image_cell << " ";
+    }
+    std::cout << "\n";
+     */
   } /* boost_foreach */
   
   /* Construct A */
@@ -721,12 +752,32 @@ Conley_Index ( Conley_Index_t * output,
     A . erase ( cell );
   } /* boost_foreach */ 
   
+  //std::cout << " --- \n";
   /* Restrict G to (X, A) */
   BOOST_FOREACH ( Cell cell, A ) {
     Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
     G [ cell ] = intersect ( A, Image );
+    //std::cout << "G [ " << cell << "] = ";
+    //BOOST_FOREACH ( Cell image_cell, G [ cell ] ) {
+    //  std::cout << image_cell << " ";
+    //}
+    //std::cout << "\n";
   } /* boost_foreach */  
   
+  /* DEBUG CONLEY INDEX */
+  /*
+  std::cout << "Geometry of X\n";
+  BOOST_FOREACH ( Cell cell, X ) {
+    std::cout << cell << " = " << toplex . geometry ( cell ) << "\n";
+  }
+  
+  std::cout << "Geometry of A\n";
+  BOOST_FOREACH ( Cell cell, A ) {
+    std::cout << cell << " = " << toplex . geometry ( cell ) << "\n";
+  }
+
+  */
+  //std::cout << "Conley_Index: calling Relative_Map_Homology.\n";
   Relative_Map_Homology ( toplex, X, A, X, A, G );
   
   return;

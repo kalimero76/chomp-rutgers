@@ -34,30 +34,47 @@ typename Complex::Chain coboundary ( const typename Complex::Chain & input, cons
   return return_value;
 } /* coboundary */
 
-#if 0
-template < class Chain >
-Chain boundary ( const Chain & input ) {
-  Chain return_value ( input . container () );
-  for ( typename Chain::const_iterator term_iterator = input . begin (); term_iterator != input . end (); ++ term_iterator ) {
-    Chain summand = input . container () . boundary ( term_iterator -> first );
-    summand *= term_iterator -> second;
-    return_value += summand;
+#include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
+template < class Matrix >
+Matrix matrix_solve ( Matrix & A, Matrix & B ) {
+  /*
+  std::cout << "A is (" << A . numberOfRows () << ", " << A . numberOfColumns () << ") ; B is (" << 
+  B . numberOfRows () << ", " << B . numberOfColumns () << ") \n";
+  std::cout << " A = " << A << "\n";
+  std::cout << " B = " << B << "\n";
+  */
+  
+  /*
+   Method: From SNF, we have
+    A = Q A' Rinv, where A' is the new value of A.
+    Hence we may solve AX = B via
+    X =  R D Qinv B
+  */
+  Matrix Q, Qinv, R, Rinv;
+  int s, t;
+  capd::matrixAlgorithms::smithForm( A, Q, Qinv, R, Rinv, s, t);
+  int n = A . numberOfRows ();
+  int m = A . numberOfColumns ();
+  int k = B . numberOfColumns ();
+  Matrix D ( m, n );
+  for (int i = 1; i <= n && i <= m; ++ i ) {
+    if ( A (i, i) == 0 ) continue; // avoid division by zero error
+    D (i, i) = 1;
   }
-  return return_value;
-} /* boundary */
+  
+  Matrix Y = D * Qinv * B;
 
-template < class Chain >
-Chain coboundary ( const Chain & input ) {
-  Chain return_value ( input . container () );
-  for ( typename Chain::const_iterator term_iterator = input . begin (); term_iterator != input . end (); ++ term_iterator ) {
-    Chain summand = input . container () . coboundary ( term_iterator -> first );
-    summand *= term_iterator -> second;
-    return_value += summand;
-  }
-  return return_value;
-} /* coboundary */
-
-#endif
+  for (int i = 1; i <= n && i <= m; ++ i ) {
+    if ( A (i, i) == 0 ) continue; // avoid division by zero error
+    for ( int j = 1; j <= k; ++ j ) {
+      Y(i,j)=Y(i,j)/A(i,i);
+    } /* for */
+  } /* for */
+  
+  //std::cout << "(" << R . numberOfRows () << ", " << R . numberOfColumns () << ") * (" << 
+  //Y . numberOfRows () << ", " << Y . numberOfColumns () << ") \n";
+  return R * Y;
+} /* matrix_solve */
 
 template < class Cell_Complex > 
 void verify_complex ( Cell_Complex & complex ) {
@@ -65,8 +82,16 @@ void verify_complex ( Cell_Complex & complex ) {
   std::cout << "Size = " << complex . size () << ", Dimension = " << complex . dimension () << "\n";
   unsigned int count = 0;
   for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
+    typename Cell_Complex::size_type idx = complex . index ( it );
+    if ( it != complex . lookup ( idx ) ) std::cout << "Problem detected: Indexing.\n";
+    typename Cell_Complex::Cell my_cell = * it;
+    if ( it != complex . find ( my_cell ) ) std::cout << "Problem Detected: Not a sane container.\n";
+    std::cout << my_cell << " " << idx << "\n";
+
+  }
+  for ( typename Cell_Complex::const_iterator it = complex . begin (); it != complex . end (); ++ it ) {
     count ++;
-    if ( count % 1000 == 0 ) std::cout << ".";
+   if ( count % 1000 == 0 ) std::cout << ".";
     if ( count % 10000 == 0 ) std::cout << count << "\n";
     typename Cell_Complex::Chain my_boundary = complex . boundary ( it );
     typename Cell_Complex::Chain my_double_boundary = boundary ( my_boundary, complex );
@@ -93,6 +118,8 @@ void verify_complex ( Cell_Complex & complex ) {
         std::cout << " Problem detected: coefficient mismatch, bd of cbd.\n";
     } /* BOOST_FOREACH */
   } /* for */
+
+  
 } /* verify_complex */
 
 template < class Cell_Complex > 
@@ -128,6 +155,7 @@ void verify_decomposition ( Cell_Complex & complex ) {
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *
  * * * * * * * * * * * * * * * * * * * * * * * */
+//#define TEST_PROGRAM
 #ifdef TEST_PROGRAM
 
 #include "algorithms/Homology.h"		/* for function Homology(...)*/

@@ -28,11 +28,9 @@ template < class Cell_Complex > class Subcomplex_const_iterator;
  * * * * * * * * * * * * * */
 
 template < class Cell_Complex >
-class Subcomplex_Chain : public Chain_Archetype < std::map < Subcomplex_const_iterator<Cell_Complex>, Default_Ring > > {
-public:
-  typedef Subcomplex<Cell_Complex> complex_type;
-  Subcomplex_Chain ( const complex_type & container );
-};
+class Subcomplex_Chain : 
+public Chain_Archetype < std::map < Subcomplex_const_iterator < Cell_Complex >, 
+typename Cell_Complex::Ring > > {};
 
 /* * * * * * * * * * *
  * class Subcomplex  *
@@ -45,7 +43,7 @@ public:
 	typedef Subcomplex_Chain<Cell_Complex> Chain;
   typedef Default_Cell Cell;
 	typedef typename Cell_Complex::Ring Ring;
-	typedef unsigned long size_type;
+	typedef typename Cell_Complex::size_type size_type;
 	typedef Cell key_type;
 	typedef Cell value_type;
   typedef Subcomplex_const_iterator<Cell_Complex> const_iterator;
@@ -53,6 +51,8 @@ public:
   /* Basic Container */
   std::pair<iterator, bool> insert ( const value_type & insert_me );
   void erase ( const iterator & erase_me );
+  void erase ( const Cell & erase_me );
+  void clear ( void );
   iterator find ( const key_type & find_me ) const;
   iterator begin ( void ) const;
   iterator end ( void ) const;
@@ -88,7 +88,9 @@ public:
   size_type ace_end ( unsigned int dimension ) const;  
   
   /* Subcomplex */
-  Subcomplex ( const Cell_Complex & super_complex ); 
+  Subcomplex ( void );
+  Subcomplex ( const Cell_Complex * super_complex ); 
+  void construct ( const Cell_Complex * super_complex );
   Chain project ( const typename Cell_Complex::Chain & project_me ) const;
   Chain project ( const Chain & project_me ) const;
   typename Cell_Complex::const_iterator include ( const const_iterator & include_me ) const;
@@ -115,7 +117,7 @@ protected:
   /* Subcomplex */
   size_type bitmap_size_;
   std::vector < bool > bitmap_;
-  const Cell_Complex & super_complex_;
+  const Cell_Complex * super_complex_;
 };
 
 /* * * * * * * * * * * * * * * * * *

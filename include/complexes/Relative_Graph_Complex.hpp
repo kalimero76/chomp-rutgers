@@ -6,10 +6,13 @@
  */
 
 namespace Relative_Graph_Complex_detail {
-void closure_in_subcomplex ( std::set < Relative_Cell > & return_value, const FactorComplex & complex, const std::set < Relative_Cell > & cells_to_close ) {
+template < class Relative_Cell, class Complex >
+void closure_in_subcomplex ( std::set < Relative_Cell > & return_value, 
+                             const Complex & complex, 
+                             const std::set < Relative_Cell > & cells_to_close ) {
 
   /* Introduce the top cells */
-  BOOST_FOREACH ( Relative_Cell & cell, cells_to_close ) {
+  BOOST_FOREACH ( const Relative_Cell & cell, cells_to_close ) {
     return_value . insert ( cell );
   } /* boost_foreach */
 
@@ -18,11 +21,11 @@ void closure_in_subcomplex ( std::set < Relative_Cell > & return_value, const Fa
   /* Now produce the closure */
   while ( not work_set . empty () ) {
     std::set<Relative_Cell> new_work_set;
-    BOOST_FOREACH ( Relative_Cell & cell, work_set ) {
-      FactorComplex::const_iterator it = complex . lookup ( cell . name () );
-      FactorChain boundary_chain = complex . boundary ( it );
-      BOOST_FOREACH ( FactorChainTerm & term, boundary_chain ) {
-        Relative_Cell bd_cell ( complex . index ( term . first ), term . first -> dimension () );
+    BOOST_FOREACH ( const Relative_Cell & cell, work_set ) {
+      typename Complex::const_iterator it = complex . lookup ( cell . data () );
+      typename Complex::Chain boundary_chain = complex . boundary ( it );
+      BOOST_FOREACH ( typename Complex::Chain::value_type & term, boundary_chain ) {
+        Relative_Cell bd_cell ( complex . index ( term . first ), term . first . dimension () );
         new_work_set . insert ( bd_cell );
         return_value . insert ( bd_cell );
       } /* boost_foreach */
@@ -35,78 +38,136 @@ void closure_in_subcomplex ( std::set < Relative_Cell > & return_value, const Fa
   
 } /* namespace Relative_Graph_Complex_detail */
 
+#include "algorithms/basic.h"
 
-template < Combinatorial_Map >
-Relative_Graph_Complex::Relative_Graph_Complex (const Toplex & T, 
+template < class Toplex, class Combinatorial_Map >
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Graph_Complex (const Toplex & T, 
                                                 const typename Toplex::Subset X,
                                                 const typename Toplex::Subset A,
                                                 const typename Toplex::Subset Y,
                                                 const typename Toplex::Subset B,
-                                                const Combinatorial_Map & F ) : toplex_(T) {
+                                                const Combinatorial_Map & F ) : toplex_(T), A_(A), F_(F) {
   using namespace Relative_Graph_Complex_detail;
 
   typedef typename Toplex::Top_Cell Top_Cell;
   typedef typename Toplex::Complex Complex;
 
   /* Generate the full_domain and full_codomain complexes */
-  full_domain_ = toplex_ . complex ( X, X_boxes_ );
-  full_codomain_ = toplex_ . complex ( Y, Y_boxes_ );
-
+  //std::cout << "Generating full_domain_.\n";
+  toplex_ . complex ( full_domain_, X, X_boxes_ );
+  //std::cout << "Generating full_codomain_.\n";
+  toplex_ . complex ( full_codomain_, Y, Y_boxes_ );
+  
   /* Produce inverse of X_boxes */
-  BOOST_FOREACH ( std::pair < Top_Cell, Complex::const_iterator > & term, X_boxes_ ) {
+  typedef const std::pair < Top_Cell, typename Complex::const_iterator > Term;
+  BOOST_FOREACH ( Term & term, X_boxes_ ) {
     X_boxes_inv_ [ term . second ] = term . first;
   } /* boost_foreach */
   
   /* Morse Decompositions (AKQ) are necessary */
   
-  full_domain_ . decompose ();
-  full_codomain_ . decompose ();
+  //std::cout << "Constructing Morse Decompositions of domain and codomain...\n";
+  full_domain_ -> decompose ();
+  full_codomain_ -> decompose ();
+  //std::cout << "Decompositions complete.\n";
+  
+  /* Initialize the subcomplex domain_ and codomain_ */
+  domain_ . construct ( full_domain_ );
+  codomain_ . construct ( full_codomain_ );
   
   /* For each cell in the "full_domain_" we record which top cells are involved in
      the combinatorial map calculation */
   
+  //DEBUG
+  Relative_Complex test_full;
+  test_full . construct ( full_domain_ );
   /* Calculate the domain complex (X, A) */
-  std::set < Relative_Cell > X_cells, A_cells;
-  closure_in_subcomplex ( X_cells, full_domain_, X );
-  closure_in_subcomplex ( A_cells, full_domain_, A );
-  BOOST_FOREACH ( Relative_Cell & cell, X_cells ) {
+  //std::cout << "Calculating Domain complex (X, A)\n";
+  
+  unsigned int X_dimension = full_domain_ -> dimension ();
+  unsigned int Y_dimension = full_codomain_ -> dimension ();
+  std::set < Relative_Cell > X_cells, X_top_cells, A_cells, A_top_cells;
+  BOOST_FOREACH ( const Top_Cell & cell, X ) {
+    X_top_cells . insert ( 
+                          Relative_Cell ( full_domain_ -> index ( X_boxes_ [ cell ] ), 
+                                         X_dimension ) );
+  }
+  BOOST_FOREACH ( const Top_Cell & cell, A ) {
+    A_top_cells . insert ( 
+                          Relative_Cell ( full_domain_ -> index ( X_boxes_ [ cell ] ), 
+                                         X_dimension ) );
+  }  
+  closure_in_subcomplex ( X_cells, *full_domain_, X_top_cells );
+  closure_in_subcomplex ( A_cells, *full_domain_, A_top_cells );
+  BOOST_FOREACH ( const Relative_Cell & cell, X_cells ) {
+    //std::cout << "X cell " << cell . data () << " " << * full_domain_ -> lookup ( cell . data () ) << "\n";
     domain_ . insert ( cell );
+    test_full . insert ( cell );
   } /* boost_foreach */
-  BOOST_FOREACH ( Relative_Cell & cell, A_cells ) {
+  BOOST_FOREACH ( const Relative_Cell & cell, A_cells ) {
+    //std::cout << "A cell " << cell . data () << " " << * full_domain_ -> lookup ( cell . data () ) << "\n";
     domain_ . erase ( cell );
   } /* boost_foreach */
 
   /* Calculate the codomain complex (Y, B) */
-  std::set < Relative_Cell > Y_cells, B_cells;
-  closure_in_subcomplex ( Y_cells, full_codomain_, Y );
-  closure_in_subcomplex ( B_cells, full_codomain_, B );
-  BOOST_FOREACH ( Relative_Cell & cell, Y_cells ) {
+  //std::cout << "Calculating Codomain complex (Y, B)\n";
+  std::set < Relative_Cell > Y_cells, Y_top_cells, B_cells, B_top_cells;
+  BOOST_FOREACH ( const Top_Cell & cell, Y ) {
+    Y_top_cells . insert ( 
+                          Relative_Cell ( full_codomain_ -> index ( Y_boxes_ [ cell ] ), 
+                                         Y_dimension ) );
+  }
+  BOOST_FOREACH ( const Top_Cell & cell, B ) {
+    B_top_cells . insert ( 
+                          Relative_Cell ( full_codomain_ -> index ( Y_boxes_ [ cell ] ), 
+                                         Y_dimension ) );
+  }  
+  closure_in_subcomplex ( Y_cells, *full_codomain_, Y_top_cells );
+  closure_in_subcomplex ( B_cells, *full_codomain_, B_top_cells );
+  BOOST_FOREACH ( const Relative_Cell & cell, Y_cells ) {
     codomain_ . insert ( cell );
   } /* boost_foreach */
-  BOOST_FOREACH ( Relative_Cell & cell, B_cells ) {
+  BOOST_FOREACH ( const Relative_Cell & cell, B_cells ) {
     codomain_ . erase ( cell );
   } /* boost_foreach */
-} /* Relative_Graph_Complex<Toplex>::Relative_Graph_Complex */
 
-Relative_Graph_Complex<Toplex>::~Relative_Graph_Complex ( void ) {
-} /* Relative_Graph_Complex<Toplex>::~Relative_Graph_Complex */
+  /* debug 
+  std::cout << "HERE IS FULL DOMAIN:\n";
+  utility::inspect_complex ( test_full );
+  std::cout << "END LISTING\n";
+  */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Graph_Complex */
 
-Relative_Complex & Relative_Graph_Complex<Toplex>::domain ( void ) {
+template < class Toplex, class Combinatorial_Map >
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::~Relative_Graph_Complex ( void ) {
+  delete full_domain_;
+  delete full_codomain_;
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::~Relative_Graph_Complex */
+
+template < class Toplex, class Combinatorial_Map >
+typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Complex & 
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::domain ( void ) {
   return domain_;
-} /* Relative_Graph_Complex<Toplex>::domain */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::domain */
 
-Relative_Complex & Relative_Graph_Complex<Toplex>::codomain ( void ) {
+template < class Toplex, class Combinatorial_Map >
+typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Complex & 
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::codomain ( void ) {
   return codomain_;
-} /* Relative_Graph_Complex<Toplex>::codomain */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::codomain */
 
-Chain Relative_Graph_Complex<Toplex>::cycleLift ( const Relative_Chain & lift_me ) {
+template < class Toplex, class Combinatorial_Map >
+typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Chain 
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( const Relative_Chain & lift_me ) {
   /* Computes a Chain in the Graph which 
       1) is a cycle
       2) projects to "lift_me"
    */
   
-  typedef FactorChain::value_type FactorChainTerm;
-  typedef Relative_Chain::value_type RelativeChainTerm;
+  //std::cout << "CYCLELIFT! Running cycleLift on chain " << lift_me << "\n";
+  
+  typedef typename FactorChain::value_type FactorChainTerm;
+  typedef typename Relative_Chain::value_type RelativeChainTerm;
   typedef std::vector < std::pair <size_type, Ring > > Index_Chain;
   
   /* Initialize "answer" to a Chain that projects to "lift_me",
@@ -116,18 +177,25 @@ Chain Relative_Graph_Complex<Toplex>::cycleLift ( const Relative_Chain & lift_me
   
   BOOST_FOREACH ( RelativeChainTerm lift_term, lift_me ) {
     Relative_Cell domain_cell = * lift_term . first;
-    Relative_Complex fiber = makeFiber ( domain_cell );
+    Relative_Complex fiber;
+    makeFiber ( fiber, domain_cell );
+    //std::cout << "Inspecting the graph fiber\n";
+    //utility::inspect_complex ( fiber );
     Relative_Chain fiber_chain;
-    Relative_Complex::const_iterator choice_iterator = fiber . begin ();
+    typename Relative_Complex::const_iterator choice_iterator = fiber . begin ();
+    //std::cout << "Dimension of choice_iterator = " << choice_iterator . dimension () << "\n";
     fiber_chain . insert ( RelativeChainTerm ( choice_iterator, lift_term . second ) );
     answer [ domain_cell ] = fiber_chain;
-    FactorChain domain_boundary = full_domain_ . boundary ( full_domain_ . lookup ( domain_cell . name () ) );
-    Relative_Complex::Ring coefficient = term . second * lift_term . second;
+    FactorChain domain_boundary = full_domain_ -> boundary ( full_domain_ -> lookup ( domain_cell . data () ) );
     BOOST_FOREACH ( FactorChainTerm term, domain_boundary ) {
-      Relative_Cell fiber_name ( full_domain_ . index ( term . first ), term . first -> dimension () );
-      answer_boundary [ fiber_name ] . insert ( RelativeChainTerm ( choice_iterator, coefficient ) );
+      Relative_Cell fiber_name ( full_domain_ -> index ( term . first ), term . first . dimension () );
+      answer_boundary [ fiber_name ] . insert ( RelativeChainTerm ( choice_iterator, 
+                                                                    term . second * lift_term . second ) );
     } /* boost_foreach */
   } /* boost_foreach */
+  
+  //std::cout << "   initial chain lift: "; printChain ( answer ); std::cout << "\n";
+  //std::cout << "   boundary of initial chain lift = "; printChain ( answer_boundary ); std::cout << "\n";
   
   /* Main Loop: continually update "answer" and "answer_boundary" so that
        1) "answer_boundary" is always the boundary of "answer"
@@ -135,59 +203,102 @@ Chain Relative_Graph_Complex<Toplex>::cycleLift ( const Relative_Chain & lift_me
        3) the loop terminates when "answer" is a cycle, eqv. "answer_boundary" == 0.
    */
   while ( not answer_boundary . empty () ) {
+    //std::cout << "   passing through loop...\n";
     /* Choose a cell in "answer_boundary" in largest dimensional fiber possible */
-    Relative_Cell domain_cell = * answer_boundary . rbegin () -> first;
-    Relative_Complex fiber = makeFiber ( domain_cell );
+    Relative_Cell domain_cell = answer_boundary . rbegin () -> first;
+    Relative_Complex fiber;
+    makeFiber ( fiber, domain_cell );
+    //std::cout << "    considering fiber indexed by domain_cell = " << domain_cell << "\n";
+    //std::cout << " Here is the " << domain_cell << " fiber: \n";
+    //utility::inspect_complex ( fiber );
+    //std::cout << " Done inspecting\n";
     /* Find the projection of the boundary terms into the fiber. */
-    Relative_Chain fiber_chain = fiber . relative_chain ( answer_boundary . rbegin () -> second );
+    Relative_Chain fiber_chain = fiber . project ( answer_boundary . rbegin () -> second );
+    //std::cout << "    the projection of answer_boundary in this fiber is " << fiber_chain << "\n";
     /* Find the preboundary of "fiber_chain" within "fiber" */
-    Relative_Chain negative_preboundary = -1 * morse::preboundary ( fiber_chain, fiber );
+    Relative_Chain negative_preboundary = morse::preboundary ( fiber_chain, fiber );
+    negative_preboundary *= -1;
+    //std::cout << "   Here is the discovered preboundary: \n";
+    //std::cout << "    " << domain_cell << " X (" << negative_preboundary << ")\n"; 
     /* Update "answer" and "answer_boundary" */
     answer [ domain_cell ] = negative_preboundary;
     answer_boundary . erase ( domain_cell );
-    FactorChain domain_boundary = full_domain_ . boundary ( full_domain_ . lookup ( domain_cell . name () ) );
+    FactorChain domain_boundary = full_domain_ -> boundary ( full_domain_ -> lookup ( domain_cell . data () ) );
     BOOST_FOREACH ( FactorChainTerm term, domain_boundary ) {
-      Relative_Cell fiber_name ( full_domain_ . index ( term . first ), term . first -> dimension () );
-      answer_boundary [ fiber_name ] += term . second * negative_preboundary;
+      Relative_Cell fiber_name ( full_domain_ -> index ( term . first ), term . first . dimension () );
+      Relative_Chain summand = negative_preboundary;
+      summand *= term . second;
+      answer_boundary [ fiber_name ] += summand;
       if ( answer_boundary [ fiber_name ] . empty () ) answer_boundary . erase ( fiber_name );
     } /* boost_foreach */ 
+    //std::cout << "   current chain lift: "; printChain ( answer ); std::cout << "\n";
+    //std::cout << "   boundary of current chain lift = "; printChain ( answer_boundary ); std::cout << "\n";
+    
   } /* while */
     
+  //std::cout << "   returning with answer = "; printChain ( answer ); std::cout << "\n";
+  //std::cout << "   projected answer = "<< projectToDomain ( answer ) << "\n";
+  //std::cout << "   should be same as: " << lift_me << "\n";
   /* Return with the computed cycle "answer" which projects to "lift_me" */
   return answer;
   
-} /* Relative_Graph_Complex<Toplex>::cycleLift */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift */
 
-Relative_Chain Relative_Graph_Complex<Toplex>::projectToDomain ( const Chain & project_me ) {
+template < class Toplex, class Combinatorial_Map >
+typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Chain 
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::projectToDomain ( const Chain & project_me ) {
   Relative_Chain answer;
-  std::cout << "ERROR,  Relative_Graph_Complex<Toplex>::projectToDomain not implemented. n";
+  for ( typename Chain::const_iterator iter = project_me . begin (); iter != project_me . end (); ++ iter ) {
+    if ( not iter -> second . empty () && iter -> second . begin () -> first . dimension () == 0 ) {
+      Ring coefficient = 0;
+      BOOST_FOREACH ( const typename Relative_Chain::value_type & term, iter -> second ) {
+        coefficient += term . second;
+      } /* boost_foreach */
+      answer . insert ( typename Relative_Chain::value_type ( domain () . find ( iter -> first ), coefficient ) );
+    } /* if */
+  } /* for */  
+
   return answer;
-} /* Relative_Graph_Complex<Toplex>::projectToDomain */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::projectToDomain */
 
-Relative_Chain Relative_Graph_Complex<Toplex>::projectToCodomain ( const Chain & project_me ) {
+template < class Toplex, class Combinatorial_Map >
+typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Chain 
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::projectToCodomain ( const Chain & project_me ) {
   Relative_Chain answer;
-  for ( Chain::const_iterator iter = project_me . begin (); iter -> first . dimension () == 0; ++ iter ) {
+  for ( typename Chain::const_iterator iter = project_me . begin (); iter -> first . dimension () == 0; ++ iter ) {
     answer += codomain () . project ( iter -> second );
   } /* for */
   return answer;
-} /* Relative_Graph_Complex<Toplex>::projectToCodomain */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::projectToCodomain */
+
+template < class Toplex, class Combinatorial_Map >
+void Relative_Graph_Complex<Toplex,Combinatorial_Map>::printChain ( const Chain & print_me ) {
+  BOOST_FOREACH ( typename Chain::value_type term, print_me ) {
+    std::cout << " ++ " << term . first << " X (" << term . second << ")\n";
+  } /* boost_foreach */
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::printChain */
 
 /* Private Functions */
 
-Relative_Complex Relative_Graph_Complex<Toplex>::makeFiber ( const Relative_Cell & domain_cell ) {
-  /* Determine the set of top cells in X whose intersection is "domain_cell */
-  Toplex::Subset neighbors;
+template < class Toplex, class Combinatorial_Map >
+void Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber ( Relative_Complex & return_value, 
+                                                                   const Relative_Cell & domain_cell ) {
+  /* Determine the set of top cells in (X, A) whose intersection is "domain_cell */
+  typename Toplex::Subset X_neighbors, A_neighbors;
+  
+  // DEBUG
+  //std::cout << "makeFiber ( " << domain_cell << ") \n";
   
   /* Collect the top-cells which can be reached through coboundary */
   std::set<Relative_Cell> work_set;
   work_set . insert ( domain_cell );
-  while ( work_set . begin () -> dimension () < full_domain_ . dimension () ) {
+  while ( work_set . begin () -> dimension () < full_domain_ -> dimension () ) {
     std::set<Relative_Cell> new_work_set;
-    BOOST_FOREACH ( Relative_Cell & cell, work_set ) {
-      FactorComplex::const_iterator it = full_domain_ . lookup ( cell . name () );
-      FactorChain coboundary_chain = full_domain_ . coboundary ( it );
-      BOOST_FOREACH ( FactorChainTerm & term, coboundary_chain ) {
-        Relative_Cell cbd_cell ( full_domain_ . index ( term . first ), term . first -> dimension () );
+    BOOST_FOREACH ( const Relative_Cell & cell, work_set ) {
+      typename FactorComplex::const_iterator it = full_domain_ -> lookup ( cell . data () );
+      FactorChain coboundary_chain = full_domain_ -> coboundary ( it );
+      BOOST_FOREACH ( typename FactorChain::value_type & term, coboundary_chain ) {
+        Relative_Cell cbd_cell ( full_domain_ -> index ( term . first ), term . first . dimension () );
         new_work_set . insert ( cbd_cell );
       } /* boost_foreach */
     } /* boost_foreach */
@@ -196,36 +307,113 @@ Relative_Complex Relative_Graph_Complex<Toplex>::makeFiber ( const Relative_Cell
   } /* while */
   
   /* Produce the Top cells which are neighbors of domain_cell */
-  BOOST_FOREACH ( Relative_Cell & cell, work_set ) {
-    FactorComplex::const_iterator it = full_domain_ . lookup ( cell . name () );
-    neighbors . insert ( X_Boxes_inv_ [ it ] );
+  BOOST_FOREACH ( const Relative_Cell & cell, work_set ) {
+    typename FactorComplex::const_iterator it = full_domain_ -> lookup ( cell . data () );
+    typename Toplex::Top_Cell top_cell = X_boxes_inv_ [ it ];
+    X_neighbors . insert ( top_cell );
+    if ( A_ . find ( top_cell ) != A_ . end () ) {
+      A_neighbors . insert ( top_cell );
+    } /* if */
   } /* boost_foreach */
   
+  //DEBUG
+  /*
+  std::cout << "X_neighbors = ";
+  BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, X_neighbors ) {
+    std::cout << neighbor << " ";
+  }
+  std::cout << "\n";
+
+  std::cout << "A_neighbors = ";
+  BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, A_neighbors ) {
+    std::cout << neighbor << " ";
+  }
+  std::cout << "\n";
+  */
   /* Produce the union of the images of the "neighbors" */
-  Toplex::Subset image;
-  BOOST_FOREACH ( Toplex::Top_Cell neighbor, neighbors ) {
-    image . insert ( F ( neighbor ) );
+  typename Toplex::Subset X_image, A_image;
+  BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, X_neighbors ) {
+    X_image . insert ( F_ . find ( neighbor ) -> second );
+  } /* boost_foreach */
+  BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, A_neighbors ) {
+    A_image . insert ( F_ . find ( neighbor ) -> second );
+  } /* boost_foreach */  
+  
+  //DEBUG
+  /*
+  std::cout << "A_ = ";
+  BOOST_FOREACH ( typename Toplex::Top_Cell cell, A_ ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  std::cout << "X_image = ";
+  BOOST_FOREACH ( typename Toplex::Top_Cell cell, X_image ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  std::cout << "A_image = ";
+  BOOST_FOREACH ( typename Toplex::Top_Cell cell, A_image ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+   */
+  /* Determine from image the largest cells in subcomplex */  
+  std::set<Relative_Cell> X_work_set, A_work_set;
+
+  BOOST_FOREACH ( typename Toplex::Top_Cell image_box, X_image ) {
+    typename FactorComplex::const_iterator it = Y_boxes_ [ image_box ];
+    Relative_Cell cell ( full_codomain_ -> index ( it ), it . dimension () );
+    //std::cout << "Creating relative cell (" << cell << "\n";
+    X_work_set . insert ( cell );
+  } /* boost_foreach */
+
+  BOOST_FOREACH ( typename Toplex::Top_Cell image_box, A_image ) {
+    typename FactorComplex::const_iterator it = Y_boxes_ [ image_box ];
+    Relative_Cell cell ( full_codomain_ -> index ( it ), it . dimension () );
+    A_work_set . insert ( cell );
   } /* boost_foreach */
   
-  /* Determine from image the largest cells in subcomplex */
-  Relative_Complex return_value;
-  
-  std::set<Relative_Cell> work_set;
-  BOOST_FOREACH ( Toplex::Top_Cell image_box, image ) {
-    FactorComplex::const_iterator it = Y_Boxes_ [ image_box ];
-    Relative_Cell cell ( full_domain_ . index ( it ), it . dimension () );
-    work_set . insert ( cell );
-  } /* boost_foreach */
+  /*
+  std::cout << "\n";
+  std::cout << "X_work_set = ";
+  BOOST_FOREACH ( Relative_Cell cell, X_work_set ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  std::cout << "A_work_set = ";
+  BOOST_FOREACH ( Relative_Cell cell, A_work_set ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  */
   
   /* Determine the Closure */
-  std::set<Relative_Cell> closure_set;
-  Relative_Graph_Complex_detail::closure_in_subcomplex ( closure_set, full_domain_, work_set );
+  std::set<Relative_Cell> X_closure_set, A_closure_set;
+  Relative_Graph_Complex_detail::closure_in_subcomplex ( X_closure_set, *full_codomain_, X_work_set );
+  Relative_Graph_Complex_detail::closure_in_subcomplex ( A_closure_set, *full_codomain_, A_work_set );
+
+  /*
+  std::cout << "X_closure_set = ";
+  BOOST_FOREACH ( Relative_Cell cell, X_closure_set ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  std::cout << "A_closure_set = ";
+  BOOST_FOREACH ( Relative_Cell cell, A_closure_set ) {
+    std::cout << cell << " ";
+  }
+  std::cout << "\n";
+  */
   
+  return_value . construct ( full_codomain_ );
   /* Assemble the subcomplex */
-  BOOST_FOREACH ( Relative_Cell & cell, closure_set ) {
+  BOOST_FOREACH ( const Relative_Cell & cell, X_closure_set ) {
     return_value . insert ( cell );
   } /* boost_foreach */
+
+  BOOST_FOREACH ( const Relative_Cell & cell, A_closure_set ) {
+    return_value . erase ( cell );
+  } /* boost_foreach */
   
-  /* Return the appropriate subcomplex */
-  return return_value;
-} /* Relative_Graph_Complex<Toplex>::makeFiber */
+  return_value . index ();
+} /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber */

@@ -3,16 +3,6 @@
  * Shaun Harker 3/31/10
  */
 
-
-/* * * * * * * * * * * * * * * * *
- * Subcomplex_Chain definitions  *
- * * * * * * * * * * * * * * * * */
-
-template < class Cell_Complex >
-Subcomplex_Chain<Cell_Complex>::Subcomplex_Chain ( const complex_type & container ) 
-: Chain_Archetype < std::map < Subcomplex_const_iterator<Cell_Complex>, Default_Ring > > ( container ) {
-}
-
 /* * * * * * * * * * * * * *
  * Subcomplex definitions  *
  * * * * * * * * * * * * * */
@@ -59,6 +49,19 @@ void Subcomplex<Cell_Complex>::erase ( const iterator & erase_me ) {
 } /* Subcomplex<>::erase */
 
 template < class Cell_Complex > 
+void Subcomplex<Cell_Complex>::erase ( const Cell & erase_me ) {
+  const_iterator it = find ( erase_me );
+  if ( it == end () ) return;
+  erase ( it );
+} /* Subcomplex<>::erase */
+
+template < class Cell_Complex > 
+void Subcomplex<Cell_Complex>::clear ( void ) {
+  for ( unsigned int i = 0; i < bitmap_size_; ++ i )
+    bitmap_ [ i ] = false;
+} /* Subcomplex<>::clear */
+
+template < class Cell_Complex > 
 typename Subcomplex<Cell_Complex>::iterator Subcomplex<Cell_Complex>::find ( const key_type & find_me ) const {
   if ( bitmap_ [ find_me . data () ] == false ) return end_;
   return typename Subcomplex<Cell_Complex>::iterator ( this, find_me . data (), find_me . dimension () );
@@ -99,13 +102,13 @@ typename Subcomplex<Cell_Complex>::size_type Subcomplex<Cell_Complex>::size ( un
 
 template < class Cell_Complex > 
 typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::boundary ( const const_iterator & input ) const {
-  typename Cell_Complex::Chain super_boundary = super_complex_ . boundary ( super_complex_ . lookup ( input . data_ ) );
+  typename Cell_Complex::Chain super_boundary = super_complex_ -> boundary ( super_complex_ -> lookup ( input . data_ ) );
   return project ( super_boundary );
 } /* Subcomplex<>::boundary */
 
 template < class Cell_Complex > 
 typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::coboundary ( const const_iterator & input ) const {
-  typename Cell_Complex::Chain super_coboundary = super_complex_ . coboundary ( super_complex_ . lookup ( input . data_ ) );
+  typename Cell_Complex::Chain super_coboundary = super_complex_ -> coboundary ( super_complex_ -> lookup ( input . data_ ) );
   return project ( super_coboundary );
 } /* Subcomplex<>::coboundary */
 
@@ -296,9 +299,42 @@ ace_end ( unsigned int dimension ) const {
 
 template < class Cell_Complex > 
 Subcomplex<Cell_Complex>::
+Subcomplex ( void ) {
+} /* Subcomplex<>::Subcomplex */
+
+template < class Cell_Complex > 
+Subcomplex<Cell_Complex>::
+Subcomplex ( const Cell_Complex * super_complex ) : super_complex_(super_complex) {
+  dimension_ = super_complex -> dimension ();
+  bitmap_size_ = super_complex_ -> size ();
+  end_ = const_iterator ( this, bitmap_size_ , dimension_ );
+  begin_ . resize ( dimension_ + 2, end_ );
+  size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
+  bitmap_ . resize ( bitmap_size_, false );
+} /* Subcomplex<>::Subcomplex */
+
+template < class Cell_Complex > 
+void Subcomplex<Cell_Complex>::
+construct ( const Cell_Complex * super_complex ) {
+  super_complex_ = super_complex;
+  dimension_ = super_complex -> dimension ();
+  bitmap_size_ = super_complex_ -> size ();
+  end_ = const_iterator ( this, bitmap_size_ , dimension_ );
+  begin_ . resize ( dimension_ + 2, end_ );
+  size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
+  bitmap_ . resize ( bitmap_size_, false );
+} /* Subcomplex<>::Subcomplex */
+
+#if 0
+// OLD constructor, used to make full subcomplex rather than empty one
+// and also used const ref instead of pointer
+template < class Cell_Complex > 
+Subcomplex<Cell_Complex>::
 Subcomplex ( const Cell_Complex & super_complex ) : super_complex_(super_complex) {
   dimension_ = super_complex . dimension ();
-  bitmap_size_ = super_complex_ . size ();
+  bitmap_size_ = super_complex_ -> size ();
   end_ = const_iterator ( this, bitmap_size_ , dimension_ );
   begin_ . resize ( dimension_ + 2, end_ );
   size_ . resize ( dimension_ + 1, 0 );
@@ -307,18 +343,18 @@ Subcomplex ( const Cell_Complex & super_complex ) : super_complex_(super_complex
   /* Load in begin_, size_, total_size_ data. */
   for ( unsigned int dimension_index = 0; dimension_index <= dimension_; ++ dimension_index ) {
     begin_ [ dimension_index ] = Subcomplex_const_iterator < Cell_Complex > 
-      ( this, super_complex_ . index ( super_complex_ . begin ( dimension_index ) ),
-       super_complex_ . begin ( dimension_index ) . dimension () );
-    total_size_ += size_ [ dimension_index ] = super_complex_ . size ( dimension_index );
+      ( this, super_complex_ -> index ( super_complex_ -> begin ( dimension_index ) ),
+       super_complex_ -> begin ( dimension_index ) . dimension () );
+    total_size_ += size_ [ dimension_index ] = super_complex_ -> size ( dimension_index );
   }
 } /* Subcomplex<>::Subcomplex */
-
+#endif
 template < class Cell_Complex > 
 typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( const typename Cell_Complex::Chain & project_me ) const {
-  Chain return_value ( *this );
+  Chain return_value;
   //unsigned int dimension = project_me . dimension (); TODO make this work instead of calling dimension on all the terms
   for ( typename Cell_Complex::Chain::const_iterator chain_term = project_me . begin (); chain_term != project_me . end (); ++ chain_term ) {
-    unsigned long indx = super_complex_ . index ( chain_term -> first );
+    unsigned long indx = super_complex_ -> index ( chain_term -> first );
     if ( bitmap_ [ indx ] ) return_value += 
       typename Chain::Chain_Term ( Subcomplex_const_iterator<Cell_Complex> ( this, indx, 
                                                                chain_term -> first . dimension () ), 
@@ -329,10 +365,10 @@ typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( con
 
 template < class Cell_Complex > 
 typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( const Chain & project_me ) const {
-  Chain return_value ( *this );
+  Chain return_value;
   //unsigned int dimension = project_me . dimension (); TODO make this work instead of calling dimension on all the terms
   for ( typename Chain::const_iterator chain_term = project_me . begin (); chain_term != project_me . end (); ++ chain_term ) {
-    unsigned long indx = * chain_term -> first;
+    unsigned long indx = chain_term -> first . data ();
     if ( bitmap_ [ indx ] ) return_value += 
       typename Chain::Chain_Term ( Subcomplex_const_iterator<Cell_Complex> ( this, indx, 
                                                                             chain_term -> first . dimension () ), 
@@ -343,15 +379,15 @@ typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( con
 
 template < class Cell_Complex > 
 typename Cell_Complex::const_iterator Subcomplex<Cell_Complex>::include ( const const_iterator & include_me ) const {
-  return super_complex_ . lookup ( include_me . data_ );
+  return super_complex_ -> lookup ( include_me . data_ );
 } /* Subcomplex<>::include */
 
 template < class Cell_Complex > 
 typename Cell_Complex::Chain Subcomplex<Cell_Complex>::include ( const Chain & include_me ) const {
-  typename Cell_Complex::Chain return_value ( *this );
+  typename Cell_Complex::Chain return_value;
   for ( typename Chain::const_iterator chain_term = include_me . begin (); chain_term != include_me . end (); ++ chain_term )
     return_value += typename Cell_Complex::Chain::Chain_Term 
-      ( super_complex_ . lookup ( chain_term -> first . data_ ), chain_term -> second );
+      ( super_complex_ -> lookup ( chain_term -> first . data_ ), chain_term -> second );
   return return_value;
 } /* Subcomplex<>::include */
 

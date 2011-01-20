@@ -20,42 +20,18 @@ template < class Complex >
 typename Complex::Chain 
 coboundary ( const typename Complex::Chain & input, const Complex & complex );
 
-template < class Chain >
-Chain boundary ( const Chain & input );
+/* Solve AX = B. warning -- writes over A */
+template < class Matrix >
+Matrix matrix_solve ( Matrix & A, Matrix & B );
 
-template < class Chain >
-Chain coboundary ( const Chain & input );
-
-/* still toying with this 
-
-template < class Chain >
-Chain operator + ( const Chain & left_hand_side, const Chain & right_hand_side );
-
-template < class Chain >
-Chain operator - ( const Chain & left_hand_side, const Chain & right_hand_side );
-
-template < class Chain >
-Chain & operator += ( Chain & left_hand_side, const Chain & right_hand_side );
-
-template < class Chain >
-Chain & operator -= ( Chain & left_hand_side, const Chain & right_hand_side );
-
-template < class Chain >
-Chain & operator += ( Chain & left_hand_side, const typename Chain::value_type & right_hand_side );
-
-template < class Chain >
-Chain & operator -= ( Chain & left_hand_side, const typename Chain::value_type & right_hand_side );
-
-template < class Chain >
-Chain & operator *= ( Chain & left_hand_side, const typename Chain::mapped_type & right_hand_side );
-*/
-
+/* Functions to verify complex property and morse decompositions */
 template < class Cell_Complex > void verify_complex ( Cell_Complex & my_complex );
 template < class Cell_Complex > void verify_decomposition ( Cell_Complex & my_complex );
 
 /* * * * * * * * * * * * * * * * * * * * * * * *
  * TEST UTILITIES -- Common testing functions  *
  * * * * * * * * * * * * * * * * * * * * * * * */
+//#define TEST_PROGRAM
 #ifdef TEST_PROGRAM
 namespace utility {
   

@@ -27,6 +27,9 @@ namespace morse {
   template < class Cell_Complex > std::vector < typename Cell_Complex::size_type > 
   decompose ( Cell_Complex & cell_complex );
 
+  template < class Cell_Complex > typename Cell_Complex::Chain 
+  preboundary ( typename Cell_Complex::Chain & boundary_chain, const Cell_Complex & cell_complex ); 
+  
 #if 0
   /* Canonicalizes chains. alpha = id + boundary o gamma */
   template < class Cell_Complex > typename Cell_Complex::Chain 
