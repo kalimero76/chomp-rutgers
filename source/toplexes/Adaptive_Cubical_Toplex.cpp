@@ -40,21 +40,14 @@ namespace Adaptive_Cubical {
   Geometric_Description::Geometric_Description ( unsigned int size, const std::vector<Real> & lower_values, const std::vector<Real> & upper_values )
   : lower_bounds ( lower_values ), upper_bounds ( upper_values ) {
   } /* Adaptive_Cubical::Geometric_Description::Geometric_Description */
-
-  bool Geometric_Description::intersects ( const Geometric_Description & other, const Real tol ) const {
-    for ( unsigned int dimension_index = 0; dimension_index < lower_bounds . size (); ++ dimension_index ) {
-      if ( upper_bounds [ dimension_index ] + tol < other . lower_bounds [ dimension_index ] ||
-          other . upper_bounds [ dimension_index ] + tol < lower_bounds [ dimension_index ] ) {
-        return false;
-      } /* if */
-    } /* for */
-    return true;
-  } /* Adaptive_Cubical::Geometric_Description::intersects */
+  
+// really bad temporary solution
+#define TOL 1e-8 
   
   bool Geometric_Description::intersects ( const Geometric_Description & other ) const {
     for ( unsigned int dimension_index = 0; dimension_index < lower_bounds . size (); ++ dimension_index ) {
-      if ( upper_bounds [ dimension_index ] < other . lower_bounds [ dimension_index ] ||
-          other . upper_bounds [ dimension_index ] < lower_bounds [ dimension_index ] ) {
+      if ( upper_bounds [ dimension_index ] + TOL < other . lower_bounds [ dimension_index ] ||
+          other . upper_bounds [ dimension_index ] + TOL < lower_bounds [ dimension_index ] ) {
         return false;
       } /* if */
     } /* for */
@@ -222,7 +215,7 @@ namespace Adaptive_Cubical {
       const_iterator work_iterator = work_deque . front ();
       work_deque . pop_front ();
       /* Does the geometry of *work_iterator intersect the geometric_region? */
-      if ( geometric_region . intersects ( geometry ( work_iterator ), tolerance ) ) {
+      if ( geometric_region . intersects ( geometry ( work_iterator ) ) ) {
         /* Is it a leaf? */
         bool leaf = true;
         if ( work_iterator . node_ -> left_ != NULL ) {
@@ -266,9 +259,6 @@ namespace Adaptive_Cubical {
       } /* if-else */
       return_value . lower_bounds [ division_dimension ] /= Real ( 2 );
       return_value . upper_bounds [ division_dimension ] /= Real ( 2 );
-      // update tolerance
-      tolerance = std::min ( tolerance, ( return_value . upper_bounds [ division_dimension ] 
-                                         - return_value . lower_bounds [ division_dimension ] ) / (Real) 64.0 );
       node_ptr = parent;
     } /* while */
     for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
@@ -277,6 +267,11 @@ namespace Adaptive_Cubical {
       ( Real ( 1 ) - return_value . lower_bounds [ dimension_index ] ) * bounds_ . lower_bounds [ dimension_index ];
       return_value . upper_bounds [ dimension_index ] = return_value . upper_bounds [ dimension_index ] * bounds_ . lower_bounds [ dimension_index ] +
       ( Real ( 1 ) - return_value . upper_bounds [ dimension_index ] ) * bounds_ . upper_bounds [ dimension_index ];
+      //DEBUG
+      if ( return_value . lower_bounds [ dimension_index ] > return_value . lower_bounds [ dimension_index ] ) {
+        std::cout << "Toplex::geometry ERROR: constructed invalid region.\n";
+        exit(1);
+      }
     } /* for */
     //std::cout << "returning.\n";
     return return_value;
@@ -604,11 +599,6 @@ namespace Adaptive_Cubical {
     size_ = 1;
     begin_ = const_iterator ( root_ );
     find_ . push_back ( begin_ );
-    Real tolerance = 1.0;
-    for ( int dim = 0; dim < (int) dimension_; ++ dim ) {
-      tolerance = std::min ( tolerance, (outer_bounds_of_toplex . upper_bounds [ dim ] 
-                                         - outer_bounds_of_toplex . lower_bounds [ dim ] ) / (Real) 64.0 );  
-    }
   } /* Adaptive_Cubical::Toplex::initialize */
 
   Geometric_Description Toplex::bounds ( void ) const {
@@ -622,7 +612,6 @@ namespace Adaptive_Cubical {
     tree_size_ = 0;
     root_ = NULL;
     dimension_ = 0;
-    tolerance = Real ( 1.0 );
   } /* Adaptive_Cubical::Toplex::Toplex */
 
 
