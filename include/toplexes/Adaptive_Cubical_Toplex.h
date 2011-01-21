@@ -109,9 +109,11 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_Subset *
    * * * * * * * * * * * * * * * * * * * * */
-  class Toplex_Subset : public std::unordered_set < Adaptive_Cubical::Top_Cell > {
+  //TODO: improve this container. (switched to set in order to consistently compare
+  //        computations among machines
+  class Toplex_Subset : public std::set < Adaptive_Cubical::Top_Cell > {
   public:
-    using std::unordered_set < Adaptive_Cubical::Top_Cell >::insert;
+    using std::set < Adaptive_Cubical::Top_Cell >::insert;
     void insert ( const Toplex_Subset & insert_me );
   };
   
