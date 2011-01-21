@@ -43,8 +43,8 @@ namespace Adaptive_Cubical {
 
   bool Geometric_Description::intersects ( const Geometric_Description & other, const Real tol ) const {
     for ( unsigned int dimension_index = 0; dimension_index < lower_bounds . size (); ++ dimension_index ) {
-      if ( upper_bounds [ dimension_index ] < tol + other . lower_bounds [ dimension_index ] ||
-          other . upper_bounds [ dimension_index ] < tol + lower_bounds [ dimension_index ] ) {
+      if ( upper_bounds [ dimension_index ] + tol < other . lower_bounds [ dimension_index ] ||
+          other . upper_bounds [ dimension_index ] + tol < lower_bounds [ dimension_index ] ) {
         return false;
       } /* if */
     } /* for */
@@ -268,7 +268,7 @@ namespace Adaptive_Cubical {
       return_value . upper_bounds [ division_dimension ] /= Real ( 2 );
       // update tolerance
       tolerance = std::min ( tolerance, ( return_value . upper_bounds [ division_dimension ] 
-                                         - return_value . lower_bounds [ division_dimension ] ) / (Real) 2.0 );
+                                         - return_value . lower_bounds [ division_dimension ] ) / (Real) 64.0 );
       node_ptr = parent;
     } /* while */
     for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
@@ -607,7 +607,7 @@ namespace Adaptive_Cubical {
     Real tolerance = 1.0;
     for ( int dim = 0; dim < (int) dimension_; ++ dim ) {
       tolerance = std::min ( tolerance, (outer_bounds_of_toplex . upper_bounds [ dim ] 
-                                         - outer_bounds_of_toplex . lower_bounds [ dim ] ) / (Real) 2.0 );  
+                                         - outer_bounds_of_toplex . lower_bounds [ dim ] ) / (Real) 64.0 );  
     }
   } /* Adaptive_Cubical::Toplex::initialize */
 
