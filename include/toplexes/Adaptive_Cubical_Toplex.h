@@ -220,9 +220,6 @@ namespace Adaptive_Cubical {
   
 } /* namespace Adaptive_Cubical */
 
-bool Check_if_Intersect (const Adaptive_Cubical::Geometric_Description & A, 
-                         const Adaptive_Cubical::Geometric_Description & B );
-
 bool Check_if_Intersect (const Adaptive_Cubical::Toplex & A, 
                          const Adaptive_Cubical::Toplex::Subset & AS, 
                          const Adaptive_Cubical::Toplex & B, 
