@@ -12,11 +12,9 @@
 #define CHOMP_ADAPTIVE_CUBICAL_TOPLEX_
 
 #include <vector>
+#include <set>
 #include <map>
 #include <iterator>
-#include "boost/foreach.hpp"
-#include <boost/serialization/serialization.hpp>
-#include <boost/serialization/split_member.hpp>
 
 #define GCC_VERSION (__GNUC__ * 10000 \
 + __GNUC_MINOR__ * 100 \
@@ -33,6 +31,10 @@ namespace std { using namespace __gnu_cxx; }
 #endif
 
 #include "complexes/Adaptive_Complex.h"
+
+#include "boost/foreach.hpp"
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/split_member.hpp>
 
 template < class Set >
 Set intersect ( const Set & A, const Set & B );

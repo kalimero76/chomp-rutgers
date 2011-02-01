@@ -526,6 +526,7 @@ namespace Cubical_detail {
       types_ [ type_index ] = piece;     
       types_inv_ [ piece ] = type_index; 
       type_dims_ [ type_index ] = dim;   // monotone
+      //std::cout << "piece = " << piece << " type index = " << type_index << " and dim = " << dim << "\n";
       ++ piece;
     } /* for */
   } /* Cubical_detail::initialize_types */
@@ -567,19 +568,23 @@ void Cubical_Complex::finalize ( void ) {
     ++ begin_ [ 0 ];
   } /* if */
   for ( const_iterator lookup = begin (); lookup != end (); ++ lookup ) { 
+
     while ( dimension < lookup . dimension () ) {
       ++ dimension;
       size_ [ dimension ] = 0;
       begin_ [ dimension ] = lookup;
     }
+
     ++ size_ [ dimension ];
     ++ total_size_;
   } /* for */
+
   while ( dimension < dimension_ ) {
     ++ dimension;
     size_ [ dimension ] = 0;
     begin_ [ dimension ] = end_;
   } /* while */
+
 } /* Cubical_Complex::finalize */
 
 void Cubical_Complex::Remove_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {
@@ -1010,6 +1015,138 @@ void Cubical_Complex::coreductions ( void ) {
   delete king_queue;
   closed_complex_ = false; // typically
 } /* Cubical_Complex::coreductions */
+
+
+// EXTENSIONS
+
+// Periodic Boundary Conditions
+
+
+void Cubical_Complex::periodic_Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes ) {
+	dimension_ = user_dimension_sizes . size ();
+  mask_ = ( 1 << dimension_ ) - 1;
+	dimension_sizes_ . resize ( dimension_, 0 );
+	jump_values_ . resize ( dimension_, 0 );
+  size_ . resize ( dimension_ + 1, 0 );
+  total_size_ = 0;
+  closed_complex_ = true;
+  boundary_count_available_ = false;
+	unsigned long number_of_full_cubes = 1;
+	for ( unsigned long index = 0; index < dimension_; ++ index ) { 
+		dimension_sizes_ [ index ] = ( user_dimension_sizes [ index ] );
+		jump_values_ [ index ] = number_of_full_cubes;
+		number_of_full_cubes *= ( user_dimension_sizes [ index ] ); 
+  } /* for */
+	bitmap_ . clear ();
+  bitmap_ . resize ( number_of_full_cubes << dimension_, false );
+  bitmap_size_ = bitmap_ . size ();
+  end_ = const_iterator ( this, bitmap_size_, 0 );
+  begin_ . resize ( dimension_ + 2, end_);
+  Cubical_detail::initialize_types ( dimension_, types_, types_inv_, type_dims_ );
+  //std::cout << "Allocate_Bitmap finished\n";
+} /* Cubical_Complex::Allocate_Bitmap */
+
+void Cubical_Complex::periodic_Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates, bool update ) {
+	std::vector<unsigned int> neighbor_coordinates( dimension_, 0);
+	/* Calculate the number of the read cube */
+  long full_cube_number = 0;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+		full_cube_number += jump_values_ [dimension_index] * ( (long) cube_coordinates [dimension_index] );
+  }
+  /* Insert the pieces from all neighboring cubes */
+	for ( int neighbor_index = 0; neighbor_index < ( 1 << dimension_ ); ++ neighbor_index ) {
+		neighbor_coordinates = cube_coordinates;
+		int temp = neighbor_index;
+		long offset = 0;
+    bool flag = false;
+		for ( unsigned int dimension_index = 0;  dimension_index < dimension_ ; ++ dimension_index ) {
+			if ( temp % 2 == 0 ) {
+				neighbor_coordinates [ dimension_index ] ++;
+				offset += jump_values_ [ dimension_index ]; 
+      } /* if */
+			temp = temp >> 1; 
+			if ( neighbor_coordinates [ dimension_index ] == dimension_sizes_ [ dimension_index ] ) {
+        neighbor_coordinates [ dimension_index ] = 0; //wrap-around
+        offset -= jump_values_ [ dimension_index ] * dimension_sizes_ [ dimension_index ]; 
+      }
+    } /* for */
+		if ( flag ) continue;
+    
+		/* this is inefficient */
+		for( int piece_index = 0; piece_index < 1 << dimension_; piece_index ++ ) 
+			if ( ( piece_index & ~neighbor_index ) == 0)  /* clever bitwise test */  {
+        /* Figure out the dimension of the cell */
+        unsigned int cell_dimension = 0;
+        for ( unsigned int bit_index = 0; bit_index < dimension_; ++ bit_index ) {
+          if ( piece_index & ( 1 << bit_index ) ) ++ cell_dimension; 
+        } /* for */
+        /* insert the cell */
+        if ( update ) {
+          insert ( Cell ( ( ( full_cube_number + offset ) << dimension_ ) + piece_index , cell_dimension ) ); 
+        } else {
+          bitmap_ [ ( ( full_cube_number + offset ) << dimension_ ) + piece_index ] = true;
+        }
+      } /* if */
+  } /* for */
+  //std::cout << " . \n";
+	return; 
+} /* Cubical_Complex::Add_Full_Cube */
+
+
+Cubical_Complex::Chain Cubical_Complex::periodic_boundary ( const const_iterator & lookup ) const {
+  Chain output ( *this );
+	/* Because the name of an elementary chain in a cubical complex is its address, we already know where it is. */
+	/* The task is to determine each of its neighbors, their 'sign', and construct the boundary chain.			 */
+  
+	if ( lookup . dimension_ == 0 ) return output; /* Boundary of a 0-dimensional object is trivial */
+	const unsigned int boundary_dimension = lookup . dimension_ - 1;
+	
+	/* Consider the bit-representation of piece_number. For three-dimensional space, it is three bits
+	 *    101, perhaps. This corresponds to a square piece. Its boundaries come in 2 varieties:
+	 *	  with piece_number 001 and with piece_number 100. In general the set of piece numbers can be arrived at
+	 *    by considering the 'single bit demotions'. 1101 has single bit demotions of 1100, 1001, and 0101, for example.
+	 * Corresponding to each single bit demotion are two boundary pieces. One has the same full_cube_number as the original
+	 *    and gets a sign of -1. The other has a full_cube_number that is offset by the "jump_values" corresponding to the bit position.
+	 * Of course we have to check these 'alleged' boundary pieces to see if they actually exist first!
+	 * Now we are in a position to give the algorithm: 
+	 */
+  
+	long work_bit = 1;
+	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
+	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
+	bool sign = false;
+	long address = lookup . address_;
+  long number = address >> dimension_;
+	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
+    // coordinate book-keeping
+    unsigned int coordinate = number % dimension_sizes_ [ dimension_index ];
+    number = number / dimension_sizes_ [ dimension_index ];
+    /* Can we demote this bit? If not, "continue". */
+		if ( not ( address & work_bit) ) continue;
+		sign = not sign;
+		/* Alter address to refer to a boundary in the current full cube */
+		address = address ^ work_bit;
+		/* Insert the piece in the current full cube */
+		if ( bitmap_ [ address ] )
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, address,  boundary_dimension ), sign ? positive : negative ) );
+		/* Obtain the coordinates of the current cube */
+      
+
+    long offset_address;
+    if ( coordinate != dimension_sizes_ [ dimension_index ] - 1 ) {
+      offset_address = address + ( jump_values_ [ dimension_index ] << dimension_ );
+    } else {
+      offset_address = address - (dimension_sizes_ [ dimension_index ] - 1) * ( jump_values_ [ dimension_index ] << dimension_ );
+    }
+    /* Insert the piece in the appropriate neighboring full cube */
+		if ( bitmap_ [ offset_address ] )
+			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, offset_address,  boundary_dimension ), sign ? negative : positive ) ); 
+    /* Recover original address */
+    address = address ^ work_bit; 
+  } /* for */
+  return output;  
+} /* Cubical_Complex::periodic_boundary */
+
 
 #ifndef CHOMP_HEADER_ONLY_
 /* Template Instances */

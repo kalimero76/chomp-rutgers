@@ -154,9 +154,14 @@ public:
   
   const std::vector<unsigned int> & dimension_sizes ( void ) const; 
 
+  // extensions
   void preprocess ( void );
   void coreductions ( void );
   void reductions ( void );
+
+  void periodic_Allocate_Bitmap ( const std::vector<unsigned int> & user_dimension_sizes );
+  void periodic_Add_Full_Cube ( const std::vector<unsigned int> & cube_coordinates, bool update );
+  Chain periodic_boundary ( const const_iterator & lookup ) const;
 
 private:  
 	friend class Cubical_const_iterator;
