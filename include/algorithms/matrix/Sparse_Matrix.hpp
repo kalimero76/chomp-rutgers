@@ -977,7 +977,7 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
     
     // We want to find a good pivot row from the jth column
     // The simplest criterion is to pick the one with the smallest size
-    size_type pivot_row; // we find this
+    size_type pivot_row = 0; // we find this
     size_type best_size = D -> number_of_columns (); // maximum size row could be
     Index index = D -> column_begin ( j );
     while ( index != D -> end () ) {
