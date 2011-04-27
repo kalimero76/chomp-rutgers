@@ -34,6 +34,7 @@ typename Complex::Chain coboundary ( const typename Complex::Chain & input, cons
   return return_value;
 } /* coboundary */
 
+#if 0
 #include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
 template < class Matrix >
 Matrix matrix_solve ( Matrix & A, Matrix & B ) {
@@ -75,6 +76,8 @@ Matrix matrix_solve ( Matrix & A, Matrix & B ) {
   //Y . numberOfRows () << ", " << Y . numberOfColumns () << ") \n";
   return R * Y;
 } /* matrix_solve */
+
+#endif
 
 template < class Cell_Complex > 
 void verify_complex ( Cell_Complex & complex ) {
