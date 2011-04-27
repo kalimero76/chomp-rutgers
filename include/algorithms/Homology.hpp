@@ -14,11 +14,11 @@
 #include "algorithms/basic.h" /* for verify_complex.h */
 #include "algorithms/matrix/Smith_Normal_Form.h" /* For Smith_Normal_Form(...) */
 #include "algorithms/matrix/Sparse_Matrix.h" /* For Sparse_Matrix<...> */
-#include "algorithms/matrix/Dense_Matrix.h"
+//#include "algorithms/matrix/Dense_Matrix.h"
 
 #include "algorithms/Morse_Theory.h"
 
-#include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
+//#include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
 
 /* Compute Homology Groups via Smith Normal Form */
 template < class Geometric_Complex_Template >
@@ -170,6 +170,7 @@ matrix has the same span as the entire matrix itself.)
 
 */
 
+#if 0
 template < class Cell_Complex >
 std::vector < std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > > 
 Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators ) {
@@ -782,3 +783,5 @@ Conley_Index ( Conley_Index_t * output,
   
   return;
 } /* void Conley_Index(...) */
+
+#endif

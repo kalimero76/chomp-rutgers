@@ -116,7 +116,7 @@ std::pair<Simplicial_Complex::iterator, bool> Simplicial_Complex::insert ( const
       fixed_index_to_handle_ . resize ( d + 1 );
     }
     handle_to_fixed_index_ [ handle ] = std::pair<unsigned int, unsigned int> (d, size ( d ) );
-    std::cout << " Inserting simplex " << insert_me << " as (" << d << ", " << size ( d ) << ")\n";
+    //std::cout << " Inserting simplex " << insert_me << " as (" << d << ", " << size ( d ) << ")\n";
     fixed_index_to_handle_ [ d ] . push_back ( handle );                                                                            
     ++ total_size_;
     return std::pair < iterator, bool > ( it, true );

@@ -15,7 +15,7 @@
 
 #include "algorithms/basic.h"
 #include "algorithms/Morse_Theory.h"
-#include "algorithms/matrix/Dense_Matrix.h"
+//#include "algorithms/matrix/Dense_Matrix.h"
 
 template < class size_type >
 Morse_Chain<size_type> & operator += ( Morse_Chain<size_type> & output, 
@@ -199,7 +199,8 @@ namespace morse {
     return king_count;
   } /* morse::decompose */
   
-  
+
+#if 0
   template < class Cell_Complex > typename Cell_Complex::Chain 
   preboundary ( typename Cell_Complex::Chain & boundary_chain, const Cell_Complex & complex ) {
     // warning, assumes preboundary actually exists
@@ -261,6 +262,7 @@ namespace morse {
     /* Return */
     return return_value;
   } /* morse::preboundary */
+#endif
   
 #if 0
   template < class Cell_Complex > typename Cell_Complex::Chain 
