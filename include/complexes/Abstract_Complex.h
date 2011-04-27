@@ -60,6 +60,7 @@ public:
   iterator begin ( void ) const;
   iterator end ( void ) const;
   size_type size ( void ) const;
+  void clear ( void );
   /* Boundary Container */
   iterator begin ( unsigned int dimension ) const;
   iterator end ( unsigned int dimension ) const;

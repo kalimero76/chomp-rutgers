@@ -195,6 +195,12 @@ namespace Adaptive_Cubical {
     Subset subdivide ( iterator cell_to_divide );
     Subset subdivide ( Top_Cell cell_to_divide );
     Subset subdivide ( const Subset & subset_to_divide );
+    
+    /// prefix ( Top_Cell )
+    ///   Return a vector with the prefix string of tree moves necessary to 
+    ///   navigate to its leaf in the Toplex tree structure
+    std::vector < unsigned char > prefix ( Top_Cell cell );
+    
     /// subdivide ( void )
     ///  subdivides everything
     Subset subdivide ( void );

@@ -107,6 +107,20 @@ typename Abstract_Complex<Cell_Type>::size_type Abstract_Complex<Cell_Type>::siz
 } /* Abstract_Complex<Cell_Type>::size */
 
 template < class Cell_Type >
+void Abstract_Complex<Cell_Type>::clear ( void ) {
+  cells_ . clear ();
+  begin_ . clear ();
+  size_ . clear ();
+  boundary_ . clear ();
+  coboundary_ . clear ();
+  index_ . clear ();
+  lookup_ . clear ();
+  index_begin_ . clear ();
+  connection_ . clear ();
+  king_count_ . clear ();
+} /* Abstract_Complex<Cell_Type>::clear */
+
+template < class Cell_Type >
 Abstract_Chain<Cell_Type> & Abstract_Complex<Cell_Type>::boundary ( const iterator & input ) {
   return boundary_ [ *input ];
 } /* Abstract_Complex<Cell_Type>::boundary */

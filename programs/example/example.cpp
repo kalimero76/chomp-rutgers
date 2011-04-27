@@ -33,11 +33,13 @@ void generate_random_cubical_complex ( Cubical_Complex & my_cubical_complex, std
 void save_cubical_complex ( Cubical_Complex & my_cubical_complex, const char * file_name ) {
 	std::ofstream output_file ( file_name ); 
 	const unsigned int dimension = my_cubical_complex . dimension ();
+  /*
 	output_file << "(";
 	for ( unsigned int dimension_index = 0; dimension_index < dimension; dimension_index ++ ) {
 		output_file << my_cubical_complex . dimension_sizes () [ dimension_index ]; 
 		if ( dimension_index + 1 != dimension ) output_file << ", "; }
 	output_file << ")\n";
+   */
 	for ( Cubical_Complex::const_iterator full_cube = my_cubical_complex . begin ( dimension ) ; 
 	full_cube != my_cubical_complex . end ( dimension ); ++ full_cube ) {
 		unsigned long name = (*full_cube) . data () >> dimension;
