@@ -23,10 +23,10 @@
 #include <tr1/unordered_map> //PORTABILITY ISSUE
 namespace std { using namespace tr1; }
 #else
-#warning Old Version of GCC -- using hash_set instead of unordered_set
+#warning Old Version of GCC -- using hash_map instead of unordered_map
 #include <ext/hash_map>
 namespace std { using namespace __gnu_cxx; }
-#define unordered_set hash_set
+#define unordered_map hash_map
 #endif
 
 
