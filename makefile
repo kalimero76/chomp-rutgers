@@ -31,11 +31,13 @@ ARCHETYPE_OBJECTS := Chain_Archetype.o
 ALGORITHM_OBJECTS := Homology.o
 COMPLEX_OBJECTS := Cubical_Complex.o Adaptive_Complex.o
 TOPLEX_OBJECTS := Adaptive_Cubical_Toplex.o
+TOOL_OBJECTS := visualization.o
 
 LIBRARY_OBJECTS := $(patsubst %.o, build/archetypes/%.o, $(ARCHETYPE_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/algorithms/%.o, $(ALGORITHM_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/complexes/%.o, $(COMPLEX_OBJECTS) )
 LIBRARY_OBJECTS += $(patsubst %.o, build/toplexes/%.o, $(TOPLEX_OBJECTS) )
+LIBRARY_OBJECTS += $(patsubst %.o, build/tools/%.o, $(TOOL_OBJECTS) )
 
 library: $(LIBRARY_OBJECTS)
 	ar rcs lib/libchomp-rutgers.a $(LIBRARY_OBJECTS)

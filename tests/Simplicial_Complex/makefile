@@ -1,7 +1,7 @@
 CXX := g++
-CXXFLAGS := -O3 -m64 -Wall -I../../include/ -I../../source/ -I../../../capd/include/ -I./ -ggdb
+CXXFLAGS := -O3 -m64 -Wall -I../../include/ -I../../source/  -I/opt/local/include/ -I./ -ggdb -L/opt/local/lib/ -L/usr/X11/lib/
 
-CXX_STANDALONE := $(CXX) $(CXXFLAGS)
+CXX_STANDALONE := $(CXX) $(CXXFLAGS) -lgmpxx -lgmp -lX11
 
 all: test
 

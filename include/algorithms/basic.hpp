@@ -10,6 +10,8 @@
 #include "boost/foreach.hpp"
 #include <typeinfo>
 
+#include "algorithms/matrix/Sparse_Matrix.h"
+
 template < class Complex >
 typename Complex::Chain boundary ( const typename Complex::Chain & input, const Complex & complex ) {
   typename Complex::Chain return_value;
@@ -34,8 +36,19 @@ typename Complex::Chain coboundary ( const typename Complex::Chain & input, cons
   return return_value;
 } /* coboundary */
 
-#if 0
-#include "capd/matrixAlgorithms/intMatrixAlgorithms.hpp" /* for smithForm */
+template < class Complex >
+typename Complex::Chain sum ( const typename Complex::Chain & lhs, const typename Complex::Chain & rhs ) {
+  typename Complex::Chain result;
+  BOOST_FOREACH ( const typename Complex::Chain::value_type & term, lhs ) {
+    result += term;
+  }
+  BOOST_FOREACH ( const typename Complex::Chain::value_type & term, rhs ) {
+    result += term;
+  }  
+  return result;
+}
+
+
 template < class Matrix >
 Matrix matrix_solve ( Matrix & A, Matrix & B ) {
   /*
@@ -47,37 +60,87 @@ Matrix matrix_solve ( Matrix & A, Matrix & B ) {
   
   /*
    Method: From SNF, we have
-    A = Q A' Rinv, where A' is the new value of A.
+    A = U D V.
     Hence we may solve AX = B via
-    X =  R D Qinv B
+    X =  Vinv D^+ Uinv B
   */
-  Matrix Q, Qinv, R, Rinv;
-  int s, t;
-  capd::matrixAlgorithms::smithForm( A, Q, Qinv, R, Rinv, s, t);
-  int n = A . numberOfRows ();
-  int m = A . numberOfColumns ();
-  int k = B . numberOfColumns ();
-  Matrix D ( m, n );
-  for (int i = 1; i <= n && i <= m; ++ i ) {
-    if ( A (i, i) == 0 ) continue; // avoid division by zero error
-    D (i, i) = 1;
+  typedef typename Matrix::value_type Ring;
+  Matrix U, Uinv, V, Vinv, D;
+  /*
+  std::cout << "Matrix Solve. Running SNF on A = ";
+  print_matrix ( A );
+  std::cout << "\n Want to find X so AX=B, where B = ";
+  print_matrix ( B );
+   */
+  SmithNormalForm( &U, &Uinv, &V, &Vinv, &D, A );
+  /*
+  std::cout << "\n UDV = ";
+  print_matrix ( U * D * V );
+  std::cout << "\n U Uinv = "; 
+  print_matrix ( U * Uinv );
+  std::cout << "\n Uinv U = "; 
+  print_matrix ( Uinv * U );
+  std::cout << "\n V Vinv = ";
+  print_matrix ( V * Vinv );  
+  std::cout << "\n Vinv V = ";
+  print_matrix ( Vinv * V ); 
+  std::cout << "\n U = ";
+  print_matrix ( U );
+  std::cout << "\n D = ";
+  print_matrix ( D );
+  std::cout << "\n V = ";
+  print_matrix ( V );
+  std::cout << "\n Uinv = ";
+  print_matrix ( Uinv );
+  std::cout << "\n Vinv = ";
+  print_matrix ( Vinv );
+  std::cout << "\n Uinv B = ";
+  print_matrix ( Uinv * B );
+   */
+  int n = A . number_of_rows ();
+  int m = A . number_of_columns ();
+  Matrix DT ( m, n );
+  for (int i = 0; i < n && i < m; ++ i ) {
+    if ( D . read (i, i) == Ring ( 0 ) ) continue; // avoid division by zero error
+    DT . write (i, i, Ring ( 1 ) );
   }
   
-  Matrix Y = D * Qinv * B;
-
-  for (int i = 1; i <= n && i <= m; ++ i ) {
-    if ( A (i, i) == 0 ) continue; // avoid division by zero error
-    for ( int j = 1; j <= k; ++ j ) {
-      Y(i,j)=Y(i,j)/A(i,i);
+  //std::cout << "\n DT = ";
+  //print_matrix ( DT );
+  
+  Matrix Y = DT * Uinv * B;
+  //std::cout << "\n Y = ";
+  //print_matrix ( Y );
+  
+  for (typename Matrix::size_type column = 0; column < Y . number_of_columns (); ++ column ) {
+    for (typename Matrix::Index entry = Y . column_begin ( column ); 
+         entry != Y . end (); Y . column_advance ( entry ) ) {
+      typename Matrix::size_type i = Y . row ( entry );
+      Ring value = D . read ( i, i );
+      if ( value == Ring ( 0 ) ) continue; // avoid division by zero error
+      // DEBUG
+      /*
+      if ( ( Y . read ( entry ) / value ) * value != Y . read ( entry ) ) {
+        std::cout << "INSOLUBLE MATRIX EQUATION! " << Y . read ( entry ) << " is not divisible by " <<
+        value << ".\n"; // note this is not the only way to be insoluble, also applying DT
+      } else {
+        std::cout << Y . read ( entry ) << " is divisible by " << value << ".\n";
+      }
+       */
+      Y . write ( entry , Y . read ( entry ) / value );
     } /* for */
   } /* for */
-  
+  //std::cout << "\n D^+Y = ";
+  //print_matrix ( Y );
   //std::cout << "(" << R . numberOfRows () << ", " << R . numberOfColumns () << ") * (" << 
   //Y . numberOfRows () << ", " << Y . numberOfColumns () << ") \n";
-  return R * Y;
+  Matrix X = Vinv * Y;
+  //std::cout << "\n Have arrived at X = "; 
+  //print_matrix ( X );
+  //std::cout << "\n AX =\n";
+  //print_matrix ( A * X );
+  return X;
 } /* matrix_solve */
-
-#endif
 
 template < class Cell_Complex > 
 void verify_complex ( Cell_Complex & complex ) {
@@ -97,13 +160,17 @@ void verify_complex ( Cell_Complex & complex ) {
    if ( count % 1000 == 0 ) std::cout << ".";
     if ( count % 10000 == 0 ) std::cout << count << "\n";
     typename Cell_Complex::Chain my_boundary = complex . boundary ( it );
+    std::cout << " bd (" << it << ") = " << my_boundary << "\n";
     typename Cell_Complex::Chain my_double_boundary = boundary ( my_boundary, complex );
     if ( not my_double_boundary . empty () ) std::cout << "Problem Detected: Not a complex (bd^2 \neq 0).\n";
     typedef std::pair < typename Cell_Complex::const_iterator, long > term_type;
     BOOST_FOREACH ( term_type term, my_boundary ) {
       typename Cell_Complex::Chain my_coboundary = complex . coboundary ( term . first );
-      if ( my_coboundary . find ( it ) == my_coboundary . end () || my_coboundary . find ( it ) -> second != term . second ) 
+      if ( my_coboundary . find ( it ) == my_coboundary . end () || my_coboundary . find ( it ) -> second != term . second ) {
         std::cout << " Problem detected: coefficient mismatch, cbd of bd.\n";
+        std::cout << " bd (" << it << ") = " << my_boundary << "\n";
+        std::cout << " cbd (" << term . first << ") = " << my_coboundary << "\n";
+      }
       
     } /* BOOST_FOREACH */
   } /* for */
@@ -159,7 +226,7 @@ void verify_decomposition ( Cell_Complex & complex ) {
  * TEST UTILITIES -- Common testing functions  *
  * * * * * * * * * * * * * * * * * * * * * * * */
 //#define TEST_PROGRAM
-#ifdef TEST_PROGRAM
+//#ifdef TEST_PROGRAM
 
 #include "algorithms/Homology.h"		/* for function Homology(...)*/
 #include "algorithms/Morse_Theory.h"		/* for morse::deep_reduction */
@@ -281,4 +348,4 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 
 } /* namespace utility */
 
-#endif
+//#endif

@@ -189,6 +189,8 @@ public:
   size_type ace_begin ( unsigned int dimension ) const;
   size_type ace_end ( unsigned int dimension ) const;
   void preprocess ( void ) {}
+  /* Visualizable */
+  std::vector < float > geometry ( const Cell & cell ) const;
 	/* Adaptive_Complex */
   Adaptive_Complex ( void );
 	Adaptive_Complex ( unsigned int complex_dimension );

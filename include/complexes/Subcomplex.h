@@ -9,7 +9,9 @@
 #ifndef CHOMP_SUBCOMPLEX_
 #define CHOMP_SUBCOMPLEX_
 
-#include <set> /* for map */
+#include <set> /* for set */
+#include <map> /* for map */
+
 #include "archetypes/Chain_Archetype.h" /* for Default_Cell, Default_Chain */
 #include "archetypes/Cell_Complex_Archetype.h" /* for class Cell_Complex_Archetype */
 
@@ -22,6 +24,7 @@
 template < class Cell_Complex > class Subcomplex_Chain;
 template < class Cell_Complex > class Subcomplex;
 template < class Cell_Complex > class Subcomplex_const_iterator;
+template < class Cell_Complex > std::ostream & operator << ( std::ostream & output_stream, const Subcomplex_const_iterator<Cell_Complex> & print_me);
 
 /* * * * * * * * * * * * * *
  * class Subcomplex_Chain  *
@@ -49,9 +52,9 @@ public:
   typedef Subcomplex_const_iterator<Cell_Complex> const_iterator;
   typedef const_iterator iterator;
   /* Basic Container */
-  std::pair<iterator, bool> insert ( const value_type & insert_me );
-  void erase ( const iterator & erase_me );
-  void erase ( const Cell & erase_me );
+  std::pair<iterator, bool> insert ( const value_type & insert_me, bool update = true );
+  void erase ( const iterator & erase_me, bool update = true );
+  void erase ( const Cell & erase_me, bool update = true );
   void clear ( void );
   iterator find ( const key_type & find_me ) const;
   iterator begin ( void ) const;
@@ -91,8 +94,10 @@ public:
   Subcomplex ( void );
   Subcomplex ( const Cell_Complex * super_complex ); 
   void construct ( const Cell_Complex * super_complex );
+  void finalize ( void );
   Chain project ( const typename Cell_Complex::Chain & project_me ) const;
   Chain project ( const Chain & project_me ) const;
+  typename Cell_Complex::const_iterator include ( const Cell & include_me ) const;
   typename Cell_Complex::const_iterator include ( const const_iterator & include_me ) const;
   typename Cell_Complex::Chain include ( const Chain & include_me ) const;
 
@@ -145,6 +150,8 @@ public:
   unsigned long data () const;
 private:
   friend class Subcomplex<Cell_Complex>;
+  friend std::ostream & operator << <Cell_Complex> ( std::ostream & output_stream, const Subcomplex_const_iterator<Cell_Complex> & print_me);
+
   const complex_type * container_;
   unsigned long data_;
   unsigned int dimension_;

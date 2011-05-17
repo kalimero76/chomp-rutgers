@@ -252,12 +252,14 @@ Cubical_Complex::Chain Cubical_Complex::coboundary ( const iterator & lookup ) c
 	long work_bit = 1;
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
-	bool sign = false;
+	bool sign = true;
 	long address = lookup . address_;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
-		/* Can we promote this bit? If not, "continue". */
-		if ( address & work_bit ) continue;
-		sign = not sign; /* or should this be with the continue ? */
+    /* Can we promote this bit? If not, "continue". */
+		if ( address & work_bit ) { 
+      sign = not sign;
+      continue;
+    }
 		address = address ^ work_bit;
 		if ( bitmap_ [ address ] )
 			output . insert ( std::pair < const_iterator, Ring > ( const_iterator ( this, address,  coboundary_dimension ), sign ? positive : negative  ) );
@@ -447,12 +449,14 @@ void Cubical_Complex::coboundary ( std::vector < std::pair< size_type, Ring > > 
 	long work_bit = 1;
 	Ring positive = ( Ring ) 1; /* Ring must be able to cast 1 to get its multiplicative identity */
 	Ring negative = - positive; /* Ring must overload unary "-" operator for additive inverse */
-	bool sign = false;
+	bool sign = true;
 	long address = cell_iterator . address_;
 	for ( unsigned int dimension_index = 0; dimension_index < dimension_; work_bit <<= 1, ++ dimension_index ) {
 		/* Can we promote this bit? If not, "continue". */
-		if ( address & work_bit ) continue;
-		sign = not sign;
+		if ( address & work_bit ) { 
+      sign = not sign;
+      continue;
+    }
 		/* Alter address to refer to a boundary in the current full cube */
 		address = address ^ work_bit;
 		/* Insert the piece in the current full cube */
@@ -584,7 +588,7 @@ void Cubical_Complex::finalize ( void ) {
     size_ [ dimension ] = 0;
     begin_ [ dimension ] = end_;
   } /* while */
-
+  index ();
 } /* Cubical_Complex::finalize */
 
 void Cubical_Complex::Remove_Full_Cube ( const std::vector<unsigned int> & cube_coordinates ) {

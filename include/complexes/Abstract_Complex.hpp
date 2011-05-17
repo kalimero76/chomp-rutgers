@@ -482,3 +482,10 @@ template < class Cell_Type >
 const Abstract_Complex<Cell_Type> & Abstract_const_iterator<Cell_Type>::container () const {
   return container_;
 } /* Abstract_const_iterator::container */
+
+template < class Cell_Type >
+std::ostream & operator << ( std::ostream & output_stream, const Abstract_const_iterator<Cell_Type> & print_me) {
+  output_stream << * print_me;
+  return output_stream;
+} /* operator << */
+

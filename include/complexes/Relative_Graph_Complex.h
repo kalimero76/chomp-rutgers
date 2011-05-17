@@ -60,8 +60,11 @@ private:
   typename Toplex::Subset A_;
   Relative_Complex domain_;
   Relative_Complex codomain_;
+public:
+  // for debugging
   FactorComplex * full_domain_;
   FactorComplex * full_codomain_;
+private:
   const Combinatorial_Map & F_;
   void makeFiber ( Relative_Complex & fiber, const Relative_Cell & domain_cell );
 

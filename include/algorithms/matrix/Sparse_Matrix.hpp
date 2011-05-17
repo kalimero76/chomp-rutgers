@@ -27,16 +27,27 @@ Ring div ( const Ring y, const Ring x ) {
   }
 }
 
+template < class Ring >
+bool divisable ( const Ring y, const Ring x ) {
+  if ( x == Ring ( 0 ) ) return ( y == Ring ( 0 ) );
+  if ( div(y, x) * x == x ) return true;
+  return false;
+}
+
 /// Bezout
 /// Given a and b, calculate a, b, and gcd such that
 /// s * a + t * b = gcd
 /// and gcd is the greatest common divisor of a and b
+/// Also, if a = +/- gcd, then choose t = 0.
 template < class Ring >
 void Bezout (Ring * s_out,
              Ring * t_out,
              Ring * gcd_out,
              const Ring & a, 
              const Ring & b) {
+  static Ring one ( 1 );
+  static Ring zero ( 0 );
+  static Ring neg_one ( -1 );
   // Relies upon Euclidean Division being available, and also comparison.
   // The user doesn't need to sort the input.
   bool reversed = false;
@@ -45,9 +56,9 @@ void Bezout (Ring * s_out,
   Ring x = std::min ( a, b ); // Think x = b for proof below
   Ring y = std::max ( a, b ); // Think y = a for proof below
   // For extended euclidean algorithm
-  Ring s0 = 1; Ring s1 = 0;
-  Ring t0 = 0; Ring t1 = 1;
-  while ( x != Ring ( 0 ) ) {
+  Ring s0 = one; Ring s1 = zero;
+  Ring t0 = zero; Ring t1 = one;
+  while ( x != zero ) {
     //std::cout << "top of bezout\n";
     //std::cout << " y = " << y << " and x = " << x << "\n";
     //std::cout << "y - 1 = " << y - 1 << "\n";
@@ -90,10 +101,67 @@ void Bezout (Ring * s_out,
     * s_out = t0;
   }
   * gcd_out = y;
+  // TODO: generalize this to all unit multiples, somehow, for general rings
+  // TODO: should this really be here? perhaps the caller should worry about this
+  if ( * gcd_out == a ) {
+    * s_out = one; * t_out = zero;
+  }
+  if ( * gcd_out == -a ) {
+    * s_out = neg_one; * t_out = zero;
+  }
 }
 
 
+  
+#ifdef USE_GMP
+#include <gmpxx.h>
+template < >
+void Bezout < mpz_class > ( mpz_class * s_out,
+             mpz_class * t_out,
+             mpz_class * gcd_out,
+             const mpz_class & a, 
+             const mpz_class & b) {
+  mpz_gcdext ( gcd_out -> get_mpz_t (), 
+               s_out -> get_mpz_t (), 
+               t_out -> get_mpz_t (), 
+               a . get_mpz_t (), 
+              b . get_mpz_t () );
+  // TODO: should this really be here? perhaps the caller should worry about this
+  static mpz_class one ( 1 );
+  static mpz_class zero ( 0 );
+  static mpz_class neg_one ( -1 );
+  if ( * gcd_out == a ) {
+    * s_out = one; * t_out = zero;
+  }
+  if ( * gcd_out == -a ) {
+    * s_out = neg_one; * t_out = zero;
+  }
+}
+#endif
 
+namespace Sparse_Matrix_detail {
+  template < class Ring >
+  void mul ( Ring * output, const Ring & lhs, const Ring & rhs ) {
+    *output = lhs * rhs;
+  }
+  
+  template < class Ring >
+  void addmul ( Ring * output, const Ring & lhs, const Ring & rhs ) {
+    *output += lhs * rhs;
+  }
+  
+#ifdef USE_GMP
+  template < >
+  void mul < mpz_class > ( mpz_class * output, const mpz_class & lhs, const mpz_class & rhs ) {
+    mpz_mul ( output -> get_mpz_t (), lhs . get_mpz_t (), rhs . get_mpz_t () );
+  }
+  
+  template < >
+  void addmul < mpz_class > ( mpz_class * output, const mpz_class & lhs, const mpz_class & rhs ) {
+    mpz_addmul ( output -> get_mpz_t (), lhs . get_mpz_t (), rhs . get_mpz_t () );
+  }
+#endif
+}
 // Sparse Matrix Algorithm Definitions
 
 // Copy the submatrix with rows [i0, i1) and columns [j0, j1) into a new Sparse Matrix.
@@ -114,7 +182,7 @@ Sparse_Matrix<Ring> operator * (const Sparse_Matrix<Ring> & lhs,
   
   int I = lhs . number_of_rows ();
   int K = lhs . number_of_columns ();
-  int J = lhs . number_of_columns ();
+  int J = rhs . number_of_columns ();
   Matrix result ( I, J );
   for ( int k = 0; k < K; ++ k ) {
     Index left_column_index = lhs . column_begin ( k );
@@ -182,6 +250,24 @@ Sparse_Matrix<Ring>::Sparse_Matrix ( void ) {
 template < class Ring >
 Sparse_Matrix<Ring>::Sparse_Matrix ( int i, int j ) {
   resize ( i, j );
+}
+
+// when I do the templates using partial specialization, it doesn't work, 
+// so I replaced Sparse_Matrix < AnotherRing > with T
+
+template < class Ring >
+template < class T >
+Sparse_Matrix<Ring>::Sparse_Matrix ( const T & copy_me ) :
+data_ ( copy_me . data_ . begin (), copy_me . data_ . end () ),
+garbage_ ( copy_me . garbage_ ), 
+access_ ( copy_me . access_ ),
+row_begin_ ( copy_me . row_begin_ ),
+column_begin_ ( copy_me . column_begin_ ),
+row_sizes_ ( copy_me . row_sizes_ ),
+column_sizes_ ( copy_me . column_sizes_ ),
+row_names_ ( copy_me . row_names_ ),
+column_names_ ( copy_me . column_names_ ) {
+  resize ( copy_me . number_of_rows (), copy_me . number_of_columns () );
 }
 
 template < class Ring >
@@ -529,7 +615,7 @@ template < class Ring >
 void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
                                         const Ring c, const Ring d,
                                         size_type i, size_type j ) {
-  ++ number_of_pivots;
+  //++ number_of_pivots;
   // Increment timestamp
   ++ timestamp;
   // Note: we expect the stacks are clear. 
@@ -542,14 +628,22 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
   Index j_index = row_begin ( j );
   while ( i_index != end () ) {
     size_type col = column ( i_index );
+#ifdef USE_GMP
+    Sparse_Matrix_detail::mul ( & cache_A [ col ], a, read ( i_index ) );
+#else
     cache_A [ col ] = a * read ( i_index );
+#endif
     cache_A_TS [ col ] = timestamp;
     row_advance ( i_index );
   }
   
   while ( j_index != end () ) {
     size_type col = column ( j_index );
+#ifdef USE_GMP
+    Sparse_Matrix_detail::mul ( & cache_B [ col ], d, read ( j_index ) );
+#else
     cache_B [ col ] = d * read ( j_index );
+#endif
     cache_B_TS [ col ] = timestamp;
     row_advance ( j_index );
   }
@@ -564,9 +658,17 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
   while ( i_index != end () ) {
     size_type col = column ( i_index );
     if ( cache_B_TS [ col ] == timestamp ) {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::addmul ( & cache_B [ col ], c, read ( i_index ) );
+#else
       cache_B [ col ] += c * read ( i_index );
+#endif
     } else {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::mul ( & cache_B [ col ], c, read ( i_index ) );
+#else
       cache_B [ col ] = c * read ( i_index );
+#endif
       cache_B_S . push ( col );
     }
     row_advance ( i_index );
@@ -576,9 +678,17 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
   while ( j_index != end () ) {
     size_type col = column ( j_index );
     if ( cache_A_TS [ col ] == timestamp ) {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::addmul ( & cache_A [ col ], b, read ( j_index ) );
+#else
       cache_A [ col ] += b * read ( j_index );
+#endif
     } else {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::mul ( & cache_A [ col ], b, read ( j_index ) );
+#else
       cache_A [ col ] = b * read ( j_index );
+#endif
       cache_A_S . push ( col );
     }
     row_advance ( j_index );
@@ -619,7 +729,7 @@ template < class Ring >
 void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
                                            const Ring c, const Ring d,
                                            size_type i, size_type j ) {
-  ++ number_of_pivots;
+  //++ number_of_pivots;
   // Increment timestamp
   ++ timestamp;
   // Note: we expect the stacks are clear. 
@@ -634,7 +744,11 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
   Index i_index = column_begin ( i );
   while ( i_index != end () ) {
     size_type roww = row ( i_index );
+#ifdef USE_GMP
+    Sparse_Matrix_detail::mul ( &cache_A [ roww ], a, read ( i_index ) );
+#else
     cache_A [ roww ] = a * read ( i_index );
+#endif
     cache_A_TS [ roww ] = timestamp;
     //std::cout << i_index << "\n";
     column_advance ( i_index );
@@ -644,7 +758,11 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
   Index j_index = column_begin ( j );
   while ( j_index != end () ) {
     size_type roww = row ( j_index );
+#ifdef USE_GMP
+    Sparse_Matrix_detail::mul ( &cache_B [ roww ], d, read ( j_index ) );
+#else
     cache_B [ roww ] = d * read ( j_index );
+#endif
     cache_B_TS [ roww ] = timestamp;
     column_advance ( j_index );
   }
@@ -659,9 +777,17 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
   while ( i_index != end () ) {
     size_type roww = row ( i_index );
     if ( cache_B_TS [ roww ] == timestamp ) {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::addmul ( &cache_B [ roww ], c, read ( i_index ) );
+#else
       cache_B [ roww ] += c * read ( i_index );
+#endif
     } else {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::mul ( &cache_B [ roww ], c, read ( i_index ) );
+#else
       cache_B [ roww ] = c * read ( i_index );
+#endif
       cache_B_S . push ( roww );
     }
     column_advance ( i_index );
@@ -671,9 +797,17 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
   while ( j_index != end () ) {
     size_type roww = row ( j_index );
     if ( cache_A_TS [ roww ] == timestamp ) {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::addmul ( &cache_A [ roww ], b, read ( j_index ) );
+#else
       cache_A [ roww ] += b * read ( j_index );
+#endif
     } else {
+#ifdef USE_GMP
+      Sparse_Matrix_detail::mul ( &cache_A [ roww ], b, read ( j_index ) );
+#else
       cache_A [ roww ] = b * read ( j_index );
+#endif
       cache_A_S . push ( roww );
     }
     column_advance ( j_index );
@@ -752,6 +886,7 @@ void RowPivot (Sparse_Matrix<Ring> * U,
                Sparse_Matrix<Ring> * D,
                const int i,
                const int j) {
+
   typedef Sparse_Matrix<Ring> Matrix;
   typedef typename Matrix::Index Index;
   // Main Loop
@@ -764,12 +899,19 @@ void RowPivot (Sparse_Matrix<Ring> * U,
     Ring b = D -> read ( index ); // Remains valid.
     int k = D -> row ( index );
     D -> column_advance ( index );
+    
+    //std::cout << " a = " << a << " b = " << b << " k = " << k << " and j = " << j << "\n";
+    //std::cout << " (column advanced) index = " << index << "\n";
+    
     // Prevent self-elimination.
     if ( i == k ) continue;
     // Determine necessary row operations with Euclidean Algorithm
     Bezout ( &s, &t, &g, a, b );
     x = div ( a, g );
     y = div ( b, g );
+    
+
+      
     
     
      // DEBUG
@@ -829,6 +971,7 @@ void ColumnPivot (Sparse_Matrix<Ring> * V,
   // Main Loop
   Index pivot_index = D -> find ( i, j );
   Index index = D -> row_begin ( i );
+  
   //std::cout << "DEBUG: ColumnPivot. pivot_index = " << pivot_index << " and index = " << index << "\n";
   //std::cout << "DEBUG: D -> end () = " << D -> end () << "\n";
 
@@ -839,23 +982,18 @@ void ColumnPivot (Sparse_Matrix<Ring> * V,
     Ring a = D -> read ( pivot_index );
     Ring b = D -> read ( index ); // Remains valid.
     int k = D -> column ( index );
-    D -> row_advance ( index );
-    //std::cout << " a = " << a << " b = " << b << " k = " << k << " and j = " << j << "\n";
-    //std::cout << " (row advanced) index = " << index << "\n";
+    //std::cout << " pivot_index = " << pivot_index << ", index = " << index << "\n";
     // Prevent self-elimination.
+    D -> row_advance ( index );
     if ( j == k ) continue;
+    //std::cout << " Eliminating (" << i << ", " << k << "; " << b << ") with (" << i << ", " << j << "; " << a << ")\n";
     // Determine necessary row operations with Euclidean Algorithm
     Bezout ( &s, &t, &g, a, b );
     x = div ( a, g );
     y = div ( b, g );
     
-    // DEBUG
-    /*
-     std::cout << " Value at pivot = " << a << "\n";
-     std::cout << " Elimination value = " << b << "\n";
-     std::cout << " Elimination index = " << k << "\n";
-     std::cout << " Bezout Formula: " << s << " * " << a << " + " << t << " * " << b << " = " << g << "\n";
-     */
+    //std::cout << " Bezout Formula: " << s << " * " << a << " + " << t << " * " << b << " = " << g << "\n";
+     
     /* Explanation of the row operations:
      Apply the 2x2 matrix from the right:
      M=  [  s  -y  ]     Minv = [  x  y ]
@@ -875,16 +1013,17 @@ void ColumnPivot (Sparse_Matrix<Ring> * V,
     
     D -> column_operation (s, t,
                            -y, x,
-                           i, k);
+                           j, k);
     
     Vinv -> column_operation (s, t,
                               -y, x,
-                              i, k);
+                              j, k);
     
     V -> row_operation (x, y,
                         -t, s,
-                        i, k);
+                        j, k);
     
+
     //std::cout << "Result of elimination step:\n";
     //print_matrix ( *D );
   } /* while */
@@ -959,6 +1098,7 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
   *D = A;
   
   //std::cout << "SmithNormalForm Calculation.\n";
+  //std::cout << "   this is " << A . number_of_rows () << " x " << A . number_of_columns () << "\n";
   //print_matrix ( *D );
   //sane_matrix ( *D );
   // Resize outputs, set to identity
@@ -973,6 +1113,7 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
   int t = 0;
   //std::cout << "**** ELIMINATION STAGE ****\n";
   for ( int j = 0; j < D -> number_of_columns (); ++ j ) {
+    //std::cout << "Working on column " << j << ".\n";
     if ( D -> column_size ( j ) == 0 ) continue;
     
     // We want to find a good pivot row from the jth column
@@ -996,7 +1137,7 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
     //print_matrix ( *D );
     //sane_matrix ( *D );
     
-    //std::cout << "Preliminary swapping of row/column (" << t << ", " << pivot_row << ")...\n";
+    //std::cout << "Swapping rows. (" << t << ", " << pivot_row << ")...\n";
     D -> swap_rows ( t, pivot_row );
     U -> swap_columns ( t, pivot_row );
     Uinv -> swap_rows ( t, pivot_row );
@@ -1013,6 +1154,7 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
     //std::cout << "Performing the pivot step at (" << t << ", " << j << "):\n";
     SmithPivot ( U, Uinv, V, Vinv, D, t, j );
     //print_matrix ( *D );
+    //std::cout << "Swapping columns.\n";
     // Now we swap columns, making this the t-th column rather than the jth column
     // (note that j >= t )
     D -> swap_columns ( t, j );
@@ -1027,13 +1169,20 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
   // The following trick accomplishes this: one by one, we 
   // copy the value of the diagonals (except the first) to the position
   // immediately to the left
+  
   //std::cout << "*** DIAGONAL DIVISABILITY STAGE ****\n";
   //print_matrix ( *D );
 
   int r = std::min ( D -> number_of_rows (), D -> number_of_columns () );
   for ( int i = 0; i < r - 1; ++ i ) {
     //std::cout << " i = " << i << " and r = " << r << "\n";
+    //print_matrix ( *D );
+
+    if ( divisable ( D -> read ( i + 1, i + 1 ), D -> read ( i, i ) ) ) continue;
     D -> write ( i + 1, i,  D -> read ( i + 1, i + 1 ) );
+    
+    //print_matrix ( *D );
+
     // This is a column operation; we need to update V and Vinv
     /* The matrix in question is
      M =  [ 1 0 ]    Minv = [  1 0 ]
@@ -1049,50 +1198,127 @@ void SmithNormalForm (Sparse_Matrix<Ring> * U,
     V -> row_operation (Ring ( 1 ), Ring ( 0 ),
                         Ring ( -1 ), Ring ( 1 ),
                         i, i + 1 );
-    
+
+
     SmithPivot ( U, Uinv, V, Vinv, D, i, i );
-    D -> write ( i, i, abs ( D -> read ( i, i ) ) );
-    D -> write ( i + 1, i + 1, abs ( D -> read ( i + 1, i + 1 ) ) );
 
     //print_matrix ( *D );
 
   }
+  /*
+   Not legitimate unless you also fix the transformation matrices 
+  for ( int i = 0; i < r; ++ i ) {
+    D -> write ( i, i, abs ( D -> read ( i, i ) ) );
+  }
+   */
+  
   //std::cout << "Total number of pivot moves: " << number_of_pivots << "\n";
+}
+
+/// Submatrix
+/// Input: A, top, bottom, left, right
+/// Produce matrix B = A(top:bottom, left:right)
+
+template < class Ring >
+void Submatrix (Sparse_Matrix<Ring> * B, 
+           const typename Sparse_Matrix<Ring>::size_type top,
+           const typename Sparse_Matrix<Ring>::size_type bottom,
+           const typename Sparse_Matrix<Ring>::size_type left,
+           const typename Sparse_Matrix<Ring>::size_type right,
+                const Sparse_Matrix<Ring> & A) {
+  typedef typename Sparse_Matrix<Ring>::size_type size_type;
+  typedef typename Sparse_Matrix<Ring>::Index Index;
+  B -> resize ( bottom - top + 1, right - left + 1 );
+  for ( size_type i = top; i <= bottom; ++ i ) { 
+    // warning: if top - bottom >> right - left and matrix is VERY sparse? then we should have make columns the outer loop
+    Index entry = A . row_begin ( i );
+    while ( entry != A . end () ) {
+      size_type j = A . column ( entry );
+      if (  left <= j && j <= right ) B -> write ( i - top, j - left, A . read ( entry ) );
+      A . row_advance ( entry );
+    } // while
+  } // for
 }
 
 /// ColumnEchelon
 /// Input: A
 /// Output: B, where B is A in column echelon form.
 
+template < class Ring >
+void ColumnEchelon (Sparse_Matrix<Ring> * B, const Sparse_Matrix<Ring> & A) {
+  //TODO
+}
+
+#include "algorithms/basic.h"
 
 /* This function produces a "Sparse_Matrix" to represent the boundary map of the appropriate dimension in the complex. */
 /* TODO: this only will work for Default_Cell */
 template < class Cell_Complex >
 void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > & output_matrix, 
                                   const Cell_Complex & complex, const unsigned int dimension ) {
+  //std::cout << "Sparse_Matrix_Boundary_Map.\n";
+  //verify_complex ( complex );
     /* Check dimension to see whether or not it is within bounds. */
-	if ( dimension > complex . dimension () || dimension < 0 ) return;
+	if ( dimension > complex . dimension () + 1 || dimension < 0 ) {
+    output_matrix . resize (0, 0);
+    return;
+  }
   if ( dimension == 0 ) {
     output_matrix . resize ( 0, complex . size ( 0 ) );
     return;
-  } 
+  }
+  if ( dimension == complex . dimension () + 1 ) {
+    output_matrix . resize ( complex . size ( complex . dimension () ), 0 );
+    return;
+  }
+  
+  //std::cout << "smbm: dim in [ 1, " << complex . dimension () << "].\n";
   
   output_matrix . resize ( complex . size ( dimension - 1 ), complex . size ( dimension ) );
-  unsigned long target_start = complex . index ( complex . begin ( dimension - 1 ) );
-  unsigned long source_start = complex . index ( complex . begin ( dimension ) );
-  
+  //std::cout << "\n " << complex . size ( dimension - 1 ) << " " <<  complex . size ( dimension ) << "\n";
+  //unsigned long target_start = complex . index ( complex . begin ( dimension - 1 ) );
+  //unsigned long source_start = complex . index ( complex . begin ( dimension ) );
+  unsigned long target_start = complex . index_begin ( dimension - 1 );
+  unsigned long source_start = complex . index_begin ( dimension );
+  //std::cout << "target_start = " << target_start << " and source_start = " << source_start << "\n";
 	/* Now we loop through all elementary chains of dimension "map_dimension". */
 	for ( typename Cell_Complex::const_iterator group_iterator = complex . begin ( dimension ); 
 	group_iterator != complex . end ( dimension ); ++ group_iterator ) {
     unsigned long group_index = complex . index ( group_iterator );
 		/* We find the boundary of the current elementary chain. */
 		typename Cell_Complex::Chain boundary_chain = complex . boundary ( group_iterator );
+    //std::cout << "smbm: bd(" << *group_iterator << ") = " << boundary_chain << "\n";
+    
 		/* We loop through the terms in the boundary we have found. */
 		for ( typename Cell_Complex::Chain::iterator chain_iterator = boundary_chain . begin (); 
          chain_iterator != boundary_chain . end (); ++ chain_iterator ) {
 			output_matrix . write ( complex . index ( chain_iterator -> first ) - target_start, 
                               group_index - source_start, 
                               chain_iterator -> second ); 
+      //std::cout << "M(" << complex . index ( chain_iterator -> first ) - target_start << ", " << group_index - source_start << ") = " << 
+      //chain_iterator -> second << ".\n";
     } /* for */
   } /* for */
 } /* Sparse_Matrix_Boundary_Map */
+
+template < class Cell_Complex >
+Sparse_Matrix<typename Cell_Complex::Ring> SparseMatrixRepresentation 
+( const std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & input, 
+ const unsigned int dimension, const Cell_Complex & complex ) {
+  //std::cout << "SparseMatrixRepresentation.\n";
+  typedef Sparse_Matrix<typename Cell_Complex::Ring> Matrix;
+  Matrix return_value ( complex . size ( dimension ), input . size () );
+  const unsigned int offset = complex . index_begin ( dimension );
+  for ( unsigned int index = 0; index < input . size (); ++ index ) {
+    for ( typename Cell_Complex::Chain::const_iterator term_iterator = input [ index ] . first . begin (); 
+         term_iterator != input [ index ] . first . end (); ++ term_iterator ) {
+      return_value . write (complex . index ( term_iterator -> first ) - offset, index, 
+                            term_iterator -> second);
+      //std::cout << "M(" << complex . index ( term_iterator -> first ) - offset << ", " << index << ") = " << 
+      // term_iterator -> second << ".\n";
+    } /* for */
+  } /* for */
+  
+  return return_value;
+} /* SparseMatrixRepresentation */
+

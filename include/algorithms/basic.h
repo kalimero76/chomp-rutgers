@@ -20,6 +20,10 @@ template < class Complex >
 typename Complex::Chain 
 coboundary ( const typename Complex::Chain & input, const Complex & complex );
 
+template < class Complex >
+typename Complex::Chain sum ( const typename Complex::Chain & lhs, const typename Complex::Chain & rhs );
+
+
 /* Solve AX = B. warning -- writes over A */
 template < class Matrix >
 Matrix matrix_solve ( Matrix & A, Matrix & B );
@@ -32,7 +36,7 @@ template < class Cell_Complex > void verify_decomposition ( Cell_Complex & my_co
  * TEST UTILITIES -- Common testing functions  *
  * * * * * * * * * * * * * * * * * * * * * * * */
 //#define TEST_PROGRAM
-#ifdef TEST_PROGRAM
+//#ifdef TEST_PROGRAM
 namespace utility {
   
 /* Declar/ations */
@@ -44,7 +48,7 @@ template < class T > T vector_prod ( const std::vector<T> multiply_my_elements_t
 template < class Cell_Complex > void inspect_complex ( Cell_Complex & my_complex );
 template < class Cell_Complex > void AKQ_inspect ( const Cell_Complex & my_complex );
 
-int do_preprocess;
+//extern int do_preprocess;
 
 /* Definitions */
 class compute_results {
@@ -59,7 +63,7 @@ public:
 
 } /* namespace utility */
 
-#endif
+//#endif
 
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/basic.hpp"

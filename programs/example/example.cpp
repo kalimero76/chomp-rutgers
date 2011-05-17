@@ -80,7 +80,7 @@ compute_results cubical_example (  int dimension, int width, float probability, 
    */
   /* Obtain Generators*/
   //utility::compute_example ( my_cubical_complex );
-#if 0
+  //#if 0
    std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
   Homology_Generators ( my_cubical_complex );
   
@@ -95,7 +95,7 @@ compute_results cubical_example (  int dimension, int width, float probability, 
       std::cout << generators [ dimension_index ] [ generator_index ] . first << "\n";
     } /* for */
   } /* for */
-#endif
+  //#endif
   return utility::compute_example ( my_cubical_complex );
 } /* cubical_example */
 

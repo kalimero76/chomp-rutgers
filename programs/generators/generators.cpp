@@ -6,6 +6,7 @@
 #define CHOMP_HEADER_ONLY_
 #include "complexes/Cubical_Complex.h"	/* for class Cubical_Complex */
 #include "algorithms/Homology.h"		/* for function Homology(...)*/
+#include "algorithms/basic.h"
 
 void generator_example ( void ) {
     Cubical_Complex my_cubical_complex;
@@ -14,7 +15,8 @@ void generator_example ( void ) {
     my_cubical_complex . Allocate_Bitmap ( sizes );
     my_cubical_complex . Add_Full_Cube ( cube_position );
     my_cubical_complex . erase ( my_cubical_complex . begin ( 2 ) );
-
+    my_cubical_complex . finalize ();
+    verify_complex ( my_cubical_complex );
     /* Obtain Generators*/
     std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
       Homology_Generators ( my_cubical_complex );
@@ -31,6 +33,7 @@ void generator_example ( void ) {
       } /* for */
     } /* for */
 
+  /*
     Cubical_Complex::Chain my_chain = generators [ 1 ] [ 0 ] . first;
 
     for ( Cubical_Complex::Chain::const_iterator it = my_chain . begin (); 
@@ -38,7 +41,7 @@ void generator_example ( void ) {
       std::cout << "Term = " << (*it) . first << " " << (*it) . second << "\n";
       std::cout << "Cell = " << * ( (*it).first ) << "\n";
     }
-
+*/
     
 } /* generator_example */
 

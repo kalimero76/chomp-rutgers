@@ -7,6 +7,7 @@
  *
  */
 
+#include <vector>
 #include <set>
 #include <deque>
 #include <algorithm>
@@ -532,6 +533,32 @@ namespace Adaptive_Cubical {
     return subdivide ( cover ( bounds () ) );
   } /* Adaptive_Cubical::Toplex::subdivide */ 
   
+  std::vector < unsigned char > Toplex::prefix ( const Top_Cell & cell ) const {
+    std::vector < unsigned char > result, reversed;
+    iterator cell_iterator = find ( cell );
+    Node * node_ptr = cell_iterator . node_;
+    while ( node_ptr != root_ ) {
+      Node * parent = node_ptr -> parent_;
+      if ( parent -> left_ == node_ptr ) {
+        /* This is a left-child */
+        reversed . push_back ( 0 );
+      } else {
+        /* This is a right-child */
+        reversed . push_back ( 1 );
+      } /* if-else */
+      node_ptr = parent;
+    } /* while */
+    /* Now reverse the order */
+    for ( int i = reversed . size () - 1; i >= 0; -- i ) {
+      result . push_back ( reversed [ i ] );
+    }
+    // WEIRD: the algorithm reverse_copy doesn't work.
+    // I get this bizarre seg-fault, and gdb tells me we've have been hijacked
+    // by some boost MPL crap (other than STL implementation). Apparently, it doesn't work right.
+    // std::reverse_copy ( reversed . begin (), reversed . end (), result . begin () );
+    return result;
+  } /* Adaptive_Cubical::Toplex::prefix */
+
   namespace detail {
     template < class FindMap >
     bool coarsen_helper ( Node * node, Toplex::size_type & size_, FindMap & find_,

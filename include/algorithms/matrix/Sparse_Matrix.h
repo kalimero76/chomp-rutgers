@@ -32,7 +32,7 @@ namespace std { using namespace __gnu_cxx; }
 
 #define HASH_SWITCH 10
 
-int number_of_pivots = 0;
+//int number_of_pivots = 0;
 
 // Sparse Matrix Data Structure
 
@@ -58,6 +58,10 @@ struct Element {
   Element ( Position position, Ring value, size_type left, size_type right, size_type up, size_type down) :
   position(position), value(value), left(left), right(right), up(up), down(down) {}
   
+  template < class T > Element ( const T & copy_me ) : 
+  position( copy_me . position), value( copy_me . value), left( copy_me . left), 
+  right( copy_me . right), up( copy_me . up), down( copy_me . down) {}
+
 };
 
 // friends of Sparse_Matrix
@@ -81,9 +85,12 @@ template < class Ring >
 class Sparse_Matrix {
 public:
   // typedefs
+  typedef Ring value_type;
   typedef int Index;
   typedef int size_type;
 private:
+  
+public: // not friends with different templated versions, weirdly
   // data to store the Sparse Matrix
   std::vector < Element<Ring> > data_;
   // Garbage Collection structure
@@ -151,8 +158,12 @@ public:
   // add to some position
   void add ( size_type i, size_type j, const Ring value );
   
+  // constructors 
   Sparse_Matrix ( void );
   Sparse_Matrix ( size_type i, size_type j );
+  template < class T > Sparse_Matrix ( const T & copy_me );
+  
+  // size and resize
   void resize ( size_type i, size_type j );
   size_type size ( void ) const; // sparsity size
   
@@ -182,6 +193,7 @@ void print_matrix ( const Sparse_Matrix<Ring> & print_me ) {
   typedef int size_type;
   size_type I = print_me . number_of_rows ();
   size_type J = print_me . number_of_columns ();
+  std::cout << " Matrix is " << I << " x " << J << "\n";
   for ( size_type i = 0; i < I; ++ i ) {
     std::cout << "[";
     for ( size_type j = 0; j < J; ++ j ) {
@@ -252,9 +264,25 @@ SmithNormalForm (Sparse_Matrix<Ring> * U,
                  Sparse_Matrix<Ring> * D,
                  const Sparse_Matrix<Ring> & A);
 
+/// Submatrix
+/// Input: A, top, bottom, left, right
+/// Produce matrix B = A(top:bottom, left:right)
+
+template < class Ring >
+void
+Submatrix (Sparse_Matrix<Ring> * B, 
+           const typename Sparse_Matrix<Ring>::size_type top,
+           const typename Sparse_Matrix<Ring>::size_type bottom,
+           const typename Sparse_Matrix<Ring>::size_type left,
+           const typename Sparse_Matrix<Ring>::size_type right,
+           const Sparse_Matrix<Ring> & A);
+
 /// ColumnEchelon
 /// Input: A
 /// Output: B, where B is A in column echelon form.
+
+template < class Ring >
+void ColumnEchelon (Sparse_Matrix<Ring> * B, const Sparse_Matrix<Ring> & A);
 
 // TODO
 
@@ -263,6 +291,11 @@ SmithNormalForm (Sparse_Matrix<Ring> * U,
 template < class Cell_Complex >
 void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > & output_matrix, 
                                   const Cell_Complex & complex, const unsigned int dimension ); 
+
+template < class Cell_Complex >
+Sparse_Matrix<typename Cell_Complex::Ring> SparseMatrixRepresentation 
+( const std::vector < std::pair < typename Cell_Complex::Chain, unsigned int > > & input, 
+  const unsigned int dimension, const Cell_Complex & complex );
 
 #ifndef CHOMP_LIBRARY_ONLY_
 #include "algorithms/matrix/Sparse_Matrix.hpp"

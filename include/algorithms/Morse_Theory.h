@@ -10,6 +10,7 @@
 #ifndef CHOMP_MORSE_THEORY_H
 #define CHOMP_MORSE_THEORY_H
 
+#include <map>
 #include <vector>
 #include <list>
 

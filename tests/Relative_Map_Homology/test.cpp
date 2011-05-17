@@ -7,9 +7,10 @@
 #define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
 #include "toplexes/Adaptive_Cubical_Toplex.h"
-#include "algorithms/Homology.h"			/* for function Homology(...)*/
 #include "complexes/Adaptive_Complex.h"
 #include "algorithms/Morse_Theory.h"
+#include "algorithms/Homology.h"			/* for function Homology(...)*/
+#include "tools/visualization.h"
 
 using namespace Adaptive_Cubical;
 
@@ -49,10 +50,23 @@ int main ( int argc, char * argv [] ) {
   subdivide_toplex ( T );
   subdivide_toplex ( T );
   subdivide_toplex ( T );
+  subdivide_toplex ( T );
+  subdivide_toplex ( T );
+  //subdivide_toplex ( T );
+  //subdivide_toplex ( T );
+  //subdivide_toplex ( T );
+  /*
+  Adaptive_Complex complex = T . complex ();
+  ComplexVisualization < Adaptive_Complex > cv ( "adaptive complex" );
+  cv . drawComplex ( complex, 100 );
   
+  // wait a minute here
+  char c;
+  std::cin >> c;
+   */
   /* Produce morse set "S" */
   std::cout << "Producing Morse set (known apriori)\n";
-  Geometric_Description square ( 2, Real ( -0.1 ), Real ( 0.1 ) );
+  Geometric_Description square ( 2, Real ( -0.4 ), Real ( 0.4 ) );
   Toplex::Subset S = T . cover ( square );
   
   /* Produce continuous map "f" */
@@ -62,7 +76,7 @@ int main ( int argc, char * argv [] ) {
   std::cout << "Calling Conley Index. \n";
   Conley_Index_t conley_index;
   Conley_Index ( &conley_index, T, S, f );
-  std::cout << " Computed Conley Index . \n";
+  std::cout << "Computed Conley Index. \n";
   
   return 0;
 } /* main */

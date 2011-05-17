@@ -6,6 +6,7 @@
 //#define MORSE_DEBUG
 #define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
+//#define USE_GMP
 #include "complexes/Simplicial_Complex.h"	/* for class Simplicial_Complex */
 #include "complexes/Abstract_Complex.h"	/* for class Simplicial_Complex */
 #include "archetypes/Chain_Archetype.h" /* For Default_Cell */

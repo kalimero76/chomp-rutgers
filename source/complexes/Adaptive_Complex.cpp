@@ -706,6 +706,99 @@ Adaptive_Complex::size_type Adaptive_Complex::ace_end ( unsigned int dimension )
   return index_begin_ [ dimension + 1 ] - king_count_ [ dimension ];
 } /* Adaptive_Complex::ace_end */
 
+/* Visualizable Complex */
+std::vector < float > Adaptive_Complex::geometry ( const Cell & cell ) const {
+  // return x y w h, where x and y are center and w and h are width and height
+  using namespace Adaptive_Complex_detail;
+  std::vector < float > retval;
+  if ( dimension () != 2 ) return retval;
+  GeoCell geo ( cell, *this );
+  float x, y, s, w, h;
+  s = .25f;
+  x = .5f;
+  y = .5f;
+  Node * node = geo . node;
+  typedef std::pair<bool, bool> Step;
+  std::list < Step > route;
+  while ( node != root_ ) {
+    //std::cout << "Climbing! Let's go! We are at node = " << node << "\n";
+    Step step;
+    //std::cout << node -> child_number << " (";
+    ///std::cout << (node -> child_number & 1) << " " << (node -> child_number & 2) << ") ";
+
+    if ( (node -> child_number & 1) == 0 ) {
+      step . first = false;
+    } else {
+      step . first = true;
+    }
+    if ( (node -> child_number & 2) == 0 ) {
+      step . second = false;
+    } else {
+      step . second = true;
+    }
+    route . push_front ( step );
+    node = node -> parent;
+  }
+  BOOST_FOREACH ( Step & step, route ) {
+    if ( step . first == false ) {
+      x -= s; 
+      //std::cout << "x-left  ";
+    } else {
+      x += s;
+      //std::cout << "x-right ";
+    }
+    if ( step . second == false ) {
+      y -= s; 
+      //std::cout << "y-left  ";
+
+    } else {
+      y += s;
+      //std::cout << "y-right ";
+    }
+    s /= 2.0f;
+  }
+  //std::cout << "\n";
+  long int code = geo . code;
+  w = h = s = 2.0f * s;
+
+  // assume in the middle for now
+  //std::cout << code << " ";
+  if ( (code & 8 ) == 0 ) {
+    if ( (code & 2) == 2 ) {
+      //std::cout << "yup ";
+      y += s;
+      h = s / 8.0f;
+    }
+    if ( (code & 2) == 0 ) {
+      //std::cout << "ydo ";
+      y -= s;
+      h = s / 8.0f;
+    }
+  } else {
+    //std::cout << "yfu ";
+  }
+  if ( ( code & 4 ) == 0 ) {
+    if ( (code & 1 ) == 1 ) {
+      //std::cout << "xup ";
+      x += s;
+      w = s / 8.0f;
+    }  
+    if ( (code & 1 ) == 0 ) {
+      //std::cout << "xdo ";
+      x -= s;
+      w = s / 8.0f;
+    }  
+  } else {
+    //std::cout << "xfu ";
+  }
+  //std::cout << "\n";
+  retval . push_back ( x );
+  retval . push_back ( y );
+  retval . push_back ( w );
+  retval . push_back ( h );
+  return retval;
+}
+
 /* Adaptive_Complex */
 
 Adaptive_Complex::Adaptive_Complex ( void ) {

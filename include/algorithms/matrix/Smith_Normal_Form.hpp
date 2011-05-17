@@ -12,12 +12,22 @@
 #include <utility> /* for std::pair */
 #include <algorithm>
 
+#ifdef USE_GMP
+#include <gmpxx.h>
+#endif
+
 template < class Vector_of_Pairs, class Ring >
 void Smith_Normal_Form ( Vector_of_Pairs & normal_form, const Sparse_Matrix<Ring> & input_matrix ) {
-  typedef Sparse_Matrix<Ring> Matrix;
+#ifdef USE_GMP
+  typedef mpz_class ComputeRing;
+#else
+  typedef Ring ComputeRing;
+#endif
+  typedef Sparse_Matrix<ComputeRing> Matrix;  
+  Matrix M ( input_matrix );
 	/* Compute Smith Normal Form */
 	Matrix U, Uinv, V, Vinv, D; 
-	SmithNormalForm < Ring > ( &U, &Uinv, &V, &Vinv, &D, input_matrix);
+	SmithNormalForm < ComputeRing > ( &U, &Uinv, &V, &Vinv, &D, M);
   
   int size_limit = std::min(D . number_of_rows (), D . number_of_columns ());
 	/* Parse the smith form output into vector of pairs <scalar, multiplicity> */
@@ -29,7 +39,12 @@ void Smith_Normal_Form ( Vector_of_Pairs & normal_form, const Sparse_Matrix<Ring
 		if ( current_diagonal_value == D . read ( index, index ) )
 			++ normal_form [ normal_form_index ] . second;
 		else {
-			current_diagonal_value = D . read ( index, index );
+#ifdef USE_GMP
+			current_diagonal_value = D . read ( index, index ) . get_si ();
+#else
+      current_diagonal_value = D . read ( index, index );
+#endif
+      
       if ( current_diagonal_value == Ring ( 0 ) ) break;
 			normal_form . push_back ( typename Vector_of_Pairs::value_type ( current_diagonal_value, 1 ) ); 
       ++ normal_form_index;

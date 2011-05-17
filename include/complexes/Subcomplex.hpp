@@ -3,12 +3,14 @@
  * Shaun Harker 3/31/10
  */
 
+#include "algorithms/Morse_Theory.h"
+
 /* * * * * * * * * * * * * *
  * Subcomplex definitions  *
  * * * * * * * * * * * * * */
 
 template < class Cell_Complex > 
-std::pair<typename Subcomplex<Cell_Complex>::iterator, bool> Subcomplex<Cell_Complex>::insert ( const value_type & insert_me ) {
+std::pair<typename Subcomplex<Cell_Complex>::iterator, bool> Subcomplex<Cell_Complex>::insert ( const value_type & insert_me, bool update ) {
   std::pair < Subcomplex_const_iterator<Cell_Complex>, bool > 
     return_value ( Subcomplex_const_iterator<Cell_Complex> ( this, 
                                                              insert_me . data (), 
@@ -17,42 +19,46 @@ std::pair<typename Subcomplex<Cell_Complex>::iterator, bool> Subcomplex<Cell_Com
   if ( return_value . second ) {
     bitmap_ [ insert_me . data () ] = true;
     unsigned int dimension = insert_me . dimension ();
-    /* Update size_ */
-		++ size_ [ dimension ];
-    ++ total_size_;
-    /* Update begin_ */
-    const_iterator iter = return_value . first;
-    ++ iter;
-    if ( iter == begin_ [ dimension ] ) {
-      begin_ [ dimension ] = return_value . first;
-    } /* if */
+    if ( update ) {
+      /* Update size_ */
+      ++ size_ [ dimension ];
+      ++ total_size_;
+      /* Update begin_ */
+      const_iterator iter = return_value . first;
+      ++ iter;
+      if ( iter == begin_ [ dimension ] ) {
+        begin_ [ dimension ] = return_value . first;
+      } /* if */
+    }
   } /* if */
   return return_value;
 } /* Subcomplex<>::insert */
 
 template < class Cell_Complex > 
-void Subcomplex<Cell_Complex>::erase ( const iterator & erase_me ) {
-  unsigned int dimension = erase_me . dimension ();
-  /* Update size_ */
-  -- size_ [ dimension ]; 
-  -- total_size_;
-  /* Update begin_ */
-  if ( erase_me == begin_ [ dimension ] ) {
-    ++ begin_ [ dimension ];
-    while ( dimension > 0 ) {
-      if ( begin_ [ dimension - 1 ] == erase_me ) begin_ [ dimension - 1 ] = begin_ [ dimension ];
-      else break;
-      -- dimension;
+void Subcomplex<Cell_Complex>::erase ( const iterator & erase_me, bool update ) {
+  if ( update ) {
+    unsigned int dimension = erase_me . dimension ();
+    /* Update size_ */
+    -- size_ [ dimension ]; 
+    -- total_size_;
+    /* Update begin_ */
+    if ( erase_me == begin_ [ dimension ] ) {
+      ++ begin_ [ dimension ];
+      while ( dimension > 0 ) {
+        if ( begin_ [ dimension - 1 ] == erase_me ) begin_ [ dimension - 1 ] = begin_ [ dimension ];
+        else break;
+        -- dimension;
+      }
     }
   }
   bitmap_ [ erase_me . data_ ] = false;
 } /* Subcomplex<>::erase */
 
 template < class Cell_Complex > 
-void Subcomplex<Cell_Complex>::erase ( const Cell & erase_me ) {
+void Subcomplex<Cell_Complex>::erase ( const Cell & erase_me, bool update ) {
   const_iterator it = find ( erase_me );
-  if ( it == end () ) return;
-  erase ( it );
+  if ( it == end () ) return; // or maybe we should complain
+  erase ( it, update );
 } /* Subcomplex<>::erase */
 
 template < class Cell_Complex > 
@@ -327,6 +333,36 @@ construct ( const Cell_Complex * super_complex ) {
   bitmap_ . resize ( bitmap_size_, false );
 } /* Subcomplex<>::Subcomplex */
 
+template < class Cell_Complex > 
+void Subcomplex<Cell_Complex>::finalize ( void ) {
+  /* Gives correct values to total_size_, begin_, and size_ */
+  unsigned int dimension = 0;
+  size_ [ 0 ] = 0;
+  total_size_ = 0;
+  begin_ [ 0 ] = const_iterator ( this, 0, 0 );
+  if ( not bitmap_ [ 0 ] ) {
+    ++ begin_ [ 0 ];
+  } /* if */
+  for ( const_iterator lookup = begin (); lookup != end (); ++ lookup ) { 
+    
+    while ( super_complex_ -> index_begin ( dimension + 1 ) <= lookup . data () ) {
+      ++ dimension;
+      size_ [ dimension ] = 0;
+      begin_ [ dimension ] = lookup;
+    }
+    
+    ++ size_ [ dimension ];
+    ++ total_size_;
+  } /* for */
+  
+  while ( dimension < dimension_ ) {
+    ++ dimension;
+    size_ [ dimension ] = 0;
+    begin_ [ dimension ] = end_;
+  } /* while */
+  index ();
+} /* Subcomplex<>::finalize */
+
 #if 0
 // OLD constructor, used to make full subcomplex rather than empty one
 // and also used const ref instead of pointer
@@ -376,6 +412,11 @@ typename Subcomplex<Cell_Complex>::Chain Subcomplex<Cell_Complex>::project ( con
   } /* for */
   return return_value;
 } /* Subcomplex<>::project */
+
+template < class Cell_Complex > 
+typename Cell_Complex::const_iterator Subcomplex<Cell_Complex>::include ( const Cell & include_me ) const {
+  return super_complex_ -> lookup ( include_me . data () ); 
+}
 
 template < class Cell_Complex > 
 typename Cell_Complex::const_iterator Subcomplex<Cell_Complex>::include ( const const_iterator & include_me ) const {
@@ -459,3 +500,9 @@ template < class Cell_Complex >
 unsigned long Subcomplex_const_iterator<Cell_Complex>::data () const {
   return data_;
 } /* Subcomplex_const_iterator::data */
+
+template < class Cell_Complex >
+std::ostream & operator << ( std::ostream & output_stream, const Subcomplex_const_iterator<Cell_Complex> & print_me) {
+  output_stream << * print_me;
+  return output_stream;
+} /* operator << */

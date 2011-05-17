@@ -23,6 +23,7 @@
 template < class > class Abstract_Chain;
 template < class > class Abstract_Complex;
 template < class > class Abstract_const_iterator;
+template < class Cell_Type > std::ostream & operator << ( std::ostream & output_stream, const Abstract_const_iterator<Cell_Type> & print_me);
 
 /* * * * * * * * * * * * *
  * class Abstract_Chain  *
@@ -118,6 +119,9 @@ private:
   std::vector< size_type> king_count_;
 };
 
+
+
+
 /* * * * * * * * * * * * * * * * * 
  * class Abstract_const_iterator *
  * * * * * * * * * * * * * * * * */
@@ -141,6 +145,7 @@ public:
   const complex_type & container () const;
 private:
   friend class Abstract_Complex<Cell_Type>;
+  friend std::ostream & operator << <Cell_Type> ( std::ostream & output_stream, const Abstract_const_iterator<Cell_Type> & print_me);
   const complex_type * container_;
   typename std::set<Cell_Type>::const_iterator data_;
   unsigned int dimension_;
