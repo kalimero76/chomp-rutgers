@@ -5,9 +5,11 @@
  *
  */
 
+#include <iterator>
+#include <ctime>
+
 #include "complexes/Adaptive_Complex.h" // debug
 #include "tools/visualization.h"
-#include <ctime>
 
 namespace Relative_Graph_Complex_detail {
 template < class Relative_Cell, class Complex >
@@ -45,12 +47,13 @@ void closure_in_subcomplex ( std::set < Relative_Cell > & return_value,
 #include "algorithms/basic.h"
 
 template < class Toplex, class Combinatorial_Map >
+template < class Subset >
 Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Graph_Complex (const Toplex & T, 
-                                                const typename Toplex::Subset X,
-                                                const typename Toplex::Subset A,
-                                                const typename Toplex::Subset Y,
-                                                const typename Toplex::Subset B,
-                                                const Combinatorial_Map & F ) : toplex_(T), A_(A), F_(F) {
+                                                const Subset X,
+                                                const Subset A,
+                                                const Subset Y,
+                                                const Subset B,
+                                                const Combinatorial_Map & F ) : toplex_(T), A_(A.begin(), A.end() ), F_(F) {
   using namespace Relative_Graph_Complex_detail;
 
   typedef typename Toplex::Top_Cell Top_Cell;
@@ -61,9 +64,9 @@ Relative_Graph_Complex<Toplex,Combinatorial_Map>::Relative_Graph_Complex (const 
   
   /* Generate the full_domain and full_codomain complexes */
   //std::cout << "Generating full_domain_.\n";
-  toplex_ . complex ( full_domain_, X, X_boxes_ );
+  toplex_ . complex ( full_domain_, X . begin(), X . end (), X_boxes_ );
   //std::cout << "Generating full_codomain_.\n";
-  toplex_ . complex ( full_codomain_, Y, Y_boxes_ );
+  toplex_ . complex ( full_codomain_, Y . begin (), Y . end (), Y_boxes_ );
 
   //std::cout << "Elapsed time: " << (float)( clock () - start ) / (float) CLOCKS_PER_SEC << "\n";
   start = clock ();
@@ -395,7 +398,11 @@ template < class Toplex, class Combinatorial_Map >
 void Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber ( Relative_Complex & return_value, 
                                                                    const Relative_Cell & domain_cell ) {
   /* Determine the set of top cells in (X, A) whose intersection is "domain_cell */
-  typename Toplex::Subset X_neighbors, A_neighbors;
+  // note: X neighbors are such top cells in X; 
+  //       A_neighbors are such top cells in A
+  //       So A_neighbors is included in X_neighbors, since A is included in X
+  typedef std::unordered_set<typename Toplex::Top_Cell> HashSubset;
+  HashSubset X_neighbors, A_neighbors;
   
   // DEBUG
   //std::cout << "makeFiber ( " << domain_cell << ") \n";
@@ -458,12 +465,17 @@ void Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber ( Relative_Comp
   */
   
   /* Produce the union of the images of the "neighbors" */
-  typename Toplex::Subset X_image, A_image;
+  HashSubset X_image, A_image;
+  typedef typename Combinatorial_Map::mapped_type TopSubset;
   BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, X_neighbors ) {
-    X_image . insert ( F_ . find ( neighbor ) -> second );
+    const TopSubset & mapped = F_ . find ( neighbor ) -> second;
+    std::insert_iterator<HashSubset> ii ( X_image, X_image . begin () );
+    std::copy ( mapped . begin (), mapped . end (), ii ); 
   } /* boost_foreach */
   BOOST_FOREACH ( typename Toplex::Top_Cell neighbor, A_neighbors ) {
-    A_image . insert ( F_ . find ( neighbor ) -> second );
+    const TopSubset & mapped = F_ . find ( neighbor ) -> second;
+    std::insert_iterator<HashSubset> ii ( A_image, A_image . begin () );
+    std::copy ( mapped . begin (), mapped . end (), ii ); 
   } /* boost_foreach */  
   
   //DEBUG

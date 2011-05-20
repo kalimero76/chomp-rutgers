@@ -4,13 +4,20 @@
 
 #include <iostream>
 
+#define RGVISUALIZE_DEBUG
+#define VISUALISE_DEBUG
 #define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
+
+
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 #include "complexes/Adaptive_Complex.h"
 #include "algorithms/Morse_Theory.h"
 #include "algorithms/Homology.h"			/* for function Homology(...)*/
-#include "tools/visualization.h"
+
+#include "visualization.cpp"
+
+
 
 using namespace Adaptive_Cubical;
 

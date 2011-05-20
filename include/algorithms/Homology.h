@@ -25,12 +25,12 @@ template < class Toplex, class Geometric_Map >
 void Map_Homology ( const Toplex & X, const Toplex & Y, const Geometric_Map & f );
 
 /* Compute relative homology of a map*/
-template < class Toplex, class Combinatorial_Map >
+template < class Toplex, class Subset, class Combinatorial_Map >
 void /* TODO */ Relative_Map_Homology (const Toplex & toplex, 
-                                       const typename Toplex::Subset X, 
-                                       const typename Toplex::Subset A,
-                                       const typename Toplex::Subset Y, 
-                                       const typename Toplex::Subset B,
+                                       const Subset X, 
+                                       const Subset A,
+                                       const Subset Y, 
+                                       const Subset B,
                                        const Combinatorial_Map & F );
 
 /* Print out the homology generators... TODO: return the homology generators */
@@ -69,10 +69,10 @@ private:
 
 /* Compute the Conley Index of a "subset" of a "toplex", with the
    combinatorial map "map" */
-template < class Toplex, class Combinatorial_Map > void
+template < class Toplex, class Subset, class Combinatorial_Map > void
 Conley_Index ( Conley_Index_t * output,
                const Toplex & toplex, 
-               const typename Toplex::Subset & subset,
+               const Subset & subset,
                /* const */ Combinatorial_Map & map );
 
 

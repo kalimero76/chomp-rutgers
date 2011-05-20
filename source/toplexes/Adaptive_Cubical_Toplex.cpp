@@ -8,15 +8,18 @@
  */
 
 #include <vector>
+#include <stack>
 #include <set>
 #include <deque>
 #include <algorithm>
+#include <iterator>
+
 #include "boost/foreach.hpp"
 
 #include "toplexes/Adaptive_Cubical_Toplex.h"
 
 //debug
-#include "algorithms/basic.h"
+//#include "algorithms/basic.h"
 
 namespace Adaptive_Cubical {
 
@@ -77,6 +80,7 @@ namespace Adaptive_Cubical {
   /* * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_Subset *
    * * * * * * * * * * * * * * * * * * * * */
+
   void Toplex_Subset::insert ( const Toplex_Subset & insert_me ) {
     BOOST_FOREACH ( const Top_Cell & cell, insert_me ) {
       insert ( cell );
@@ -203,10 +207,23 @@ namespace Adaptive_Cubical {
     return size_;
   } /* Adaptive_Cubical::Toplex::size */
 
+  Toplex::size_type Toplex::tree_size ( void ) const {
+    return tree_size_;
+  } /* Adaptive_Cubical::Toplex::tree_size */
+
   unsigned int Toplex::dimension ( void ) const {
     return dimension_;
   } /* Adaptive_Cubical::Toplex::dimension */
 
+#if 1
+  // BOTTLENECK #1 May 17, 2011.
+  Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region ) const {
+    Toplex::Subset result;
+    std::insert_iterator < Toplex::Subset > ii ( result, result . begin () );
+    cover ( ii, geometric_region ); 
+    return result;
+  } // cover
+#else
   Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region ) const {
     /* TODO: optimize geometric checks, it is inefficient to call geometry at every level */
     Subset cover_set;
@@ -234,7 +251,7 @@ namespace Adaptive_Cubical {
     } /* while */
     return cover_set;
   } /* Adaptive_Cubical::Toplex::cover */
-
+#endif
   // TODO: this could be improved
   Toplex::Subset Toplex::cover ( const Geometric_Description & geometric_region, const Subset & subset ) const {
     return intersect ( cover ( geometric_region ), subset );
@@ -374,52 +391,49 @@ namespace Adaptive_Cubical {
         //std::cout << "leaving\n";
       } /* operator () */
     };
-
-    struct AddTopCell {
-      std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes;
-      Toplex::Complex & complex;
-      const Toplex & toplex;
-      AddTopCell ( std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes,
-                   Toplex::Complex & complex, 
-                   const Toplex & toplex )
-      : boxes(boxes), complex(complex), toplex(toplex) {}
-      void operator () ( const Toplex::Top_Cell & top_cell ) {
-        //std::cout << "Main, entering with " << top_cell << "\n";
-        /* Determine depth of cell */
-        unsigned int depth = 0;
-        Node * leaf = toplex . find ( top_cell ) . node ();
-        Node * node = leaf;
-        while ( node -> parent_ != NULL ) {
-          node = node -> parent_;
-          if ( node -> dimension_ == 0 ) ++ depth;
-        } /* while */
-        //std::cout << "depth = " << depth << "\n";
-        /* Determine 'splitting' used for Add_Full_Cube in Adaptive Complex */
-        std::vector < unsigned int > splitting ( depth );
-        unsigned int subdivision_choice = 0;
-        node = leaf;
-        int outer_index = depth;
-        int inner_index = toplex . dimension ();
-        while ( 1 ) {
-          -- inner_index;
-          Node * parent = node -> parent_;
-          //std::cout << "parent = " << parent << "\n";
-          //std::cout << "inner_index = " << inner_index << "\n";
-          //std::cout << node -> dimension_ << "\n";
-          if ( parent -> left_ != node ) subdivision_choice |= ( 1 << inner_index );
-          if ( inner_index == 0 ) {
-            -- outer_index;
-            splitting [ outer_index ] = subdivision_choice;
-            subdivision_choice = 0;
-            if ( outer_index == 0 ) break;
-            inner_index = toplex . dimension ();
-          } /* if */
-          node = parent;
-        } /* while */
-        boxes [ top_cell ] = complex . Add_Full_Cube ( splitting );
-        
-      } /* operator () */
-    };
+    
+    /* AddTopCell Definitions. */
+    AddTopCell::AddTopCell ( std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes,
+                            Toplex::Complex & complex, 
+                            const Toplex & toplex )
+    : boxes(boxes), complex(complex), toplex(toplex) {}
+    void AddTopCell::operator () ( const Toplex::Top_Cell & top_cell ) {
+      //std::cout << "Main, entering with " << top_cell << "\n";
+      /* Determine depth of cell */
+      unsigned int depth = 0;
+      Node * leaf = toplex . find ( top_cell ) . node ();
+      Node * node = leaf;
+      while ( node -> parent_ != NULL ) {
+        node = node -> parent_;
+        if ( node -> dimension_ == 0 ) ++ depth;
+      } /* while */
+      //std::cout << "depth = " << depth << "\n";
+      /* Determine 'splitting' used for Add_Full_Cube in Adaptive Complex */
+      std::vector < unsigned int > splitting ( depth );
+      unsigned int subdivision_choice = 0;
+      node = leaf;
+      int outer_index = depth;
+      int inner_index = toplex . dimension ();
+      while ( 1 ) {
+        -- inner_index;
+        Node * parent = node -> parent_;
+        //std::cout << "parent = " << parent << "\n";
+        //std::cout << "inner_index = " << inner_index << "\n";
+        //std::cout << node -> dimension_ << "\n";
+        if ( parent -> left_ != node ) subdivision_choice |= ( 1 << inner_index );
+        if ( inner_index == 0 ) {
+          -- outer_index;
+          splitting [ outer_index ] = subdivision_choice;
+          subdivision_choice = 0;
+          if ( outer_index == 0 ) break;
+          inner_index = toplex . dimension ();
+        } /* if */
+        node = parent;
+      } /* while */
+      boxes [ top_cell ] = complex . Add_Full_Cube ( splitting );
+      
+    } /* operator () */
+    
     
   } /* namespace detail */
 
@@ -478,41 +492,8 @@ namespace Adaptive_Cubical {
   
   Toplex::Subset Toplex::subdivide ( iterator cell_to_divide ) {
     Subset children;
-    std::deque < std::pair < const_iterator, unsigned int > > work_deque;
-    work_deque . push_back ( std::pair < const_iterator, unsigned int >
-                            (cell_to_divide,
-                             cell_to_divide . node () -> dimension_ ) );
-    while ( not work_deque . empty () ) {
-      std::pair < const_iterator, unsigned int >  work_pair = work_deque . front ();
-      work_deque . pop_front ();
-      if ( work_pair . second < dimension_ ) {
-        work_pair . first . node_ -> dimension_ = work_pair . second;
-        /* We must subdivide further */
-        work_pair . first . node_ -> left_ = new Node;
-        work_pair . first . node_ -> right_ = new Node;
-        /* Update begin_, size_, tree_size_, find_ and initialize new nodes.*/
-        if ( begin_ == work_pair . first . node_ )
-          begin_ . node_ = work_pair . first . node_ -> left_;
-        ++ size_;
-        work_pair . first . node_ -> left_ -> contents_ = tree_size_ ++;
-        work_pair . first . node_ -> left_ -> parent_ = work_pair . first . node_;
-        find_ . push_back ( const_iterator ( work_pair . first . node_ -> left_ ) );
-        work_pair . first . node_ -> right_ -> contents_ = tree_size_ ++;
-        work_pair . first . node_ -> right_ -> parent_ = work_pair . first . node_;
-        find_ . push_back ( const_iterator ( work_pair . first . node_ -> right_ ) );
-        /* Push the children onto the work_deque */
-        work_deque . push_back ( std::pair < const_iterator, unsigned int >
-                                 (const_iterator ( work_pair . first . node_ -> left_ ),
-                                  work_pair . second + 1 ) );
-        work_deque . push_back ( std::pair < const_iterator, unsigned int >
-                                 (const_iterator ( work_pair . first . node_ -> right_ ),
-                                  work_pair . second + 1 ) );
-      } else {
-        work_pair . first . node_ -> dimension_ = 0;
-        //std::cout << "subdivide: inserting " << work_pair . first . node_ -> contents_ << "\n";
-        children . insert ( work_pair . first . node_ -> contents_ );
-      } /* if-else */
-    } /* while */
+    std::insert_iterator < Subset > ii ( children, children . begin () );
+    subdivide ( ii, cell_to_divide );
     return children;
   } /* Adaptive_Cubical::Toplex::subdivide */
 
@@ -524,7 +505,7 @@ namespace Adaptive_Cubical {
     Subset result;
     BOOST_FOREACH ( Top_Cell cell_to_divide, subset_to_divide ) {
       Subset subresult = subdivide ( cell_to_divide );
-      result . insert ( subresult . begin (), subresult . end () );
+      result . insert ( subresult );
     } /* boost_foreach */
     return result;
   } /* Adaptive_Cubical::Toplex::subdivide */  

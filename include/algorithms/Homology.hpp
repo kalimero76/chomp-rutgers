@@ -11,6 +11,7 @@
 #include <vector>   /* For vector<...> */
 #include <utility>  /* For pair<...> */
 #include <algorithm>
+#include <iterator>
 #include <ctime>
 
 #include "algorithms/basic.h" /* for verify_complex.h and matrix_solve */
@@ -565,12 +566,12 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
 
 /* Given a single toplex, with subsets X, A, Y, B, and a combinatorial map F : X -> Y which restricts
    to F : A -> B, compute the relative homology of F. */
-template < class Toplex, class Combinatorial_Map >
+template < class Toplex, class Subset, class Combinatorial_Map >
 void /* TODO */ Relative_Map_Homology (const Toplex & toplex, 
-                                       const typename Toplex::Subset X, 
-                                       const typename Toplex::Subset A,
-                                       const typename Toplex::Subset Y, 
-                                       const typename Toplex::Subset B,
+                                       const Subset X, 
+                                       const Subset A,
+                                       const Subset Y, 
+                                       const Subset B,
                                        const Combinatorial_Map & F ) {
   /* Method.
    1. Construct the Relative Graph G
@@ -779,10 +780,11 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
 
 /* CONLEY INDEX */
 
-template < class Toplex, class Map > void
-Conley_Index ( Conley_Index_t * output,
+// note:: assuming Map::mapped_type == Subset, so that needs to be fixed
+template < class Toplex, class Subset, class Map > 
+void Conley_Index ( Conley_Index_t * output,
               const Toplex & toplex, 
-              const typename Toplex::Subset & S,
+              const Subset & S,
               /* const */ Map & f ) {
   /* Method.
   1. Let F be the combinatorial map on "toplex" that "f" induces
@@ -808,47 +810,54 @@ Conley_Index ( Conley_Index_t * output,
   */
   
   typedef typename Toplex::Top_Cell Cell;
-  typedef typename Toplex::Subset Subset;
   typedef std::map < Cell, Subset > Combinatorial_Map;
   
-  Subset X;
-  Subset A;
-  Combinatorial_Map G;
+
   
   clock_t start, start0, stop;
   std::cout << "Conley Index. Preparing computation...\n";
   start0 = start = clock ();
-  /* Construct X */
+  /* Construct G on S, and also X and S in hash set forms called X_cells and S_cells */
+  // note: All cells in X may be obtained as images of cells in S.
+  typedef std::unordered_set<Cell> CellDictionary;
+  CellDictionary X_cells;
+  CellDictionary S_cells;
+  Combinatorial_Map G;
+  
+  std::insert_iterator<CellDictionary> Xc_ii ( X_cells, X_cells . begin () );
   BOOST_FOREACH ( Cell cell, S ) {
-    X . insert ( cell );
-    Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
-    X . insert ( Image );
-    G [ cell ] = Image; // cache these values for G rather than having to compute them later
-    /*
-    std::cout << "G [ " << cell << "] = ";
-    BOOST_FOREACH ( Cell image_cell, Image ) {
-      std::cout << image_cell << " ";
-    }
-    std::cout << "\n";
-     */
+    S_cells . insert ( cell );
+    Subset & image = G [ cell ] = Subset ();
+    std::insert_iterator<Subset> image_ii ( image, image . end () );
+    toplex . cover ( image_ii, f ( toplex . geometry ( toplex . find ( cell ) ) ) );
+    std::copy ( image . begin (), image . end (), Xc_ii );
   } /* boost_foreach */
   
-  /* Construct A */
-  A = X;
-  BOOST_FOREACH ( Cell cell, S ) {
-    A . erase ( cell );
+  /* Construct X and A */
+  // note: The cells in A are those in X not in S.
+  Subset X, A;
+  std::insert_iterator<Subset> X_ii ( X, X . begin () );
+  std::insert_iterator<Subset> A_ii ( A, A . begin () );
+  BOOST_FOREACH ( Cell cell, X_cells ) {
+    * X_ii ++ = cell;
+    if ( S_cells . count ( cell ) == 0 ) {
+      * A_ii ++ = cell;
+      
+    }
   } /* boost_foreach */ 
   
-  //std::cout << " --- \n";
-  /* Restrict G to (X, A) */
+  /* Compute G for domain cells in A */
+  // note: we restrict the ranges to A 
   BOOST_FOREACH ( Cell cell, A ) {
-    Subset Image = toplex . cover ( f ( toplex . geometry ( toplex . find ( cell ) ) ) );
-    G [ cell ] = intersect ( A, Image );
-    //std::cout << "G [ " << cell << "] = ";
-    //BOOST_FOREACH ( Cell image_cell, G [ cell ] ) {
-    //  std::cout << image_cell << " ";
-    //}
-    //std::cout << "\n";
+    Subset image;
+    std::insert_iterator<Subset> image_ii ( image, image . end () );
+    toplex . cover ( image_ii, f ( toplex . geometry ( toplex . find ( cell ) ) ) );
+    G [ cell ] = Subset ();
+    std::insert_iterator<Subset> G_ii ( G [ cell ], G [ cell ] . begin () );
+    BOOST_FOREACH ( Cell image_cell, image ) {
+      if ( X_cells . count ( image_cell ) != 0 ) * G_ii ++ = image_cell; // better to look in A_cells, but i didn't make it
+    }
+    
   } /* boost_foreach */  
   
   /* DEBUG CONLEY INDEX */
@@ -876,7 +885,6 @@ Conley_Index ( Conley_Index_t * output,
   std::cout << "Conley Index computed. Total time = " << (float) ( stop - start0 ) / (float) CLOCKS_PER_SEC << "\n";
   std::cout << "Number of cells in X = " << X . size () << "\n Cells per second = " << (float) X . size () * (float) CLOCKS_PER_SEC / (float) ( stop - start0 )  << "\n";
   
-
   return;
 } /* void Conley_Index(...) */
 

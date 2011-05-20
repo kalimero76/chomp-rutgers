@@ -112,11 +112,13 @@ namespace Adaptive_Cubical {
    * * * * * * * * * * * * * * * * * * * * */
   //TODO: improve this container. (switched to set in order to consistently compare
   //        computations among machines
+
   class Toplex_Subset : public std::set < Adaptive_Cubical::Top_Cell > {
   public:
     using std::set < Adaptive_Cubical::Top_Cell >::insert;
     void insert ( const Toplex_Subset & insert_me );
   };
+  
   
   /* * * * * * * * * * * * * * * * * * * * * * * * *
    * class Adaptive_Cubical::Toplex_const_iterator  *
@@ -166,6 +168,8 @@ namespace Adaptive_Cubical {
     iterator begin ( void ) const;
     iterator end ( void ) const;
     size_type size ( void ) const;
+    size_type tree_size ( void ) const;
+
     /* Toplex */
     unsigned int dimension ( void ) const;
     
@@ -173,6 +177,7 @@ namespace Adaptive_Cubical {
     /// Return the top cells in toplex which intersect "geometric_region"
     Subset cover ( const Geometric_Description & geometric_region ) const;
     
+
     /// Subset cover ( const Geometric_Description & geometric_region, 
     ///                const Subset & subset )
     /// Return the top cells in subset which intersect "geometric_region"
@@ -195,6 +200,26 @@ namespace Adaptive_Cubical {
     Subset subdivide ( iterator cell_to_divide );
     Subset subdivide ( Top_Cell cell_to_divide );
     Subset subdivide ( const Subset & subset_to_divide );
+    
+    /* Generic Interfaces */
+    template < class InsertIterator >
+    void cover ( InsertIterator & ii, const Geometric_Description & geometric_region ) const;
+
+    /*
+    template < class InsertIterator >
+    void subdivide ( InsertIterator & ii );
+    */
+    
+    template < class InsertIterator >
+    void subdivide ( InsertIterator & ii, iterator cell_to_divide );
+    
+    template < class InsertIterator, class Container >
+    void subdivide ( InsertIterator & ii, const Container & subset_to_divide );
+
+    template < class InputIterator >
+    void complex ( Complex * & return_value, 
+                  InputIterator start, InputIterator stop, // begin and end of subset container
+                  std::map < Top_Cell, Complex::const_iterator > & boxes ) const;
     
     /// get_prefix ( Top_Cell )
     ///   Return a vector with the prefix string of tree moves necessary to 
@@ -227,6 +252,20 @@ namespace Adaptive_Cubical {
     unsigned int dimension_;
   };
   
+  namespace detail {
+    
+    struct AddTopCell {
+      std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes;
+      Toplex::Complex & complex;
+      const Toplex & toplex;
+      AddTopCell ( std::map < Toplex::Top_Cell, Toplex::Complex::const_iterator > & boxes,
+                  Toplex::Complex & complex, 
+                  const Toplex & toplex );
+      void operator () ( const Toplex::Top_Cell & top_cell );
+    };
+    
+  } /* namespace detail */
+
 } /* namespace Adaptive_Cubical */
 
 bool Check_if_Intersect (const Adaptive_Cubical::Toplex & A, 
