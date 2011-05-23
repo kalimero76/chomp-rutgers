@@ -38,9 +38,10 @@ namespace Adaptive_Cubical {
     
     // Step 1. Convert input to standard coordinates. 
     Geometric_Description region ( dimension_ );
-    static std::vector<unsigned int> LB ( dimension_);
-    static std::vector<unsigned int> UB ( dimension_);
-    static Real bignum ( 1 << 30 );
+    static std::vector<unsigned long> LB ( dimension_);
+    static std::vector<unsigned long> UB ( dimension_);
+#define INTPHASEWIDTH (((unsigned long)1) << 60)
+    static Real bignum ( INTPHASEWIDTH );
     for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
       region . lower_bounds [ dimension_index ] = 
       (geometric_region . lower_bounds [ dimension_index ] - bounds_ . lower_bounds [ dimension_index ]) /
@@ -48,21 +49,27 @@ namespace Adaptive_Cubical {
       region . upper_bounds [ dimension_index ] = 
       (geometric_region . upper_bounds [ dimension_index ] - bounds_ . lower_bounds [ dimension_index ]) /
       (bounds_ . upper_bounds [ dimension_index ] - bounds_ . lower_bounds [ dimension_index ]);
-      if ( region . lower_bounds [ dimension_index ] < Real ( 0 ) ) region . lower_bounds [ dimension_index ] = 0;
-      if ( region . lower_bounds [ dimension_index ] > Real ( 1 ) ) region . lower_bounds [ dimension_index ] = 1;
-      LB [ dimension_index ] = (unsigned int) ( bignum * region . lower_bounds [ dimension_index ] );
-      if ( region . upper_bounds [ dimension_index ] < Real ( 0 ) ) region . upper_bounds [ dimension_index ] = 0;
-      if ( region . upper_bounds [ dimension_index ] > Real ( 1 ) ) region . upper_bounds [ dimension_index ] = 1;
-      UB [ dimension_index ] = (unsigned int) ( bignum * region . upper_bounds [ dimension_index ] );
+      if ( region . lower_bounds [ dimension_index ] < Real ( 0 ) ) 
+        region . lower_bounds [ dimension_index ] = Real ( 0 );
+      if ( region . lower_bounds [ dimension_index ] > Real ( 1 ) ) 
+        region . lower_bounds [ dimension_index ] = Real ( 1 );
+      LB [ dimension_index ] = (unsigned long) ( bignum * region . lower_bounds [ dimension_index ] );
+      if ( region . upper_bounds [ dimension_index ] < Real ( 0 ) ) 
+        region . upper_bounds [ dimension_index ] = Real ( 0 );
+      if ( region . upper_bounds [ dimension_index ] > Real ( 1 ) ) 
+        region . upper_bounds [ dimension_index ] = Real ( 1 );
+      UB [ dimension_index ] = (unsigned long) ( bignum * region . upper_bounds [ dimension_index ] );
     }
     
     // Step 2. Perform DFS on the Toplex tree, recursing whenever we have intersection,
     //         (or adding leaf to output when we have leaf intersection)
-    static std::vector<unsigned int> NLB ( dimension_);
-    static std::vector<unsigned int> NUB ( dimension_);
+    static std::vector<unsigned long> NLB ( dimension_);
+    static std::vector<unsigned long> NUB ( dimension_);
     for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
+      //if ( LB [ dimension_index ] > 0 ) -- LB [ dimension_index ];
+      //if ( UB [ dimension_index ] < INTPHASEWIDTH ) ++ UB [ dimension_index ];
       NLB [ dimension_index ] = 0;
-      NUB [ dimension_index ] = 1 << 30;
+      NUB [ dimension_index ] = INTPHASEWIDTH;
     }
     //std::cout << "C\n";
     
@@ -87,7 +94,7 @@ namespace Adaptive_Cubical {
         // If we have descended here, then we should check for intersection.
         bool intersect_flag = true;
         for ( unsigned int d = 0; d < dimension_; ++ d ) {
-          if ( LB[d] > NUB[d] || UB[d] < NLB [d] ) {
+          if ( LB[d] > NUB[d] || UB[d] < NLB [d] ) {  // INTERSECTION CHECK
             intersect_flag = false;
             break;
           }
@@ -119,7 +126,7 @@ namespace Adaptive_Cubical {
           //std::cout << "Issue Rise.\n";
           state = 3;
         } // intersection check complete
-      } // state 0 or 1
+      } // state 0
       
       if ( state == 1 ) {
         // We have been ordered to descend to the left.
