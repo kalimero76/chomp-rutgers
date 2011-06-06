@@ -819,7 +819,7 @@ void Conley_Index ( Conley_Index_t * output,
   start0 = start = clock ();
   /* Construct G on S, and also X and S in hash set forms called X_cells and S_cells */
   // note: All cells in X may be obtained as images of cells in S.
-  typedef std::unordered_set<Cell> CellDictionary;
+  typedef boost::unordered_set<Cell> CellDictionary;
   CellDictionary X_cells;
   CellDictionary S_cells;
   Combinatorial_Map G;

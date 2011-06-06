@@ -2,15 +2,14 @@
 # this makes the chomp library
 # written by Shaun Harker
 
-# CAPD LOCATION
 
 HOMEDIR := ../
 CHOMPDIR := $(HOMEDIR)/chomp-rutgers
-BOOSTDIR :=
-LIBDIR = -L/usr/local/lib -L$(CHOMPDIR)/lib/
-LIBS = $(LIBDIR) -lboost_serialization -lchomp-rutgers
-CXX := g++
-CXXFLAGS := -O3 -m64 -Wall -I./include/ -I$(CHOMPDIR)/include -Wno-deprecated
+INCLUDES := -I/usr/local/include/ -I$(CHOMPDIR)/include
+LIBDIR := -L/usr/local/lib/
+LIBS = -lboost_serialization
+CXX := g++-mp-4.6
+CXXFLAGS := -O3 -m64 -Wall -Wno-deprecated
 
 
 BUILD_DIR := ./build
@@ -42,7 +41,7 @@ library: $(LIBRARY_OBJECTS)
 	ar rcs lib/libchomp-rutgers.a $(LIBRARY_OBJECTS)
 
 $(BUILD_DIR)/%.o : source/%.cpp include/%.h
-	$(CXX) $(CXXFLAGS) -c $< -o $@
+	$(CXX) $(CXXFLAGS) $(INCLUDES) -c $< -o $@
 
 # Cleanup
 

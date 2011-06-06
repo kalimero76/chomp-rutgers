@@ -13,19 +13,8 @@
 #include <map>
 #include <vector>
 
-#define GCC_VERSION (__GNUC__ * 10000 \
-+ __GNUC_MINOR__ * 100 \
-+ __GNUC_PATCHLEVEL__)
-/* Test for GCC > 4.2.0 */
-#if GCC_VERSION > 40200
-#include <tr1/unordered_map> //PORTABILITY ISSUE
-namespace std { using namespace tr1; }
-#else
-#warning Old Version of GCC -- using hash_set instead of unordered_set
-#include <ext/hash_map>
-namespace std { using namespace __gnu_cxx; }
-#define unordered_map hash_map
-#endif
+#include "boost/unordered_map.hpp"
+
 
 #include "boost/functional/hash.hpp"
 #include "archetypes/Chain_Archetype.h" /* for Default_Chain */
@@ -165,7 +154,7 @@ private:
   /* Cell Complex */
   size_type total_size_;
   /* Index Complex */
-  std::unordered_map < const_iterator, size_type, boost::hash < const_iterator > > index_;
+  boost::unordered_map < const_iterator, size_type, boost::hash < const_iterator > > index_;
   std::vector < const_iterator > lookup_;
   std::vector<size_type> index_begin_;
   /* Decomposable Complex */
@@ -174,9 +163,9 @@ private:
   bool boundary_count_available_;
   std::vector<size_type> king_count_;
   /* Simplicial Complex */
-  std::unordered_map < size_type, unsigned long > vertex_hashes_;
-  std::unordered_map < unsigned long, size_type > smallest_vertex_;
-  std::unordered_map < unsigned long, std::pair < size_type, size_type > > handle_to_fixed_index_;
+  boost::unordered_map < size_type, unsigned long > vertex_hashes_;
+  boost::unordered_map < unsigned long, size_type > smallest_vertex_;
+  boost::unordered_map < unsigned long, std::pair < size_type, size_type > > handle_to_fixed_index_;
   std::vector < std::vector < unsigned long > > fixed_index_to_handle_;
   unsigned long simplex_to_handle_ ( const std::vector<unsigned int> & simplex ) const;
 

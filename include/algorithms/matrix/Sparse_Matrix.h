@@ -14,21 +14,7 @@
 #include <vector>
 #include <stack>
 #include "boost/functional/hash.hpp"
-
-#define GCC_VERSION (__GNUC__ * 10000 \
-+ __GNUC_MINOR__ * 100 \
-+ __GNUC_PATCHLEVEL__)
-/* Test for GCC > 4.2.0 */
-#if GCC_VERSION > 40200
-#include <tr1/unordered_map> //PORTABILITY ISSUE
-namespace std { using namespace tr1; }
-#else
-#warning Old Version of GCC -- using hash_map instead of unordered_map
-#include <ext/hash_map>
-namespace std { using namespace __gnu_cxx; }
-#define unordered_map hash_map
-#endif
-
+#include "boost/unordered_map.hpp"
 
 #define HASH_SWITCH 10
 
@@ -96,8 +82,8 @@ public: // not friends with different templated versions, weirdly
   // Garbage Collection structure
   std::stack < Index > garbage_;
   // data to assist in O(1) random access times
-  std::unordered_map < Position, Index, boost::hash< Position > > access_;
-  typedef std::unordered_map < Position, Index, boost::hash< Position > >::const_iterator access_iterator;
+  boost::unordered_map < Position, Index, boost::hash< Position > > access_;
+  typedef boost::unordered_map < Position, Index, boost::hash< Position > >::const_iterator access_iterator;
   // data to store the beginning of the rows and columns
   std::vector < Index > row_begin_;
   std::vector < Index > column_begin_;

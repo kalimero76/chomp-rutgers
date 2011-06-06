@@ -10,19 +10,7 @@
 #ifndef CHOMP_RELATIVE_GRAPH_COMPLEX_
 #define CHOMP_RELATIVE_GRAPH_COMPLEX_
 
-#define GCC_VERSION (__GNUC__ * 10000 \
-+ __GNUC_MINOR__ * 100 \
-+ __GNUC_PATCHLEVEL__)
-/* Test for GCC > 4.2.0 */
-#if GCC_VERSION > 40200
-#include <tr1/unordered_set> //PORTABILITY ISSUE
-namespace std { using namespace tr1; }
-#else
-#warning Old Version of GCC -- using hash_set instead of unordered_set
-#include <ext/hash_set>
-namespace std { using namespace __gnu_cxx; }
-#define unordered_set hash_set
-#endif
+#include "boost/unordered_map.hpp"
 
 #include "complexes/Subcomplex.h"
 #include "complexes/Product_Complex.h"
@@ -72,7 +60,7 @@ public:
   
 private:
   const Toplex & toplex_;
-  typename std::unordered_set<typename Toplex::Top_Cell> A_;
+  typename boost::unordered_set<typename Toplex::Top_Cell> A_;
   Relative_Complex domain_;
   Relative_Complex codomain_;
 public:

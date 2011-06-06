@@ -12,7 +12,7 @@ std::pair<typename Sparse_Subcomplex<Cell_Complex>::iterator, bool>
 Sparse_Subcomplex<Cell_Complex>::
 insert ( const value_type & insert_me ) {
   const unsigned int dimension = insert_me . dimension ();
-  std::pair < typename std::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::iterator, bool > 
+  std::pair < typename boost::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::iterator, bool > 
     insert_value = data_ [ dimension ] . insert ( insert_me );
   std::pair < Sparse_Subcomplex_const_iterator<Cell_Complex>, bool > return_value 
     ( Sparse_Subcomplex_const_iterator<Cell_Complex> ( this, 
@@ -63,7 +63,7 @@ void Sparse_Subcomplex<Cell_Complex>::clear ( void ) {
 template < class Cell_Complex > 
 typename Sparse_Subcomplex<Cell_Complex>::iterator Sparse_Subcomplex<Cell_Complex>::find ( const key_type & find_me ) const {
   const unsigned int dimension = find_me . dimension ();
-  typename std::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator find_value =
+  typename boost::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator find_value =
     data_ [ dimension ] . find ( find_me );
   if ( find_value == data_ [ dimension ] . end () ) return end_;
   return typename Sparse_Subcomplex<Cell_Complex>::iterator ( this, find_value, dimension );
@@ -328,7 +328,7 @@ construct ( const Cell_Complex & super_complex ) {
   super_complex_ = &super_complex;
   dimension_ = super_complex . dimension ();
   end_ = const_iterator ( this, 
-                         typename std::unordered_set < typename Cell_Complex::const_iterator, 
+                         typename boost::unordered_set < typename Cell_Complex::const_iterator, 
                          boost::hash < typename Cell_Complex::const_iterator > >::const_iterator (), 
                          dimension_ + 1 );
   size_ . resize ( dimension_ + 1, 0 );
@@ -371,7 +371,7 @@ Sparse_Subcomplex_const_iterator<Cell_Complex>::Sparse_Subcomplex_const_iterator
 template < class Cell_Complex > 
 Sparse_Subcomplex_const_iterator<Cell_Complex>::Sparse_Subcomplex_const_iterator 
   ( const Sparse_Subcomplex<Cell_Complex> * const container, 
-    const typename std::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator data, 
+    const typename boost::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator data, 
     const unsigned int dimension ) : 
 container_(container), data_(data), dimension_(dimension) {
 } /* Sparse_Subcomplex_const_iterator::Sparse_Subcomplex_const_iterator */

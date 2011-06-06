@@ -12,19 +12,7 @@
 #include <vector>
 #include <map>
 
-#define GCC_VERSION (__GNUC__ * 10000 \
-+ __GNUC_MINOR__ * 100 \
-+ __GNUC_PATCHLEVEL__)
-/* Test for GCC > 4.2.0 */
-#if GCC_VERSION > 40200
-#include <tr1/unordered_set> //PORTABILITY ISSUE
-namespace std { using namespace tr1; }
-#else
-#warning Old Version of GCC -- using hash_set instead of unordered_set
-#include <ext/hash_set>
-namespace std { using namespace __gnu_cxx; }
-#define unordered_set hash_set
-#endif
+#include "boost/unordered_set.hpp"
 
 #include "boost/functional/hash.hpp"
 #include "archetypes/Chain_Archetype.h"
@@ -127,7 +115,7 @@ protected:
   std::vector<size_type> king_count_;
   /* Sparse Subcomplex */
   //todo:: make this unordered_map and use it to store the index_ data?
-  std::vector < std::unordered_set < Cell, boost::hash<Cell> > > data_;
+  std::vector < boost::unordered_set < Cell, boost::hash<Cell> > > data_;
   const Cell_Complex * super_complex_;
 };
 
@@ -141,7 +129,7 @@ public:
   typedef Sparse_Subcomplex<Cell_Complex> complex_type;
   Sparse_Subcomplex_const_iterator ( void );
   Sparse_Subcomplex_const_iterator ( const complex_type * const container, 
-                                     const typename std::unordered_set < typename Cell_Complex::const_iterator, 
+                                     const typename boost::unordered_set < typename Cell_Complex::const_iterator, 
                                      boost::hash < typename Cell_Complex::const_iterator > >
                                     ::const_iterator data,
                              const unsigned int dimension ); 
@@ -155,7 +143,7 @@ public:
 private:
   friend class Sparse_Subcomplex<Cell_Complex>;
   const complex_type * container_;
-  typename std::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator data_;
+  typename boost::unordered_set < typename Cell_Complex::const_iterator, boost::hash < typename Cell_Complex::const_iterator > >::const_iterator data_;
   unsigned int dimension_;
 };
 

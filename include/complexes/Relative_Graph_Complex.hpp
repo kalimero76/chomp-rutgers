@@ -401,7 +401,7 @@ void Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber ( Relative_Comp
   // note: X neighbors are such top cells in X; 
   //       A_neighbors are such top cells in A
   //       So A_neighbors is included in X_neighbors, since A is included in X
-  typedef std::unordered_set<typename Toplex::Top_Cell> HashSubset;
+  typedef boost::unordered_set<typename Toplex::Top_Cell> HashSubset;
   HashSubset X_neighbors, A_neighbors;
   
   // DEBUG
