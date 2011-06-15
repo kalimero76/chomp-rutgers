@@ -8,7 +8,7 @@ CHOMPDIR := $(HOMEDIR)/chomp-rutgers
 INCLUDES := -I/usr/local/include/ -I$(CHOMPDIR)/include
 LIBDIR := -L/usr/local/lib/
 LIBS = -lboost_serialization
-CXX := g++-mp-4.6
+CXX := g++
 CXXFLAGS := -O3 -m64 -Wall -Wno-deprecated
 
 

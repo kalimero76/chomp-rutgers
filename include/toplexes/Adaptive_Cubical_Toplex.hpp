@@ -49,6 +49,10 @@ namespace Adaptive_Cubical {
       region . upper_bounds [ dimension_index ] = 
       (geometric_region . upper_bounds [ dimension_index ] - bounds_ . lower_bounds [ dimension_index ]) /
       (bounds_ . upper_bounds [ dimension_index ] - bounds_ . lower_bounds [ dimension_index ]);
+      
+      if ( region . upper_bounds [ dimension_index ] < Real ( 0 ) ) return;
+      if ( region . lower_bounds [ dimension_index ] > Real ( 1 ) ) return;
+      
       if ( region . lower_bounds [ dimension_index ] < Real ( 0 ) ) 
         region . lower_bounds [ dimension_index ] = Real ( 0 );
       if ( region . lower_bounds [ dimension_index ] > Real ( 1 ) ) 
