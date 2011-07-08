@@ -220,6 +220,10 @@ namespace Adaptive_Cubical {
     Subset subdivide ( void );
     
     void coarsen ( void );
+    
+    template < class CellContainer >
+    void coarsen ( const CellContainer & coarsen_to );
+    
     /* Adaptive Cubical Toplex */
     Geometric_Description bounds ( void ) const;
     void initialize ( const Geometric_Description & outer_bounds_of_toplex );

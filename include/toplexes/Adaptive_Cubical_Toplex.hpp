@@ -247,4 +247,29 @@ namespace Adaptive_Cubical {
     return_value -> Finalize ();
   }
   
+  inline void branch ( std::vector < Node * > nodes, Node * node ) {
+    nodes . push_back ( node );
+    if ( node -> left_ != NULL ) branch ( nodes, node -> left_ );
+    if ( node -> right_ != NULL ) branch ( nodes, node -> right_ );
+  }
+  
+  template < class CellContainer >
+  void Toplex::coarsen ( const CellContainer & coarsen_to ) {
+    std::vector < Node * > nodes;
+    // Produce a list "nodes" of all descendant nodes
+    BOOST_FOREACH ( Top_Cell cell, coarsen_to ) {
+      Node * node = find ( cell ) . node ();
+      if ( node -> left_ != NULL ) branch ( nodes, node -> left_ );
+      if ( node -> right_ != NULL ) branch ( nodes, node -> right_ );  
+      node -> left_ = node -> right_ = NULL;
+    }
+    // Remove the top cells from the find structure
+    BOOST_FOREACH ( Node * node, nodes ) {
+      find_ [ node -> contents_ ] = end ();
+      // Single delete (not recursive, so forget children first)
+      node -> left_ = node -> right_ = NULL;
+      delete node;
+    }
+  }
+  
 } /* namespace Adapative_Cubical */
