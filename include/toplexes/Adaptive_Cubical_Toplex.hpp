@@ -70,8 +70,10 @@ namespace Adaptive_Cubical {
     static std::vector<unsigned long> NLB ( dimension_);
     static std::vector<unsigned long> NUB ( dimension_);
     for ( unsigned int dimension_index = 0; dimension_index < dimension_; ++ dimension_index ) {
-      //if ( LB [ dimension_index ] > 0 ) -- LB [ dimension_index ];
-      //if ( UB [ dimension_index ] < INTPHASEWIDTH ) ++ UB [ dimension_index ];
+      if ( LB [ dimension_index ] < (1 << 20) ) LB [ dimension_index ] = 0;
+      if ( LB [ dimension_index ] >= (1 << 20) ) LB [ dimension_index ] -= (1 << 20);
+      if ( UB [ dimension_index ] < (INTPHASEWIDTH - (1 << 20)) ) UB [ dimension_index ] += (1 << 20);
+      if ( UB [ dimension_index ] >= (INTPHASEWIDTH - (1 << 20)) ) UB [ dimension_index ] = INTPHASEWIDTH;
       NLB [ dimension_index ] = 0;
       NUB [ dimension_index ] = INTPHASEWIDTH;
     }
@@ -111,6 +113,7 @@ namespace Adaptive_Cubical {
             if ( N -> right_ == NULL ) {
               // Here's what we are looking for.
               * ii ++ = N -> contents_; // OUTPUT
+              //std::cout << "cover -- " << N -> contents_ << "\n";
               // Issue the order to rise.
               //std::cout << "Issue rise.\n";
               state = 3;
@@ -220,6 +223,7 @@ namespace Adaptive_Cubical {
   template < class InsertIterator, class Container >
   void Toplex::subdivide ( InsertIterator & ii, const Container & subset_to_divide ) {
     BOOST_FOREACH ( Top_Cell cell, subset_to_divide ) {
+      //std::cout << "subdividing " << cell << "\n";
       subdivide ( ii, find ( cell ) );
     }
   }
@@ -247,8 +251,9 @@ namespace Adaptive_Cubical {
     return_value -> Finalize ();
   }
   
-  inline void branch ( std::vector < Node * > nodes, Node * node ) {
+  inline void branch ( std::vector < Node * > & nodes, Node * node ) {
     nodes . push_back ( node );
+    // std::cout << "  pushing " << node << "  " << node -> contents_ << "\n";
     if ( node -> left_ != NULL ) branch ( nodes, node -> left_ );
     if ( node -> right_ != NULL ) branch ( nodes, node -> right_ );
   }
@@ -259,17 +264,33 @@ namespace Adaptive_Cubical {
     // Produce a list "nodes" of all descendant nodes
     BOOST_FOREACH ( Top_Cell cell, coarsen_to ) {
       Node * node = find ( cell ) . node ();
+      //std::cout << "Coarsen to: " << node << "  " << node -> contents_ << "\n";
+      // If this will be a new leaf and was not before, increment size
+      if ( node -> left_ != NULL || node -> right_ != NULL ) {
+        ++ size_;
+        //std::cout << "  Will be a new leaf.\n";
+      } 
       if ( node -> left_ != NULL ) branch ( nodes, node -> left_ );
       if ( node -> right_ != NULL ) branch ( nodes, node -> right_ );  
       node -> left_ = node -> right_ = NULL;
     }
     // Remove the top cells from the find structure
     BOOST_FOREACH ( Node * node, nodes ) {
+      //std::cout <<  "Removing node " << node << "  " << node -> contents_ << "\n";
       find_ [ node -> contents_ ] = end ();
+      // If we are deleting what used to be a leaf, decrement size
+      if ( node -> left_ == NULL && node -> right_ == NULL ) -- size_;
       // Single delete (not recursive, so forget children first)
       node -> left_ = node -> right_ = NULL;
       delete node;
     }
+    // Recompute begin_
+    Node * n = root_;
+    while ( n -> left_ != NULL || n -> right_ != NULL ) {
+      while ( n -> left_ != NULL ) n = n -> left_;
+      if ( n -> right_ != NULL ) n = n -> right_;
+    }
+    begin_ = iterator ( n );
   }
   
 } /* namespace Adapative_Cubical */
