@@ -67,6 +67,7 @@ void GraphicsWindow::clear ( void ) {
   XClearWindow(dis, win);
 }
 char GraphicsWindow::wait ( void ) {
+  XFlush ( dis );
   XEvent event;
   while(1){
 		XNextEvent(dis, &event);
