@@ -10,13 +10,17 @@
 
 int main (int argc, char * const argv[]) {
 
-  if ( argc < 3 ) {
-    std::cout << "usage ./chomp filename i\n filename is cubical complex file \n n is 1 or 0 (indicates whether or not to do preprocessing) \n";
-    exit(-1);
+  if ( argc != 2 ) {
+    std::cout << "usage ./chomp filename\n " <<
+      " filename is cubical complex file, which consists of a list \n" <<
+      " of many lines of the form \n" <<
+      "      ( n1, n2, ..., nd ) \n" <<
+      "  where d is the dimension of the complex \n" <<
+      "  and the ni's are the coordinates of the individual cube. Example:\n" <<
+      " (0, 0, 1, 0) \n" <<
+      " (10, 13, 2, 3) \n" << " ... two cubes of a four dimensional cubical complex\n";
+    return 0;
   }
-  std::cout << argc << "\n";
-  /* Use command line argument to determine whether or not to do preprocessing */
-  utility::do_preprocess = atoi(argv [ 2 ]);
   /* Load the cubical_complex from file */
   Cubical_Complex my_cubical_complex;
   std::cout << "Loading from file " << argv [ 1 ] << "\n";
