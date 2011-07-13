@@ -28,7 +28,8 @@
 template < class Geometric_Complex_Template >
 void Homology ( const Geometric_Complex_Template & the_complex ) {
 	std::vector<int> Betti_output, minimal_number_of_generators_output;
-	Homology ( Betti_output, minimal_number_of_generators_output, the_complex ); } /* endfunction */
+	Homology ( Betti_output, minimal_number_of_generators_output, the_complex ); 
+} /* endfunction */
 
 /* Compute Homology Groups via Smith Normal Form */
 template < class Geometric_Complex_Template >

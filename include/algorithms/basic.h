@@ -41,7 +41,8 @@ namespace utility {
   
 /* Declar/ations */
 class compute_results;
-template < class Cell_Complex_Template > compute_results compute_example ( Cell_Complex_Template & my_complex );
+template < class Cell_Complex_Template > compute_results compute_example 
+    ( Cell_Complex_Template & my_complex, bool betti_only = false );
 template < class T > void print_my_vector ( std::vector<T> print_me );
 template < class T > T vector_sum ( const std::vector<T> add_my_elements_together );
 template < class T > T vector_prod ( const std::vector<T> multiply_my_elements_together );

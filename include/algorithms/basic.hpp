@@ -280,8 +280,10 @@ void inspect_complex ( Cell_Complex & my_complex ) {
   } /* AKQ-inspect */
   
 template < class Cell_Complex_Template >
-compute_results compute_example ( Cell_Complex_Template & my_complex ) {
-	clock_t start_clock, stop_clock, total_time_start, total_time_stop;
+compute_results compute_example ( Cell_Complex_Template & my_complex, bool betti_only ) {
+
+#ifdef STATS
+  clock_t start_clock, stop_clock, total_time_start, total_time_stop;
 	float total_time, morse_time, homology_time;
   unsigned long original_size;
   std::cout << " Size = " << (original_size = my_complex . size ()) << "\n";
@@ -292,12 +294,14 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	/* Create Morse Complex */
 	std::cout << "  Using morse theory to reduce ... \n";
 	total_time_start = start_clock = clock ();
+#endif
   
   //Morse_Complex my_morse_complex;
   //my_complex . index ();
   //my_complex . decompose ();
   //morse::reduction ( my_morse_complex, my_complex );
   Morse_Complex my_morse_complex = morse::deep_reduction ( my_complex );
+#ifdef STATS
 	std::cout << " ... morse reduction completed. \n";
 	stop_clock = clock (); 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " so far elapsed \n";
@@ -308,20 +312,26 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	for ( unsigned int dim = 0; dim <= my_morse_complex . dimension (); dim ++ ) 
 		std::cout << my_morse_complex . size ( dim ) << " "; 
 	std::cout << "\n";
-  
+#endif
   //inspect ( my_morse_complex );
   
 	/* Compute the homology */
 	std::vector<int> Betti_Numbers, Minimal_Number_of_Generators;
+#ifdef STATS
 	std::cout << "  Computing Homology ... \n";
 	start_clock = clock ();
+#endif
 	Homology < Morse_Complex > ( Betti_Numbers, Minimal_Number_of_Generators, my_morse_complex );
+#ifdef STATS
 	stop_clock = clock ();
 	std::cout << "  Homology computed. "; 
 	std::cout << (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC << " elapsed \n";
 	homology_time = (float) ( stop_clock - start_clock ) / (float) CLOCKS_PER_SEC;
-	std::cout << "  Betti Numbers: "; print_my_vector ( Betti_Numbers ); 
+#endif
+	std::cout << "Betti Numbers: "; 
+  print_my_vector ( Betti_Numbers ); 
 	std::cout << "\n";
+#ifdef STATS
 	total_time_stop = clock ();
 	total_time = (float) ( total_time_stop - total_time_start) / (float) CLOCKS_PER_SEC ;
 	std::cout << "  STATISTICS \n";
@@ -336,13 +346,16 @@ compute_results compute_example ( Cell_Complex_Template & my_complex ) {
 	std::cout << "  Cells per second of Morse time:" << (float) original_size / morse_time << "\n"; 
 	std::cout << "  Cells per second of Smith time:" << (float) original_size / homology_time << "\n"; 
 	std::cout << "  ----------\n";
+#endif
 	compute_results return_value;
+#ifdef STATS
 	return_value . original_size =  original_size;
 	return_value . morse_size =  my_morse_complex . size ();
 	return_value . homology_size = vector_sum(Minimal_Number_of_Generators) ;
 	return_value . total_time =  total_time;
 	return_value . morse_time =  morse_time;
 	return_value . smith_time =  homology_time;
+#endif
   return return_value;
 } /* compute_example */
 
