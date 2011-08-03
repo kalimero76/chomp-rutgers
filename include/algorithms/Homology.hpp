@@ -563,17 +563,16 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
 } /* void Map_Homology(...) */
 #endif
 
-
-
 /* Given a single toplex, with subsets X, A, Y, B, and a combinatorial map F : X -> Y which restricts
    to F : A -> B, compute the relative homology of F. */
 template < class Toplex, class Subset, class Combinatorial_Map >
-void /* TODO */ Relative_Map_Homology (const Toplex & toplex, 
-                                       const Subset X, 
-                                       const Subset A,
-                                       const Subset Y, 
-                                       const Subset B,
-                                       const Combinatorial_Map & F ) {
+std::vector < Sparse_Matrix < long > > // TODO: only works for long "Ring"
+Relative_Map_Homology (const Toplex & toplex, 
+                       const Subset X, 
+                       const Subset A,
+                       const Subset Y, 
+                       const Subset B,
+                       const Combinatorial_Map & F ) {
   /* Method.
    1. Construct the Relative Graph G
      Definition of relative graph now follows: Define F_A : A -> B as the restriction of F to A.
@@ -586,6 +585,11 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   */
   typedef typename Relative_Graph_Complex < Toplex, Combinatorial_Map >::Relative_Complex Complex;
   typedef Relative_Graph_Complex < Toplex, Combinatorial_Map > Graph;
+  
+  typedef typename Complex::Ring Ring;
+  typedef Sparse_Matrix<Ring> Matrix;
+  
+  std::vector < Matrix > homology_matrices; // graded by dimension
   
   /* Produce the graph complex */
   std::cout << "RMH: Generating Graph Complex...\n";
@@ -731,8 +735,7 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   start = clock ();
   /* Re-express reduced_cycles in basis given by codomain_generators */
   /* Need to index the cells of the codomain */
-  typedef typename Complex::Ring Ring;
-  typedef Sparse_Matrix<Ring> Matrix;
+
   for (unsigned int dimension_index = 0; 
        dimension_index < codomain_generators . size (); 
        ++ dimension_index ) {
@@ -756,7 +759,8 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
     //std::cout << "matG"; print_matrix ( matG ); std::cout << "\n";
     /* Solve for matX:  matG * matX = matC */
     Matrix matX = matrix_solve ( matG, matC );
-    Matrix output;
+    homology_matrices . push_back ( Matrix () );
+    Matrix & output = homology_matrices . back ();
     Submatrix ( & output, 
                0, matX . number_of_rows () - trivial_count - 1, 
                0, matX . number_of_columns () - 1,
@@ -775,7 +779,7 @@ void /* TODO */ Relative_Map_Homology (const Toplex & toplex,
   
   
   /* Return algebraic information */
-  return /* TODO */;
+  return homology_matrices;
   
 } /* Relative_Map_Homology */
 
@@ -880,7 +884,7 @@ void Conley_Index ( Conley_Index_t * output,
 
   start = clock ();
   std::cout << "Conley_Index: calling Relative_Map_Homology.\n";
-  Relative_Map_Homology ( toplex, X, A, X, A, G );
+  output -> data () = Relative_Map_Homology ( toplex, X, A, X, A, G );
   stop = clock ();
   
   std::cout << "Conley Index computed. Total time = " << (float) ( stop - start0 ) / (float) CLOCKS_PER_SEC << "\n";

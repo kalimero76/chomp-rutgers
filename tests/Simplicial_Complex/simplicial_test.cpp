@@ -58,7 +58,6 @@ void test_example ( char * filename ) {
 } /* generator_example */
 
 int main (int argc, char * const argv[]) {
-  utility::do_preprocess = 0;
   if ( argc != 2 ) {
     std::cout << "supply a filename\n";
   } else {

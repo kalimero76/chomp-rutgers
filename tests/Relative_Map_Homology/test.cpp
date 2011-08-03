@@ -73,7 +73,7 @@ int main ( int argc, char * argv [] ) {
    */
   /* Produce morse set "S" */
   std::cout << "Producing Morse set (known apriori)\n";
-  Geometric_Description square ( 2, Real ( -0.4 ), Real ( 0.4 ) );
+  Geometric_Description square ( 2, Real ( -0.2 ), Real ( 0.2 ) );
   Toplex::Subset S = T . cover ( square );
   
   /* Produce continuous map "f" */

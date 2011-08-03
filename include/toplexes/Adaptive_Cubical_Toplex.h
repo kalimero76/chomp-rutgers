@@ -149,6 +149,7 @@ namespace Adaptive_Cubical {
     typedef const_iterator iterator;
     typedef Top_Cell key_type;
     typedef Top_Cell value_type;
+    
     /* Basic Container */
     void erase ( iterator erase_me );
     void clear ( void );

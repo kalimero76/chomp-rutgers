@@ -12,9 +12,14 @@
 #define CHOMP_SPARSE_MATRIX_
 
 #include <vector>
-#include <stack>
+#include <deque>
 #include "boost/functional/hash.hpp"
 #include "boost/unordered_map.hpp"
+
+#include <boost/serialization/serialization.hpp>
+#include <boost/serialization/vector.hpp>
+#include <boost/serialization/deque.hpp>
+#include <boost/serialization/unordered_map.hpp>
 
 #define HASH_SWITCH 10
 
@@ -48,6 +53,17 @@ struct Element {
   position( copy_me . position), value( copy_me . value), left( copy_me . left), 
   right( copy_me . right), up( copy_me . up), down( copy_me . down) {}
 
+  /// The serialization method.
+  friend class boost::serialization::access;  
+  template < class Archive >
+  void serialize ( Archive & ar , const unsigned int version ) {
+    ar & position;
+    ar & value;
+    ar & left;
+    ar & right;
+    ar & up;
+    ar & down;
+  }
 };
 
 // friends of Sparse_Matrix
@@ -80,7 +96,7 @@ public: // not friends with different templated versions, weirdly
   // data to store the Sparse Matrix
   std::vector < Element<Ring> > data_;
   // Garbage Collection structure
-  std::stack < Index > garbage_;
+  std::deque < Index > garbage_;
   // data to assist in O(1) random access times
   boost::unordered_map < Position, Index, boost::hash< Position > > access_;
   typedef boost::unordered_map < Position, Index, boost::hash< Position > >::const_iterator access_iterator;
@@ -96,10 +112,10 @@ public: // not friends with different templated versions, weirdly
   // data to handle quick linear algebra
   std::vector < Ring > cache_A;
   std::vector < size_type > cache_A_TS;
-  std::stack < size_type > cache_A_S;
+  std::deque < size_type > cache_A_S;
   std::vector < Ring > cache_B;
   std::vector < size_type > cache_B_TS;
-  std::stack < size_type > cache_B_S;
+  std::deque < size_type > cache_B_S;
   size_type timestamp;
   // technicals
   Index new_index ( void );
@@ -170,6 +186,32 @@ public:
   size_type row_size ( const size_type i ) const;
   size_type column_size ( const size_type j ) const;
   
+  /// The serialization method.
+  friend class boost::serialization::access;  
+  template < class Archive >
+  void serialize ( Archive & ar , const unsigned int version ) {
+    ar & data_;
+    ar & garbage_;
+    // data to assist in O(1) random access times
+    ar & access_;
+    // data to store the beginning of the rows and columns
+    ar & row_begin_;
+    ar & column_begin_;
+    // data to store amount of non-zero elements per row and column
+    ar & row_sizes_;
+    ar & column_sizes_;
+    // data to handle quick permutations of rows and columns
+    ar & row_names_;
+    ar & column_names_;
+    // data to handle quick linear algebra
+    ar & cache_A;
+    ar & cache_A_TS;
+    ar & cache_A_S;
+    ar & cache_B;
+    ar & cache_B_TS;
+    ar & cache_B_S;
+    ar & timestamp;  
+  }
 };
 
 // Sparse Matrix Algorithms

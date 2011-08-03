@@ -38,7 +38,6 @@ void test_example ( void ) {
 } /* generator_example */
 
 int main (int argc, char * const argv[]) {
-  utility::do_preprocess = 0;
   test_example ();
 	return 0;
 } /* main */

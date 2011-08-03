@@ -35,32 +35,30 @@ GraphicsWindow::GraphicsWindow( const char * title ) {
                                          default_visual,
                                          AllocNone);
   palette . resize ( 256 );
-  for ( int i = 0; i < 256 /* 128 */; ++ i ) {
+  for ( int i = 0; i <  128 ; ++ i ) {
     XColor rgb_color;
-    /*
+    
     rgb_color.red = 0; 
     rgb_color.green = 0;
-    rgb_color.blue = i * 512;*/
-    rgb_color.red = rand () % 65536; 
-    rgb_color.green = rand () % 65536; 
-    rgb_color.blue = rand () % 65536;
+    rgb_color.blue = i * 512;
+    //rgb_color.red = rand () % 65536; 
+    //rgb_color.green = rand () % 65536; 
+    //rgb_color.blue = rand () % 65536;
      /*Status rc = */XAllocColor(dis,
                             my_colormap,
                             &rgb_color);
     palette [ i ] = rgb_color . pixel;
   }
-  /*
+  
   for ( int i = 0; i < 128; ++ i ) {
     XColor rgb_color;
     rgb_color.red = i * 512; 
     rgb_color.green = 0;
     rgb_color.blue = 0;
-   XAllocColor(dis,
-                            my_colormap,
-                            &rgb_color);
+    XAllocColor(dis, my_colormap, &rgb_color);
     palette [ i + 128 ] = rgb_color . pixel;
   } 
-   */
+   
 }
 
 GraphicsWindow::~GraphicsWindow ( void ) {

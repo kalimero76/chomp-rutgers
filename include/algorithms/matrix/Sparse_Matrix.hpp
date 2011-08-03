@@ -290,8 +290,8 @@ typename Sparse_Matrix<Ring>::Index Sparse_Matrix<Ring>::new_index ( void ) {
   Index result;
   // First we reclaim garbage space
   if ( not garbage_ . empty () ) {
-    result = garbage_ . top ();
-    garbage_ . pop ();
+    result = garbage_ . back ();
+    garbage_ . pop_back ();
     return result;
   }
   // No garbage space is left to reclaim.
@@ -305,7 +305,7 @@ typename Sparse_Matrix<Ring>::Index Sparse_Matrix<Ring>::new_index ( void ) {
 
 template < class Ring >
 void Sparse_Matrix<Ring>::delete_index ( const Index index ) {
-  garbage_ . push ( index );
+  garbage_ . push_back ( index );
 }
 
 template < class Ring >
@@ -669,7 +669,7 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
 #else
       cache_B [ col ] = c * read ( i_index );
 #endif
-      cache_B_S . push ( col );
+      cache_B_S . push_back ( col );
     }
     row_advance ( i_index );
   }
@@ -689,7 +689,7 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
 #else
       cache_A [ col ] = b * read ( j_index );
 #endif
-      cache_A_S . push ( col );
+      cache_A_S . push_back ( col );
     }
     row_advance ( j_index );
   }
@@ -712,14 +712,14 @@ void Sparse_Matrix<Ring>::row_operation ( const Ring a, const Ring b,
   
   /* Stage IV. Unload the stacks and insert the new elements */
   while ( not cache_A_S . empty () ) {
-    size_type col = cache_A_S . top ();
-    cache_A_S . pop ();
+    size_type col = cache_A_S . back ();
+    cache_A_S . pop_back ();
     write ( i, col, cache_A [ col ], true );
   }
   
   while ( not cache_B_S . empty () ) {
-    size_type col = cache_B_S . top ();
-    cache_B_S . pop ();
+    size_type col = cache_B_S . back ();
+    cache_B_S . pop_back ();
     write ( j, col, cache_B [ col ], true );
   }
   
@@ -788,7 +788,7 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
 #else
       cache_B [ roww ] = c * read ( i_index );
 #endif
-      cache_B_S . push ( roww );
+      cache_B_S . push_back ( roww );
     }
     column_advance ( i_index );
   }
@@ -808,7 +808,7 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
 #else
       cache_A [ roww ] = b * read ( j_index );
 #endif
-      cache_A_S . push ( roww );
+      cache_A_S . push_back ( roww );
     }
     column_advance ( j_index );
   }
@@ -833,15 +833,15 @@ void Sparse_Matrix<Ring>::column_operation (const Ring a, const Ring b,
   
   /* Stage IV. Unload the stacks and insert the new elements */
   while ( not cache_A_S . empty () ) {
-    size_type roww = cache_A_S . top ();
-    cache_A_S . pop ();
+    size_type roww = cache_A_S . back ();
+    cache_A_S . pop_back ();
     //std::cout << "IV. (" << roww << ", " << i << ") = " << cache_A [ roww ] << "\n";
     write ( roww, i, cache_A [ roww ], true );
   }
   
   while ( not cache_B_S . empty () ) {
-    size_type roww = cache_B_S . top ();
-    cache_B_S . pop ();
+    size_type roww = cache_B_S . back ();
+    cache_B_S . pop_back ();
     //std::cout << "IV. (" << roww << ", " << j << ") = " << cache_B [ roww ] << "\n";
     write ( roww, j, cache_B [ roww ], true );
   }
@@ -1249,6 +1249,7 @@ void ColumnEchelon (Sparse_Matrix<Ring> * B, const Sparse_Matrix<Ring> & A) {
   //TODO
 }
 
+// this is a bad place for this, because i risk circular dependencies
 #include "algorithms/basic.h"
 
 /* This function produces a "Sparse_Matrix" to represent the boundary map of the appropriate dimension in the complex. */

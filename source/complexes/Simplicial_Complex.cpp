@@ -270,9 +270,9 @@ std::vector < int > Simplicial_Complex::count_all_boundaries ( void ) const {
   return number_of_boundaries;
 } /* Simplicial_Complex::count_all_boundaries */
   
-class push_functor {
+class simplicial_complex_push_functor {
 public:
-  push_functor ( const Simplicial_Complex & complex, std::vector < Simplicial_Complex::size_type > & output ) : complex(complex), output(output) {}
+  simplicial_complex_push_functor ( const Simplicial_Complex & complex, std::vector < Simplicial_Complex::size_type > & output ) : complex(complex), output(output) {}
   void operator () ( std::pair < const Simplicial_const_iterator, Simplicial_Complex::Ring > & term ) {
     output . push_back ( complex . index ( term . first ) );
   }
@@ -283,19 +283,19 @@ public:
 void Simplicial_Complex::boundary ( std::vector < size_type > & output, const size_type cell_index ) const {
   output . clear ();
 	Chain boundary_chain =  boundary ( lookup_ [ cell_index ] );
-  for_each ( boundary_chain . begin (), boundary_chain . end (), push_functor ( *this, output ) );
+  for_each ( boundary_chain . begin (), boundary_chain . end (), simplicial_complex_push_functor ( *this, output ) );
 } /* Simplicial_Complex::boundary */
 
 void Simplicial_Complex::coboundary ( std::vector < size_type > & output, const size_type cell_index ) const {
   output . clear ();
   //std::cout << "cbd : cell_index = " << cell_index << " / " << total_size_ << "\n";
   Chain coboundary_chain =  coboundary ( lookup_ [ cell_index ] );
-  for_each ( coboundary_chain . begin (), coboundary_chain . end (), push_functor ( *this, output ) );
+  for_each ( coboundary_chain . begin (), coboundary_chain . end (), simplicial_complex_push_functor ( *this, output ) );
 } /* Simplicial_Complex::coboundary */
 
-class push_functor_with_ring {
+class simplicial_complex_push_functor_with_ring {
 public:
-  push_functor_with_ring ( const Simplicial_Complex & complex, std::vector < std::pair< Simplicial_Complex::size_type, Default_Ring > > & output ) : complex(complex), output(output) {}
+  simplicial_complex_push_functor_with_ring ( const Simplicial_Complex & complex, std::vector < std::pair< Simplicial_Complex::size_type, Default_Ring > > & output ) : complex(complex), output(output) {}
   void operator () ( std::pair < const Simplicial_const_iterator, Simplicial_Complex::Ring > & term ) {
     output . push_back ( std::pair< Simplicial_Complex::size_type, Default_Ring > ( complex . index ( term . first ), term . second ) );
   }
@@ -306,13 +306,13 @@ public:
 void Simplicial_Complex::boundary ( std::vector < std::pair< size_type, Default_Ring > > & output, const size_type cell_index ) const {
   output . clear ();
   Chain boundary_chain =  boundary ( lookup_ [ cell_index ] );
-  for_each ( boundary_chain . begin (), boundary_chain . end (), push_functor_with_ring ( *this, output ) );
+  for_each ( boundary_chain . begin (), boundary_chain . end (), simplicial_complex_push_functor_with_ring ( *this, output ) );
 } /* Simplicial_Complex::boundary */
 
 void Simplicial_Complex::coboundary ( std::vector < std::pair< size_type, Ring > > & output, const size_type cell_index ) const {
   output . clear ();
   Chain coboundary_chain =  coboundary ( lookup_ [ cell_index ] );
-  for_each ( coboundary_chain . begin (), coboundary_chain . end (), push_functor_with_ring ( *this, output ) );
+  for_each ( coboundary_chain . begin (), coboundary_chain . end (), simplicial_complex_push_functor_with_ring ( *this, output ) );
 } /* Simplicial_Complex::coboundary */
 
 
