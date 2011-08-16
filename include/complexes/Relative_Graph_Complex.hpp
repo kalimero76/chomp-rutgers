@@ -572,12 +572,13 @@ void Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber ( Relative_Comp
   return_value . construct ( full_codomain_ );
   /* Assemble the subcomplex */
   BOOST_FOREACH ( const Relative_Cell & cell, X_closure_set ) {
-    return_value . insert ( cell );
+    return_value . insert ( cell, false );
   } /* boost_foreach */
 
   BOOST_FOREACH ( const Relative_Cell & cell, A_closure_set ) {
-    return_value . erase ( cell );
+    return_value . erase ( cell, false );
   } /* boost_foreach */
   
+  return_value . finalize ();
   return_value . index ();
 } /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::makeFiber */
