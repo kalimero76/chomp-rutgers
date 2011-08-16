@@ -1257,7 +1257,7 @@ void ColumnEchelon (Sparse_Matrix<Ring> * B, const Sparse_Matrix<Ring> & A) {
 template < class Cell_Complex >
 void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > & output_matrix, 
                                   const Cell_Complex & complex, const unsigned int dimension ) {
-  //std::cout << "Sparse_Matrix_Boundary_Map.\n";
+  //std::cout << "Sparse_Matrix_Boundary_Map, dimension = " << dimension << ".\n";
   //verify_complex ( complex );
     /* Check dimension to see whether or not it is within bounds. */
 	if ( dimension > complex . dimension () + 1 || dimension < 0 ) {
@@ -1276,9 +1276,8 @@ void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > 
   //std::cout << "smbm: dim in [ 1, " << complex . dimension () << "].\n";
   
   output_matrix . resize ( complex . size ( dimension - 1 ), complex . size ( dimension ) );
-  //std::cout << "\n " << complex . size ( dimension - 1 ) << " " <<  complex . size ( dimension ) << "\n";
-  //unsigned long target_start = complex . index ( complex . begin ( dimension - 1 ) );
-  //unsigned long source_start = complex . index ( complex . begin ( dimension ) );
+  //std::cout << "\n matrix size =" << complex . size ( dimension - 1 ) << " " <<  complex . size ( dimension ) << "\n";
+    
   unsigned long target_start = complex . index_begin ( dimension - 1 );
   unsigned long source_start = complex . index_begin ( dimension );
   //std::cout << "target_start = " << target_start << " and source_start = " << source_start << "\n";
@@ -1289,15 +1288,16 @@ void Sparse_Matrix_Boundary_Map ( Sparse_Matrix < typename Cell_Complex::Ring > 
 		/* We find the boundary of the current elementary chain. */
 		typename Cell_Complex::Chain boundary_chain = complex . boundary ( group_iterator );
     //std::cout << "smbm: bd(" << *group_iterator << ") = " << boundary_chain << "\n";
-    
+    //std::cout << "smbm: index = " << group_index << " (subtract source start to get matrix column)\n";
 		/* We loop through the terms in the boundary we have found. */
 		for ( typename Cell_Complex::Chain::iterator chain_iterator = boundary_chain . begin (); 
          chain_iterator != boundary_chain . end (); ++ chain_iterator ) {
+      //std::cout << "M(" << complex . index ( chain_iterator -> first ) - target_start << ", " << group_index - source_start << ") = " << 
+      //chain_iterator -> second << ".\n";
 			output_matrix . write ( complex . index ( chain_iterator -> first ) - target_start, 
                               group_index - source_start, 
                               chain_iterator -> second ); 
-      //std::cout << "M(" << complex . index ( chain_iterator -> first ) - target_start << ", " << group_index - source_start << ") = " << 
-      //chain_iterator -> second << ".\n";
+
     } /* for */
   } /* for */
 } /* Sparse_Matrix_Boundary_Map */

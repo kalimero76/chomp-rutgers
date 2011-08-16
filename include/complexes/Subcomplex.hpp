@@ -344,9 +344,10 @@ void Subcomplex<Cell_Complex>::finalize ( void ) {
     ++ begin_ [ 0 ];
   } /* if */
   for ( const_iterator lookup = begin (); lookup != end (); ++ lookup ) { 
-    
+    // warning: ++ doesn't work properly if begin is incorrect; it gets the dimension wrong
     while ( super_complex_ -> index_begin ( dimension + 1 ) <= lookup . data () ) {
       ++ dimension;
+      lookup . dimension_ = dimension; // because ++ didn't increment dimension
       size_ [ dimension ] = 0;
       begin_ [ dimension ] = lookup;
     }
