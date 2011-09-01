@@ -226,8 +226,8 @@ Relative_Graph_Complex<Toplex,Combinatorial_Map>::codomain ( void ) {
 } /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::codomain */
 
 template < class Toplex, class Combinatorial_Map >
-typename Relative_Graph_Complex<Toplex,Combinatorial_Map>::Chain 
-Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( const Relative_Chain & lift_me ) {
+int
+Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( Chain * lifted_chain, const Relative_Chain & lift_me ) {
   /* Computes a Chain in the Graph which 
       1) is a cycle
       2) projects to "lift_me"
@@ -241,7 +241,7 @@ Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( const Relative_Cha
   
   /* Initialize "answer" to a Chain that projects to "lift_me",
      and compute its boundary as well. */
-  Chain answer;
+  Chain & answer = *lifted_chain;
   Chain answer_boundary;
   
   //std::cout << "STAGE I. CHAIN LIFT.\n";
@@ -330,7 +330,18 @@ Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( const Relative_Cha
       std::cout << "fiber_chain = " << fiber_chain << "\n";
       std::cout << "negative_preboundary = " << negative_preboundary << "\n";
       std::cout << "bd(neg_preboundary) = " << boundary ( negative_preboundary, fiber ) << "\n";
-      exit ( -1 );
+      std::cout << " should be zero: " << check << "\n";
+      {
+        Adaptive_Complex & complex = * full_codomain_;
+        ComplexVisualization < Adaptive_Complex > * cv = new ComplexVisualization < Adaptive_Complex > ( "Preboundary chain in fiber!");
+        cv -> drawRelativeComplex ( complex, fiber, 0, 100 );
+        cv -> drawChain ( complex, fiber . include ( fiber_chain ), 200 );
+        cv -> drawChain ( complex, fiber . include ( negative_preboundary ), 200 );
+        // explore a minute here
+        cv -> explore ();
+        delete cv;
+      }
+      return 1; // error code
     }
     //std::cout << "   Here is the discovered preboundary: \n";
     //std::cout << "    " << domain_cell << " X (" << negative_preboundary << ")\n"; 
@@ -354,7 +365,7 @@ Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift ( const Relative_Cha
   //std::cout << "   projected answer = "<< projectToDomain ( answer ) << "\n";
   //std::cout << "   should be same as: " << lift_me << "\n";
   /* Return with the computed cycle "answer" which projects to "lift_me" */
-  return answer;
+  return 0;
   
 } /* Relative_Graph_Complex<Toplex,Combinatorial_Map>::cycleLift */
 

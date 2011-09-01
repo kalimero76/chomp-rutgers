@@ -52,7 +52,10 @@ public:
   Relative_Complex & domain ( void ); 
   Relative_Complex & codomain ( void ); 
 
-  Chain cycleLift ( const Relative_Chain & lift_me );
+  /** cycleLift. gives a cycle in graph that projects to cycle lift_me in domain space.
+      if successful, return 0 (and output stored in lifted_chain argument)
+      otherwise, return 1 */
+  int cycleLift ( Chain * lifted_chain, const Relative_Chain & lift_me );
   Relative_Chain projectToDomain ( const Chain & project_me );
   Relative_Chain projectToCodomain ( const Chain & project_me );
 

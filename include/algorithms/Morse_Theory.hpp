@@ -13,8 +13,8 @@
 #include <functional> /* greater<> */
 #include <ctime>
 
-#include "algorithms/basic.h"
-#include "algorithms/Morse_Theory.h"
+//#include "algorithms/basic.h"
+//#include "algorithms/Morse_Theory.h"
 #include "algorithms/matrix/Sparse_Matrix.h"
 
 template < class size_type >

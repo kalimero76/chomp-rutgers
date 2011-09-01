@@ -12,11 +12,8 @@
 
 /* Conley Index */
 Conley_Index_t::Conley_Index_t ( void ) {
+  undefined_ = true;
 } /* Conley_Index_t::Conley_Index_t */
-
-bool Conley_Index_t::undefined ( void ) {
-  return data_ . empty ();
-} /* Conley_Index_t::undefined */
 
 std::vector < Sparse_Matrix < long > > & Conley_Index_t::data ( void ) {
   return data_;
@@ -25,6 +22,14 @@ std::vector < Sparse_Matrix < long > > & Conley_Index_t::data ( void ) {
 const std::vector < Sparse_Matrix < long > > & Conley_Index_t::data ( void ) const {
   return data_;
 }
+
+bool & Conley_Index_t::undefined ( void ) {
+  return undefined_;
+} /* Conley_Index_t::undefined */
+
+const bool & Conley_Index_t::undefined ( void ) const {
+  return undefined_;
+} /* Conley_Index_t::undefined */
 
 #if 0
 #ifndef CHOMP_HEADER_ONLY_

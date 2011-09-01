@@ -566,8 +566,9 @@ void Map_Homology_V2 ( const Toplex & X, const Toplex & Y, const Map & f ) {
 /* Given a single toplex, with subsets X, A, Y, B, and a combinatorial map F : X -> Y which restricts
    to F : A -> B, compute the relative homology of F. */
 template < class Toplex, class Subset, class Combinatorial_Map >
-std::vector < Sparse_Matrix < long > > // TODO: only works for long "Ring"
-Relative_Map_Homology (const Toplex & toplex, 
+int 
+Relative_Map_Homology (std::vector < Sparse_Matrix < long > > * output, // TODO: only works for long "Ring"
+                       const Toplex & toplex, 
                        const Subset X, 
                        const Subset A,
                        const Subset Y, 
@@ -589,7 +590,7 @@ Relative_Map_Homology (const Toplex & toplex,
   typedef typename Complex::Ring Ring;
   typedef Sparse_Matrix<Ring> Matrix;
   
-  std::vector < Matrix > homology_matrices; // graded by dimension
+  std::vector < Matrix > & homology_matrices = *output; // graded by dimension
   
   /* Produce the graph complex */
   std::cout << "RMH: Generating Graph Complex...\n";
@@ -638,8 +639,14 @@ Relative_Map_Homology (const Toplex & toplex,
     codomain_cycles [ dimension_index ] . resize ( domain_generators [ dimension_index ] . size () );
     //std::cout << " dimension_index = " << dimension_index << "\n";
     for ( unsigned int generator_index = 0; generator_index < domain_generators [ dimension_index ] . size (); ++ generator_index ) {
+      typename Graph::Chain lifted_cycle;
+      int error_code = graph . cycleLift ( &lifted_cycle, domain_generators [ dimension_index ] [ generator_index ] . first );
+      if ( error_code == 1 ) {
+        std::cout << "Problem computing Relative Map Homology (cycle lift failed).\n";
+        return error_code;
+      }
       codomain_cycles [ dimension_index ] [ generator_index ] = 
-      std::make_pair ( graph . projectToCodomain ( graph . cycleLift ( domain_generators [ dimension_index ] [ generator_index ] . first ) ),
+      std::make_pair ( graph . projectToCodomain ( lifted_cycle ),
                        domain_generators [ dimension_index ] [ generator_index ] . second );
       //std::cout << "  generator_index = " << generator_index << "\n";
       //std::cout << "   Lifting the domain-cycle " << domain_generators [ dimension_index ] [ generator_index ] . first << "\n";
@@ -778,8 +785,8 @@ Relative_Map_Homology (const Toplex & toplex,
   
   
   
-  /* Return algebraic information */
-  return homology_matrices;
+  /* Return Success */
+  return 0;
   
 } /* Relative_Map_Homology */
 
@@ -884,7 +891,12 @@ void Conley_Index ( Conley_Index_t * output,
 
   start = clock ();
   std::cout << "Conley_Index: calling Relative_Map_Homology.\n";
-  output -> data () = Relative_Map_Homology ( toplex, X, A, X, A, G );
+  int error_code = Relative_Map_Homology ( &(output -> data ()), toplex, X, A, X, A, G );
+  if ( error_code == 1 ) {
+    std::cout << "Problem computing conley index. Returning undefined result.\n";
+    output -> undefined () = true;
+    return;
+  }
   stop = clock ();
   
   std::cout << "Conley Index computed. Total time = " << (float) ( stop - start0 ) / (float) CLOCKS_PER_SEC << "\n";

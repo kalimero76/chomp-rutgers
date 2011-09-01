@@ -28,13 +28,14 @@ void Map_Homology ( const Toplex & X, const Toplex & Y, const Geometric_Map & f 
 
 /* Compute relative homology of a map*/
 template < class Toplex, class Subset, class Combinatorial_Map >
-std::vector < Sparse_Matrix < long > > 
-Relative_Map_Homology (const Toplex & toplex, 
-                                       const Subset X, 
-                                       const Subset A,
-                                       const Subset Y, 
-                                       const Subset B,
-                                       const Combinatorial_Map & F );
+int
+Relative_Map_Homology ( std::vector < Sparse_Matrix < long > > * output,
+                        const Toplex & toplex, 
+                        const Subset X, 
+                        const Subset A,
+                        const Subset Y, 
+                        const Subset B,
+                        const Combinatorial_Map & F );
 
 /* Print out the homology generators... TODO: return the homology generators */
 template < class Cell_Complex >
@@ -55,20 +56,21 @@ Homology_Generators ( const Cell_Complex & the_complex );
 
 class Conley_Index_t {
 private:
-  /// Some dummy information, unused at the moment.
   std::vector < Sparse_Matrix < long > >  data_;
-  
+  bool undefined_;  
 public:
-  bool undefined ( void );
   Conley_Index_t ( void );
   std::vector < Sparse_Matrix < long > > & data ( void );
   const std::vector < Sparse_Matrix < long > > & data ( void ) const;
+  bool & undefined ( void );
+  const bool & undefined ( void ) const;
   
   /// The serialization method.
   friend class boost::serialization::access;
   template < class Archive >
   void serialize ( Archive & ar , const unsigned int version ) {
     ar & data_;
+    ar & undefined_;
   }
 };
 

@@ -1249,9 +1249,6 @@ void ColumnEchelon (Sparse_Matrix<Ring> * B, const Sparse_Matrix<Ring> & A) {
   //TODO
 }
 
-// this is a bad place for this, because i risk circular dependencies
-#include "algorithms/basic.h"
-
 /* This function produces a "Sparse_Matrix" to represent the boundary map of the appropriate dimension in the complex. */
 /* TODO: this only will work for Default_Cell */
 template < class Cell_Complex >
