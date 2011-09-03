@@ -87,19 +87,19 @@ void ComplexVisualization<Cell_Complex>::drawNow ( void ) {
     std::vector<float> bounds = object . first;
     if ( not rescale_cell ( bounds ) ) continue; // bounds is affected 
     GraphicsWindow::rect ( object . second, 
-                          border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f ),  
-                          512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f ), 
-                          scale * bounds [ 2 ], 
-                          scale * bounds [ 3 ]);
+                          (int) ( border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f )),  
+                          (int) (512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f )), 
+                          (int) (scale * bounds [ 2 ]), 
+                          (int) (scale * bounds [ 3 ]));
   }
   BOOST_FOREACH ( drawobject object, special_cells_ ) {
     std::vector<float> bounds = object . first;
     if ( not rescale_cell ( bounds ) ) continue; // bounds is affected 
     GraphicsWindow::rect ( object . second, 
-                          border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f ),  
-                          512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f ), 
-                          scale * bounds [ 2 ], 
-                          scale * bounds [ 3 ]);
+                          (int) ( border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f )),  
+                          (int) (512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f )), 
+                          (int) (scale * bounds [ 2 ]), 
+                          (int) (scale * bounds [ 3 ]));
   }
   XFlush ( dis );
 }
@@ -122,10 +122,10 @@ void ComplexVisualization<Cell_Complex>::drawQuick ( void ) {
       continue; // bounds is affected 
     }
     GraphicsWindow::rect ( object . second, 
-                          border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f ),  
-                          512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f ), 
-                          scale * bounds [ 2 ], 
-                          scale * bounds [ 3 ]);
+                          (int) ( border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f )),  
+                          (int) (512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f )), 
+                          (int) (scale * bounds [ 2 ]), 
+                          (int) (scale * bounds [ 3 ]));
   }
   BOOST_FOREACH ( drawobject object, special_cells_ ) {
     std::vector<float> bounds = object . first;
@@ -134,10 +134,10 @@ void ComplexVisualization<Cell_Complex>::drawQuick ( void ) {
     bounds [ 3 ] *= 2;
     
     GraphicsWindow::rect ( object . second, 
-                          border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f ),  
-                          512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f ), 
-                          scale * bounds [ 2 ], 
-                          scale * bounds [ 3 ]);
+                          (int) ( border + scale * ( bounds [ 0 ] - bounds [ 2 ] / 2.0f )),  
+                          (int) (512.0f - border - scale * ( bounds [ 1 ] + bounds [ 3 ] / 2.0f )), 
+                          (int) (scale * bounds [ 2 ]), 
+                          (int) (scale * bounds [ 3 ]));
   }
   XFlush ( dis );
 }
