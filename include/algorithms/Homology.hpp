@@ -216,21 +216,27 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
       }
     }
     
-    
     /* Here is the current method of calculation.
-       We want to obtain the generators.
-       The torsion generators can be read right off from the middle columns of U_2.
-       To obtain the betti generators, here is a possible solution:
-           1 Get the bottom rows of U^{-1}_2. Call it A. 
-           2 Get the the rightmost columns of V^{-1}_1. Call it B.
-           3 Get the rightmost rows of U_2, call it C.
-           4 Form the product P = CAB.
-           5 Find the smith normal form UDV of P. Claim: D is a projection.
-       Now the betti generators are the non-zero columns of U corresponding to non-zero entries in D
+     We want to obtain the generators.
+     The torsion generators can be read right off from the middle columns of U_2.
+     To obtain the betti generators, here is a possible solution:
+     1 Get the rightmost columns of U_2, call it A.
+     2 Get the bottom rows of U^{-1}_2. Call it B. 
+     3 Get the the rightmost columns of V^{-1}_1. Call it C.
+     4 Form the product P = CAB.
+     5 Find the smith normal form UDV of P. Claim: D is a projection.
+     Now the betti generators are the non-zero columns of U corresponding to non-zero entries in D
      */
 		/* Obtain the relevant sub-matrix from second_Qinv */
 		Matrix A, B, C, U, Uinv, V, Vinv, D, P, G;
-
+    Submatrix ( & A, 
+               0, second_U . number_of_rows () - 1, 
+               second_t, second_U . number_of_columns () - 1,
+               second_U );
+    Submatrix ( & B, 
+               second_t, second_Uinv . number_of_rows () - 1, 
+               0, second_Uinv . number_of_columns () - 1,
+               second_Uinv );
     if ( dimension_index == 0 ) {
       typename Matrix::Index n = complex . size ( 0 );
       C . resize ( n, n );
@@ -241,14 +247,7 @@ Homology_Generators_SNF ( const Cell_Complex & complex, bool trivial_generators 
                  first_t, first_Vinv . number_of_columns () - 1,
                  first_Vinv );
     }
-    Submatrix ( & A, 
-               second_t, second_U . number_of_rows () - 1, 
-               0, second_U . number_of_columns () - 1,
-               second_U );
-    Submatrix ( & B, 
-               second_t, second_Uinv . number_of_rows () - 1, 
-               0, second_Uinv . number_of_columns () - 1,
-               second_Uinv );
+    
     P = A * (B * C);
     SmithNormalForm( &U, &Uinv, &V, &Vinv, &D, P);
     G = U * D;

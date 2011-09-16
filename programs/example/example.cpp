@@ -5,6 +5,7 @@
 
 #define CHOMP_HEADER_ONLY_
 #define TEST_PROGRAM
+#define STATS
 #include "complexes/Cubical_Complex.h"	/* for class Cubical_Complex */
 #include "algorithms/basic.h"
 
@@ -80,7 +81,7 @@ compute_results cubical_example (  int dimension, int width, float probability, 
    */
   /* Obtain Generators*/
   //utility::compute_example ( my_cubical_complex );
-  //#if 0
+#if 0
    std::vector < std::vector < std::pair < Cubical_Complex::Chain, unsigned int > > > generators = 
   Homology_Generators ( my_cubical_complex );
   
@@ -95,7 +96,7 @@ compute_results cubical_example (  int dimension, int width, float probability, 
       std::cout << generators [ dimension_index ] [ generator_index ] . first << "\n";
     } /* for */
   } /* for */
-  //#endif
+#endif
   return utility::compute_example ( my_cubical_complex );
 } /* cubical_example */
 
@@ -124,13 +125,11 @@ int main (int argc, char * const argv[]) {
     std::cout << "give arguments: dimension, width\n";
     return 0;
   }
-  
-  do_preprocess = atoi(argv[3]);
-  
+   
   cubical_example ( atoi(argv[1]), atoi(argv[2]), .2, true );
   } else {
     
-  do_preprocess = true;
+  
 	/* Run 2D tests */
 	run_tests( "random_cubical_stats_2d.m", 2, .2, 40, 100);
 	/* Run 3D tests */
