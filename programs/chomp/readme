@@ -1,0 +1,4 @@
+The simplicial*.s files were provided by Matt Kahle. They are designed to give high torsion 
+numbers and without large integer support we can easily get erroneous results.
+Thanks to Matt Kahle for these example! 
+-shaun harker
