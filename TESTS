@@ -1,0 +1,12 @@
+make chomp-cubical
+make chomp-simplicial
+make chomp-matrix
+make greyscale-to-cubical
+./bin/chomp-cubical ./examples/square.cub
+./bin/chomp-cubical ./examples/squarewithhole.cub
+./bin/chomp-cubical ./examples/square.cub ./examples/squarewithhole.cub
+./bin/greyscale-to-cubical ./examples/rubik.jpg 128 ./examples/rubik.cub
+./bin/chomp-cubical ./examples/rubik.cub
+./bin/chomp-simplicial ./examples/simplex.simp
+./bin/chomp-matrix ./examples/segment.mat
+./bin/chomp-matrix ./examples/circle.mat
