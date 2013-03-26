@@ -10,6 +10,7 @@
 #include <fstream>
 #include <iterator>
 #include <stack>
+#include <set>
 
 #include "boost/unordered_set.hpp"
 
