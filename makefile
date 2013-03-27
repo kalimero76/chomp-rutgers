@@ -1,6 +1,8 @@
 
 PATH_TO_BOOST_INCLUDE:=/usr/local/include/
 
+all: chomp-cubical chomp-simplicial chomp-matrix greyscale-to-cubical
+
 chomp-cubical:
 	g++ -O3 ./source/chomp-cubical.cpp -I./include/ -I$(PATH_TO_BOOST_INCLUDE) -o ./bin/chomp-cubical
 
