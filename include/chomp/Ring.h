@@ -6,7 +6,7 @@
 #define CHOMP_RING_H
 
 #include <iostream>
-#include <cstdint>
+#include <stdint.h>
 
 #include <boost/serialization/serialization.hpp>
 #include <boost/serialization/nvp.hpp>
