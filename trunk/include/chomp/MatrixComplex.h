@@ -6,6 +6,7 @@
 #define CHOMP_MATRIXCOMPLEX_H
 
 #include <iostream>
+#include <cstdint>
 #include <vector>
 #include <fstream>
 #include <iterator>

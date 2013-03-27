@@ -11,6 +11,7 @@
 #include <iterator>
 #include <stack>
 #include <set>
+#include <cstdint>
 
 #include "boost/unordered_set.hpp"
 
