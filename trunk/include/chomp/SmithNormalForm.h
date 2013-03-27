@@ -5,7 +5,7 @@
 #ifndef CHOMP_SMITHNORMALFORM_H
 #define CHOMP_SMITHNORMALFORM_H
 
-#include <cstdint>
+#include <stdint.h>
 
 #include "chomp/SparseMatrix.h"
 

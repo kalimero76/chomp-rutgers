@@ -11,7 +11,7 @@
 #include <iterator>
 #include <stack>
 #include <set>
-#include <cstdint>
+#include <stdint.h>
 
 #include "boost/unordered_set.hpp"
 
