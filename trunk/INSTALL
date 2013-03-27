@@ -1,0 +1,4 @@
+
+1. You need a boost installation. 
+It is preferable to install it in /usr/local
+If this is not possible, edit the makefile to point to the boost install.
