@@ -5,6 +5,7 @@
 #ifndef CHOMP_SIMPLICIALCOMPLEX_H
 #define CHOMP_SIMPLICIALCOMPLEX_H
 
+#include <cstdlib>
 #include <iostream>
 #include <vector>
 #include <fstream>

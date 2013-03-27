@@ -5,6 +5,7 @@
 #ifndef CHOMP_RELATIVEMAPHOMOLOGY_H
 #define CHOMP_RELATIVEMAPHOMOLOGY_H
 
+#include <cstdlib>
 #include <vector>
 #include <ctime>
 #include "boost/unordered_map.hpp"

@@ -6,6 +6,7 @@
 #define CHOMP_CUBICALCOMPLEX_H
 
 #include <iostream>
+#include <cstdlib>
 #include <vector>
 #include <fstream>
 #include <iterator>
