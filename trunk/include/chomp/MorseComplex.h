@@ -5,6 +5,7 @@
 #ifndef CHOMP_MORSECOMPLEX_H
 #define CHOMP_MORSECOMPLEX_H
 
+#include <cstdlib>
 #include <vector>
 #include <queue>
 #include <set>

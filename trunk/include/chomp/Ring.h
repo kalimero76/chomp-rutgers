@@ -5,6 +5,7 @@
 #ifndef CHOMP_RING_H
 #define CHOMP_RING_H
 
+#include <cstdlib>
 #include <iostream>
 #include <stdint.h>
 
