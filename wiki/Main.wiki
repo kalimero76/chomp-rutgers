@@ -6,7 +6,7 @@
 
 == Introduction ==
 
-This is software (written in C++) capable of representing chain complexes and computing their homology. We provide command line tools and also a software library for developers. To get started, we have [[Installation|installation instructions]] and [[Tutorial| a tutorial]].
+This is software (written in C++) capable of representing chain complexes and computing their homology. We provide command line tools and also a software library for developers. To get started, we have [[Installation|installation instructions]] and [[Tutorial|a tutorial]].
 
 There are several modes of usage for this software package. For basic usage, we offer several command line tools that accept text file input describing a complex. We also provide a lower-level C++ interface for developers. Advanced users can even extend the code by creating new types of complexes due to the generic construction of the algorithms.
 
@@ -30,5 +30,4 @@ Second, we describe the provided command-line tools:
 
 Finally, we provide documentation intended for developers who wish to call chomp-rutgers methods directly in their software via the C++ interface:
 
-[[Developer Documentation]]
-
+[[Developer|Developer Documentation]]
