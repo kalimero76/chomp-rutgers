@@ -1,0 +1,1 @@
+A generically written library capable of representing cell complexes of various types and computing homology groups.
